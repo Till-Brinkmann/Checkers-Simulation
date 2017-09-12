@@ -1,5 +1,7 @@
 package checkers;
 
+import checkers.Player;
+import checkers.Player.FigureColors;
 import gui.GUI;
 
 /**
@@ -14,7 +16,7 @@ public class GameLogic {
 		STEP,
 		JUMP,
 		MULTI_JUMP
-	}
+	};
 	/**
 	 * the default playfield to use
 	 */
@@ -23,7 +25,7 @@ public class GameLogic {
 	private GUI gui;
 	
 	public GameLogic(){
-		field = new Playfield();
+		this(new Playfield());
 	}
 	/**
 	 * 
@@ -43,6 +45,17 @@ public class GameLogic {
 	}
 	public Moves testMove(Move move){
 		return testMove(move, field);
+	}
+	
+	public Move[] getPossibleMoves(FigureColors color){
+		return new Move[0];
+	}
+	
+	public Playfield getPlayfield(){
+		return field;
+	}
+	public void setPlayfield(Playfield f){
+		field = f;
 	}
 	/*
 	 * TODO vielleicht garnicht nötig

@@ -4,8 +4,9 @@ import javax.swing.JFrame;
 
 import checkers.GameLogic;
 
+@SuppressWarnings("serial")
 public class GUI extends JFrame{
-	
+
 	private GameLogic gmlc;
 	
 	/*
@@ -19,14 +20,12 @@ public class GUI extends JFrame{
 	public Console console;
 	public PlayfieldPanel playfieldpanel;
 	
-	public GUI(){
-		gmlc = new GameLogic();
-		gmlc.linkGUI(this);
-		System.out.println("Init end");
-	}
 	public GUI(GameLogic gamelogic){
 		gmlc = gamelogic;
 		gmlc.linkGUI(this);
+	}
+	public GUI(){
+		this(new GameLogic());
 	}
 	
 	public static void main(String[] args) {
@@ -35,6 +34,9 @@ public class GUI extends JFrame{
 
 	public void linkGameLogic(GameLogic gamelogic) {
 		gmlc = gamelogic;
+	}
+	private void createWindow(){
+		playfieldpanel = new PlayfieldPanel(gmlc.getPlayfield());
 	}
 
 }

@@ -2,8 +2,17 @@ package checkers;
 
 public class Playfield {
 
+	public final int SIZE;
 	public Playfield() {
-		// TODO Auto-generated constructor stub
+		this(8);
+	}
+	
+	/**
+	 * can be used by any superclass to customize basic required parameters
+	 * @param size
+	 */
+	public Playfield(int size){
+		SIZE = size;
 	}
 
 }

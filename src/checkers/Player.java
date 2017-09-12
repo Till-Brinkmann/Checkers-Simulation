@@ -8,6 +8,9 @@ package checkers;
  */
 public class Player {
 
+	public static enum FigureColors{WHITE, GREEN};
+	
+	public static FigureColors playedColor;
 	public Player() {
 		// TODO Auto-generated constructor stub
 	}
