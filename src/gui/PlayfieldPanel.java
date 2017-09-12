@@ -8,6 +8,9 @@ import checkers.Playfield;
  *
  */
 public class PlayfieldPanel {
+	
+	private JButton[] buttons = new JButton[64];
+	
 	public PlayfieldPanel(Playfield playfield){
 		
 	}
@@ -15,7 +18,6 @@ public class PlayfieldPanel {
 	 * @return an array of all the buttons the field exists of
 	 */
 	public JButton[] getButtons(){
-		JButton[] buttons = new JButton[64];
 		return buttons;
 	}
 }
