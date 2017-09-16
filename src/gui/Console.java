@@ -1,6 +1,6 @@
 package gui;
 
-import javax.swing.JScrollPane;
+import javax.swing.*;
 import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 
@@ -10,7 +10,7 @@ import javax.swing.text.DefaultCaret;
  * @author Till
  *
  */
-public class Console {
+public class Console extends JPanel{
 
 	private JScrollPane scrollpaneOutput;
     private JScrollPane scrollpaneInput;
