@@ -1,9 +1,14 @@
 package gui;
 
-public class SoundSettings {
+import javax.swing.*;
+
+public class SoundSettings extends JFrame{
 
 	public SoundSettings() {
-		// TODO Auto-generated constructor stub
+		super("Sound Settings");
 	}
-
+	public void enableVisibility() {
+		setVisible(true);
+		
+	}
 }

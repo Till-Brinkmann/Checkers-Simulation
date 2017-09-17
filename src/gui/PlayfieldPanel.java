@@ -22,10 +22,10 @@ public class PlayfieldPanel extends JPanel {
 	}
 	public void createPlayfield(){		
 		setLayout(new GridLayout(playfield.SIZE,playfield.SIZE));
-		setPreferredSize(new Dimension(500,500));
+		setPreferredSize(new Dimension(700,700));
         for (int y = 7; y >= 0; y--) {
             for(int x = 0; x < 8; x++){
-                buttons[x][y] = new JButton ( "(" + (x+1) + ")(" + (y+1) + ")" );
+                buttons[x][y] = new JButton ();
                 buttons[x][y].setBackground(Color.lightGray);
                 buttons[x][y].setVerticalTextPosition(SwingConstants.BOTTOM);
                 buttons[x][y].setHorizontalTextPosition(SwingConstants.CENTER);
@@ -45,6 +45,19 @@ public class PlayfieldPanel extends JPanel {
                   });
             }
         }
+	}
+	public void buttonNumeration(boolean selected) {
+        for (int y = 7; y >= 0; y--) {
+            for(int x = 0; x < 8; x++){
+            	if(selected){
+            		buttons[x][y].setText( "(" + (x+1) + ")(" + (y+1) + ")" );
+            	}
+            	else{
+            		buttons[x][y].setText("");
+            	}
+            }
+        }
+		
 	}
 	/**
 	 * @return an array of all the buttons the field exists of

@@ -1,9 +1,14 @@
 package gui;
 
-public class GameSettings {
+import javax.swing.*;
+
+public class GameSettings extends JFrame{
 
 	public GameSettings() {
-		// TODO Auto-generated constructor stub
+		super("Game Settings");
 	}
-
+	public void enableVisibility() {
+		setVisible(true);
+		
+	}
 }
