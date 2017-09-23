@@ -30,16 +30,43 @@ public class DLList<ContentType> {
 	 * @param newContent
 	 */
 	public void add(ContentType newContent){
+		if(isEmpty()){
+			current = new DLListNode(newContent, null, null);
+			return;
+		} 
 		current.next = new DLListNode(newContent, current, current.next);
+		if(current.next.next != null){
+			current.next.next.prev = current.next;
+		}
+	}
+	/**
+	 * adds the new entry before current
+	 * @param newContent
+	 */
+	public void addBefore(ContentType newContent){
+		if(isEmpty()){
+			current = new DLListNode(newContent, null, null);
+			return;
+		}
+		current.prev = new DLListNode(newContent, current.prev, current);
+		if(current.prev.prev != null){
+			current.prev.prev.next = current.prev;
+		}
 	}
 	
 	/**
-	 * deletes current
+	 * deletes current and makes previous the current object.
+	 * if current has no previous, next is chosen.
 	 */
 	public void delete(){
 		if(current.prev == null){
-			current = current.next;
-			current.prev = null;
+			if(current.next == null){
+				current = null;
+			}
+			else {
+				current = current.next;
+				current.prev = null;
+			}
 		}
 		else {
 			DLListNode tmp = current;

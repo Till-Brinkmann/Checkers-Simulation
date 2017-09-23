@@ -9,6 +9,7 @@ import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 
 import generic.DLList;
+import generic.List;
 
 
 /**
@@ -22,6 +23,8 @@ public class Console extends JPanel{
 	//TODO eine printCommand, print, printWarning, printError methode (oder so)
 	private DLList<String> previousCommands;
 	
+	private List<CommandListener> listener;
+	
 	private JScrollPane scrollpaneOutput;
 	private JScrollPane scrollpaneInput;
     private JTextArea output;
@@ -31,6 +34,8 @@ public class Console extends JPanel{
 	public Console() {
 		super();
 		previousCommands = new DLList<String>();
+		previousCommands.add("");
+		listener = new List<CommandListener>();
 		setPreferredSize(new Dimension(350,700));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(createOutput());
@@ -60,24 +65,32 @@ public class Console extends JPanel{
         {
         	@Override
         	public void keyPressed(KeyEvent e) {
-        		e.consume();
         		switch(e.getKeyCode()){
         		case KeyEvent.VK_ENTER:
-        			previousCommands.add(input.getText());
-        			output.append(input.getText() + "\n");
-        			input.setText("");
+        			e.consume();
+        			//go to the top
+        			while(!previousCommands.isEmpty() && previousCommands.hasNext()){
+        				previousCommands.next();
+        			}
+        			if(!input.getText().equals("")){
+            			previousCommands.addBefore(input.getText());
+            			input.setText("");
+        			}
+        			//output.append(input.getText() + "\n");
         			break;
         		case KeyEvent.VK_UP:
-                    if(previousCommands.hasPrevious()){
-                 	   input.setText(previousCommands.get());
-                 	   previousCommands.previous();
-                    }
+        			e.consume();
+        			if(previousCommands.hasPrevious()){
+                   	   previousCommands.previous();
+                      }
+        			input.setText(previousCommands.get());
         			break;
         		case KeyEvent.VK_DOWN:
-                    if(previousCommands.hasNext()){
-                    	input.setText(previousCommands.get());
-                  	   previousCommands.next();
+        			e.consume();
+        			if(previousCommands.hasNext()){
+    					previousCommands.next();
                     }
+        			input.setText(previousCommands.get());
         			break;
         		}
         		
@@ -86,10 +99,34 @@ public class Console extends JPanel{
 		return scrollpaneInput;		
 		
 	}
+	public void addCommandListener(CommandListener l){
+		listener.append(l);
+	}
+	
+	private void printCommand(String arg){
+		output.append(">>" + arg + "\n");
+	}
+	public void printCommandOutput(String... args){
+		for(int i = 0; i < args.length; i++){
+			output.append("  " + args[i].replace("\n", "\n  ") + "\n");
+		}
+	}
+	public void printInfo(String info, String from){
+		output.append("[INFO] " + from + ": " + info);
+	}
+	public void printInfo(String info){
+		printInfo(info, "Unknown");
+	}
+	public void printWarning(String warning, String from){
+		output.append("[WARNING] " + from + ": " + warning);
+	}
+	public void printWarning(String warning){
+		printWarning(warning, "Unknown");
+	}
+	
 	public void updateBackground(Color color){
 		setBackground(color);
 	}
-	
 	public void updateForeground(Color color){
 		output.setForeground(color);
 		input.setForeground(color);
