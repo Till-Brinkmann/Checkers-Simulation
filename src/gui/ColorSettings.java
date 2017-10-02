@@ -10,7 +10,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class ColorSettings extends JFrame{
-	
+
 	private JPanel foregroundPanel;
     private JSlider[] foregroundSlider;
     private JLabel labelBg;
@@ -20,11 +20,11 @@ public class ColorSettings extends JFrame{
     private JCheckBox officialFigureColor;
     private JButton okButton;
     GUI gui;
-    
+
 	public ColorSettings(GUI pGui,boolean random) {
 		super("Color Settings");
 		gui = pGui;
-		initialize(random);	
+		initialize(random);
 		createWindow();
 		updateColors();
 	}
@@ -42,36 +42,36 @@ public class ColorSettings extends JFrame{
 		}
 		officialFigureColor = new JCheckBox("official figure colors");
 		okButton = new JButton("confirm");
-		
+
 		for(int i = 0; i < 3; i++){
 	        backgroundSlider[i].addChangeListener(new ChangeListener()
 	        {
 	        	public void stateChanged(ChangeEvent evt){
 	        		updateColors();
-	            } 
+	            }
 	        });
 	        foregroundSlider[i].addChangeListener(new ChangeListener()
 	        {
 	        	public void stateChanged(ChangeEvent evt){
 	        		updateColors();
-	            } 
+	            }
 	        });
 		}
 		officialFigureColor.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
-        	
+
             }
-            
-        }); 
+
+        });
 		okButton.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
             	setVisible(false);
             }
-            
+
         });
 	}
 
@@ -110,7 +110,7 @@ public class ColorSettings extends JFrame{
 		gui.updateBackground(sliderMixer(backgroundSlider));
 		gui.updateForeground(sliderMixer(foregroundSlider));
 		backgroundPanel.setBackground(sliderMixer(backgroundSlider));
-		foregroundPanel.setBackground(sliderMixer(backgroundSlider));
+		foregroundPanel.setBackground(sliderMixer(foregroundSlider));
 	}
 
 }

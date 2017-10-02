@@ -1,7 +1,10 @@
 package checkers;
 
+import checkers.Figure.FigureColor;
+import checkers.Figure.FigureType;
+import checkers.Move.MoveDirection;
 import checkers.Player;
-import checkers.Player.FigureColors;
+import checkers.Figure.FigureColor;
 import gui.GUI;
 
 /**
@@ -11,12 +14,6 @@ import gui.GUI;
  */
 public class GameLogic {
 	
-	public static enum Moves{
-		INVALID,
-		STEP,
-		JUMP,
-		MULTI_JUMP
-	};
 	/**
 	 * the default playfield to use
 	 */
@@ -40,14 +37,55 @@ public class GameLogic {
 	 * @param field
 	 * @return Moves.INVALID if not possible
 	 */
-	public static Moves testMove(Move m, Playfield f){
-		return Moves.INVALID;
+	public static boolean testMove(Move m, Playfield f){
+		int x = m.getX();
+		int y = m.getY();
+		FigureColor color = f.field[x][y].getFigureColor();
+		if(m.getMoveDirection() == MoveDirection.INVALID){
+			return false;
+		}
+		if(f.field[x][y] == null){
+			return false;
+		}
+		if(f.field[x][y].getFigureType() == FigureType.NORMAL && Math.abs(m.getSteps()) > 2){
+			return false;
+		}
+		if(f.field[x][y].getFigureType() == FigureType.NORMAL && m.getSteps() < 0)
+		for(int i = 0; i < m.getSteps();i++){
+			if(m.getMoveDirection() == MoveDirection.FR){
+				x++;
+				y++;
+			}
+			if(m.getMoveDirection() == MoveDirection.FL){
+				x--;
+				y++;
+			}
+			if(m.getMoveDirection() == MoveDirection.BR){
+				x++;
+				y--;
+			}
+			if(m.getMoveDirection() == MoveDirection.BL){
+				x--;
+				y--;
+			}
+			if(f.field[x][y] != null){
+				//if()
+			}
+		}
+		return true;
 	}
-	public Moves testMove(Move move){
+	public boolean testMove(Move move){
 		return testMove(move, field);
 	}
+	public static boolean testForMultiJump(int x, int y, Playfield f){
+		
+		return true;
+	}
+	public boolean testForMultiJump(int x, int y){
+		return testForMultiJump(x,y, field);
+	}
 	
-	public Move[] getPossibleMoves(FigureColors color){
+	public Move[] getPossibleMoves(FigureColor color){
 		return new Move[0];
 	}
 	

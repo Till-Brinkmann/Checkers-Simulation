@@ -1,17 +1,27 @@
 package gui;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import checkers.GameLogic;
-
 @SuppressWarnings("serial")
 public class GUI extends JFrame{
 
 	private GameLogic gmlc;
-	
 	/*
 	 * settings that are outsourced to different frames
 	 * to improve codestructure/readability
@@ -19,6 +29,8 @@ public class GUI extends JFrame{
 	public ColorSettings colorsettings;
 	public GameSettings gamesettings;
 	public SoundSettings soundsettings;
+	public JFileChooser filechooser;
+	public FileFilter filter;
 	
 	public Console console;
 	public PlayfieldPanel playfieldpanel;
@@ -28,6 +40,7 @@ public class GUI extends JFrame{
 	
 	public GUI(GameLogic gamelogic){
 		super("Checker Simulation");
+		
 		gmlc = gamelogic;
 		gmlc.linkGUI(this);
 		initialize();
@@ -48,11 +61,10 @@ public class GUI extends JFrame{
 		gmlc = gamelogic;
 	}
 	private void initialize(){
-		playfieldpanel = new PlayfieldPanel(gmlc.getPlayfield());
+		playfieldpanel = new PlayfieldPanel(gmlc.getPlayfield(),this);
 		console = new Console();		
 		colorsettings = new ColorSettings(this,true);
-		gamesettings = new GameSettings();
-		soundsettings = new SoundSettings();		
+		soundsettings = new SoundSettings();	
 	}
 	private void createWindow(){	
 		setResizable(true);
@@ -72,8 +84,11 @@ public class GUI extends JFrame{
         menubar.setBackground(Color.WHITE);
         JMenu game = new JMenu("Game");
         JMenuItem newgame = new JMenuItem("new game");
+        newgame.setBackground(Color.WHITE);
         JMenuItem loadgame = new JMenuItem("load game");
+        loadgame.setBackground(Color.WHITE);
         JMenuItem savegame = new JMenuItem("save Game");
+        savegame.setBackground(Color.WHITE);;
         game.add(newgame);
         game.add(loadgame);
         game.add(savegame);
@@ -81,9 +96,13 @@ public class GUI extends JFrame{
         
         JMenu preferences = new JMenu("Preferences");
         JMenuItem color = new JMenuItem("Color");
+        color.setBackground(Color.WHITE);
         JMenuItem sound = new JMenuItem("Sound");
+        sound.setBackground(Color.WHITE);
         JCheckBoxMenuItem showmoves = new JCheckBoxMenuItem("show moves");
+        showmoves.setBackground(Color.WHITE);
         JCheckBoxMenuItem showfieldnumbers = new JCheckBoxMenuItem("show field numbers");
+        showfieldnumbers.setBackground(Color.WHITE);
         preferences.add(color);
         preferences.add(sound);
         preferences.add(showmoves);
@@ -91,8 +110,11 @@ public class GUI extends JFrame{
         menubar.add(preferences);
         
         JMenu help = new JMenu("Help");
+        help.setBackground(Color.WHITE);
         JMenuItem aboutcs = new JMenuItem("About Checker Simulation");
+        aboutcs.setBackground(Color.WHITE);
         JMenuItem guide = new JMenuItem("Guide");
+        guide.setBackground(Color.WHITE);
         help.add(guide);
         help.add(aboutcs);
         menubar.add(help);
@@ -101,21 +123,47 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	gamesettings.enableVisibility();
+            	gamesettings = new GameSettings(GUI.this);             	
             }
         });
         loadgame.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
+            	filechooser = new JFileChooser();
+            	filter = new FileNameExtensionFilter("pfs","txt");
+            	filechooser.setDialogTitle("Playfield ausw�hlen");
+            	int rueckgabeWert = filechooser.showOpenDialog(null);
+            	filechooser.addChoosableFileFilter(filter);
+            	//File muss erst ausgew�hlt werden! Testfile:
+            	if(rueckgabeWert == JFileChooser.APPROVE_OPTION){
+            		File file = filechooser.getSelectedFile();       
+		        	try {		        		
+					    gmlc.getPlayfield().loadGameSituation(file);
+						console.printInfo("Playfield " + file.getName() + " loaded!");
+					} catch (IOException e) {						
+						console.printWarning(file.getName() + " counld not be loaded: " + e);
+						
+					}
+            	}
+//            	if(file.getName().substring(file.getName().length()-4, file.getName().length()) != ".pfs"){
+//            		console.printInfo("File ending not .pfs!");
+//            	}
+//            	else{
 
-            }
+            	}
+            
         });      
         savegame.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
-
+            	try {
+					gmlc.getPlayfield().saveGameSituation();
+					console.printInfo("Playfield saved!");
+				} catch (IOException e) {
+					console.printWarning("Playfield saving error: "+ e);
+				}       	
             }
         });      
         color.addActionListener(new ActionListener()
@@ -151,7 +199,7 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-
+            	
             }
         });      
         aboutcs.addActionListener(new ActionListener()
@@ -174,5 +222,8 @@ public class GUI extends JFrame{
 		setForeground(color);
 		console.updateForeground(color);
 		playfieldpanel.setForeground(color);
+	}
+	public GameLogic getGameLogic() {
+		return gmlc;
 	}
 }

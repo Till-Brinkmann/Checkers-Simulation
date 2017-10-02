@@ -1,4 +1,7 @@
 package checkers;
+
+import checkers.Figure.FigureColor;
+
 /**
  * this class should be used to interface
  * with the playfield and figures so that you can attach everything as a player
@@ -8,9 +11,7 @@ package checkers;
  */
 public class Player {
 
-	public static enum FigureColors{WHITE, GREEN};
-	
-	public static FigureColors playedColor;
+	public static FigureColor playedColor;
 	public Player() {
 		// TODO Auto-generated constructor stub
 	}

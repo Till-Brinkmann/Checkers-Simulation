@@ -22,15 +22,15 @@ public class Console extends JPanel{
 
 	//TODO eine printCommand, print, printWarning, printError methode (oder so)
 	private DLList<String> previousCommands;
-	
+
 	private List<CommandListener> listener;
-	
+
 	private JScrollPane scrollpaneOutput;
 	private JScrollPane scrollpaneInput;
-    private JTextArea output;
+    public JTextArea output;
     private JTextArea input;
     private DefaultCaret caret;
-    
+
 	public Console() {
 		super();
 		previousCommands = new DLList<String>();
@@ -49,34 +49,44 @@ public class Console extends JPanel{
         output.setWrapStyleWord(true);
 		output.setFont(new Font("Arial", Font.BOLD, 15));
 		caret = (DefaultCaret)output.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); 
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		scrollpaneOutput = new JScrollPane(output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		return scrollpaneOutput;
 	}
 	private JScrollPane createInput(){
 		input = new JTextArea();
 		input.setPreferredSize(new Dimension(315,19));
-		input.setFont(new Font("Arial", Font.BOLD, 15));		
+		input.setFont(new Font("Arial", Font.BOLD, 15));
 		scrollpaneInput = new JScrollPane(input);
-		
-		
-		
+
+
+
         input.addKeyListener(new KeyAdapter()
         {
         	@Override
         	public void keyPressed(KeyEvent e) {
         		switch(e.getKeyCode()){
         		case KeyEvent.VK_ENTER:
+        			String in = input.getText();
         			e.consume();
-        			//go to the top
-        			while(!previousCommands.isEmpty() && previousCommands.hasNext()){
-        				previousCommands.next();
+        			//it's a command
+        			if(in.startsWith("/") && !in.startsWith("//")){
+        				printCommand(input.getText());
+
+        				processCommand(in);
+
+            			while(!previousCommands.isEmpty() && previousCommands.hasNext()){
+            				previousCommands.next();
+            			}
+            			if(!input.getText().equals("")){
+                			previousCommands.addBefore(input.getText());
+                			input.setText("");
+            			}
         			}
-        			if(!input.getText().equals("")){
-            			previousCommands.addBefore(input.getText());
-            			input.setText("");
+        			//it's something different
+        			else {
+
         			}
-        			//output.append(input.getText() + "\n");
         			break;
         		case KeyEvent.VK_UP:
         			e.consume();
@@ -93,16 +103,46 @@ public class Console extends JPanel{
         			input.setText(previousCommands.get());
         			break;
         		}
-        		
+
         	}
         });
-		return scrollpaneInput;		
-		
+		return scrollpaneInput;
+
 	}
 	public void addCommandListener(CommandListener l){
 		listener.append(l);
 	}
-	
+
+	private void processCommand(String in) {
+		boolean wasProcessed = true;
+		//cut the slash off
+		in = in.substring(1);
+		//own Commands
+		switch (in){
+		case "exit":
+			System.exit(0);
+			break;
+		case "sayhello":
+			printCommandOutput("This is an easteregg!!:", "Hello World");
+			break;
+		default:
+			wasProcessed = false;
+			break;
+		}
+		//go through all listeners
+		listener.toFirst();
+		while(listener.hasAccess()){
+			//if processCommand returned true AND was
+			if(listener.getContent().processCommand(in) && !wasProcessed){
+				wasProcessed = true;
+			}
+			listener.next();
+		}
+		if(!wasProcessed){
+			printWarning("The command could not be processed by any module.\nMaybe you wrote it wrong.", "Console");
+		}
+	}
+
 	private void printCommand(String arg){
 		output.append(">>" + arg + "\n");
 	}
@@ -112,18 +152,17 @@ public class Console extends JPanel{
 		}
 	}
 	public void printInfo(String info, String from){
-		output.append("[INFO] " + from + ": " + info);
+		output.append("[INFO] " + from + ": " + info + "\n");
 	}
 	public void printInfo(String info){
 		printInfo(info, "Unknown");
 	}
 	public void printWarning(String warning, String from){
-		output.append("[WARNING] " + from + ": " + warning);
+		output.append("[WARNING] " + from + ": " + warning + "\n");
 	}
 	public void printWarning(String warning){
 		printWarning(warning, "Unknown");
 	}
-	
 	public void updateBackground(Color color){
 		setBackground(color);
 	}
