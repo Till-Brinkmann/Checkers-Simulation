@@ -174,6 +174,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	
 	private boolean jumpIsPossible() {
 		boolean canJump = false;
+		jumpFigures = new List<Figure>();
 		for(Figure f : playfield.getFiguresFor(figurecolor)){
 			if(Move.getAllJumps(f, playfield).length > 0){
 				canJump = true;
