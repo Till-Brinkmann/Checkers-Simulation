@@ -61,8 +61,8 @@ public class GUI extends JFrame{
 		gmlc = gamelogic;
 	}
 	private void initialize(){
-		playfieldpanel = new PlayfieldPanel(gmlc.getPlayfield(),this);
-		console = new Console();		
+		console = new Console();
+		playfieldpanel = new PlayfieldPanel(gmlc ,console);		
 		colorsettings = new ColorSettings(this,true);
 		soundsettings = new SoundSettings();	
 	}

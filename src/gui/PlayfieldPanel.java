@@ -5,34 +5,47 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
+import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
 import checkers.Move.MoveDirection;
+import checkers.Move.MoveType;
+import checkers.Player;
 import checkers.Playfield;
+
+import generic.List;
 /**
  *
  * @author Till
  *
  */
 @SuppressWarnings("serial")
-public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
+public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
 	private Playfield playfield;
 	private JButton[][] buttons;
-	public GUI gui;
+	GameLogic gamelogic;
+	Console console;
 	//for move-making
+	private int[][] coords;
 	int x1 = 0;
 	int y1 = 0;
 	int x2 = 0;
 	int y2 = 0;
 	boolean alreadyOneMove = false;
+	
+	//the PlayfieldPanel must support up to two player
+	FigureColor figurecolor;
+	boolean twoPlayerMode = false;
+	List<Figure> jumpFigures;
 
-	public PlayfieldPanel(Playfield pPlayfield,GUI pGui){
+	public PlayfieldPanel(GameLogic pGamelogic, Console pConsole){
 		super();
-		gui = pGui;
-		playfield = pPlayfield;
+		gamelogic = pGamelogic;
+		playfield = gamelogic.getPlayfield();
 		playfield.setPlayfieldDisplay(this);
+		jumpFigures = new List<Figure>();
 		buttons = new JButton[playfield.SIZE][playfield.SIZE];
 		createPlayfieldPanel();
 	}
@@ -112,7 +125,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
 						case WHITE:
 							setButtonColor(x, y, Color.white);
 							return;
-						case GREEN:
+						case RED:
 						//TODO das richtige grün für die figuren finden
 							setButtonColor(x, y, new Color(0,165,0));
 							return;
@@ -126,9 +139,11 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
 	}
 
 	private void saveCoordinates(int x, int y) {
-
 		if(!alreadyOneMove){
 			if(playfield.isOccupied(x, y)){
+				if(jumpIsPossible()){
+					//TODO nur Figuren die jumpen können dürfen angeklickt werden(mit jumpFigures)
+				}
 				x1 = x;
 				y1 = y;
 				alreadyOneMove = true;
@@ -137,52 +152,68 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
 		}
 		else{
 			alreadyOneMove = false;
-			if(x1 != x || y1 !=y){
+			if(x1 != x || y1 != y){
 				buttons[x1][y1].setBorder(BorderFactory.createLineBorder(Color.GRAY));
 				x2 = x;
 				y2 = y;
-				createMove();
+				
+				/*Move m = createMove();
+				if(GameLogic.makeMove(m, playfield))
+				if(gui.getGameLogic().testMove(m)){
+					playfield.executeMove(m);
+				}
+				else{
+					//Fehlermeldung
+				}*/
 			}//unselect figure
 			else {
 				buttons[x1][y1].setBorder(null);
 			}
 		}
 	}
-	public void createMove(){
-		MoveDirection direction = MoveDirection.INVALID;
-		int steps = y2-y1;
-		int xShift = x2-x1;
-		if(Math.abs(steps) == Math.abs(xShift)){
-			if(steps < 0){
-				if(xShift < 0){
-					direction = MoveDirection.BL;
-				}
-				if(xShift > 0){
-					direction = MoveDirection.BR;
-				}
-			}
-			if(steps > 0){
-				if(xShift < 0){
-					direction = MoveDirection.FL;
-				}
-				if(xShift > 0){
-					direction = MoveDirection.FR;
-				}
+	
+	private boolean jumpIsPossible() {
+		boolean canJump = false;
+		for(Figure f : playfield.getFiguresFor(figurecolor)){
+			if(Move.getAllJumps(f, playfield).length > 0){
+				canJump = true;
+				jumpFigures.append(f);
 			}
 		}
-		Move m = new Move(direction, steps, x1, y1);
-		if(gui.getGameLogic().testMove(m)){
-			playfield.executeMove(m);
-		}
-		else{
-			//Fehlermeldung
-		}
-
+		return canJump;
 	}
 	public void createMove(int x,int y){
 		//Method for Multi jump
-		if(gui.getGameLogic().testForMultiJump(x, y)){
+		if(gamelogic.testForMultiJump(x, y)){
 			buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY));
+		}
+	}
+	@Override
+	public void prepare(FigureColor color) {
+		if(figurecolor == null){
+			figurecolor = color;
+		}
+		else {//two players are wanted
+			figurecolor = FigureColor.RED; //red always starts
+			twoPlayerMode = true;
+		}
+	}
+	@Override
+	public void requestMove() {
+		if(twoPlayerMode){
+			//toggle color
+			figurecolor = figurecolor == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED;
+			//TODO enable only the own figures(for this figurecolor)
+		} else {
+			enableAllButtons(true);
+		}
+	}
+	
+	private void enableAllButtons(boolean enabled) {
+		for(int x = 0; x < playfield.SIZE; x++){
+			for(int y = 0; y < playfield.SIZE; y++){
+				buttons[x][y].setEnabled(enabled);
+			}
 		}
 	}
 }

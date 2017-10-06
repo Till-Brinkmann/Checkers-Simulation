@@ -1,4 +1,7 @@
 package checkers;
+
+import checkers.Move.MoveDirection;
+
 /**
  * class to save and share moves in an easy way
  * @author Till
@@ -9,23 +12,44 @@ public class Move {
 	public static enum MoveType{
 		STEP,
 		JUMP,
+		MULTIJUMP,
+		INVALID
 	};
 	public static enum MoveDirection{
 		FR, // Forward/Right
 		FL, // Forward/Left
 		BR, // Backward/Right
 		BL, // Backward/Left
-		INVALID;
 	};
 	private MoveType type;
-	private MoveDirection direction;
-	private int steps, x, y;
+	private MoveDirection[] directions;
+	private int steps;
 	
-	public Move(MoveDirection pDirection,int pSteps, int pX, int pY) {
-		direction = pDirection;
+	private int x, y;
+	
+	public Move(MoveDirection[] pDirection, int pSteps, int pX, int pY) {
+		directions = pDirection;
 		steps = pSteps;
 		x = pX;
 		y = pY;
+	}
+	public Move(MoveDirection pDirection, int pX, int pY){
+		this(new MoveDirection[4], 0, pX, pY);
+		addStep(pDirection);
+	}
+	public Move(MoveType pType) {
+		type = pType;
+	}
+	
+	public void addStep(MoveDirection dir){
+		if(steps + 1 > directions.length){
+			MoveDirection[] tmp = new MoveDirection[steps+4];
+			for(int i = 0; i < directions.length; i++){
+				tmp[i] = directions[i];
+			}
+			directions = tmp;
+		}
+		directions[steps++] = dir;
 	}
 	public void setMoveType(MoveType pType){
 		type = pType;
@@ -33,8 +57,11 @@ public class Move {
 	public MoveType getMoveType(){
 		return type;
 	}
+	public MoveDirection getMoveDirection(int step){
+		return directions[step];		
+	}
 	public MoveDirection getMoveDirection(){
-		return direction;		
+		return directions[0];
 	}
 	public int getSteps(){
 		return steps;
@@ -45,4 +72,114 @@ public class Move {
 	public  int getY(){
 		return y;
 	}
+	
+	public static Move makeMove(int[][] coords){
+		Move move = new Move(MoveType.INVALID);
+		MoveDirection direction;
+		int step = 0;
+		int xShift;
+		for(int i = 0; i < coords.length - 1; i++){
+			step = coords[i+1][1] - coords[i][1];
+			xShift = coords[i+1][0] - coords[i][0];
+			if(Math.abs(step) == Math.abs(xShift) && (Math.abs(step) == 2 || Math.abs(step) == 1)){
+				if(step < 0){
+					if(xShift < 0){
+						direction = MoveDirection.BL;
+					}
+					else {
+						direction = MoveDirection.BR;
+					}
+				}
+				else {
+					if(xShift < 0){
+						direction = MoveDirection.FL;
+					}
+					else {
+						direction = MoveDirection.FR;
+					}
+				}
+				if(i == 0){
+					move = new Move(direction, coords[0][0], coords[0][1]);
+				} else {
+					move.addStep(direction);
+				}
+			}
+			else {//Move is invalid
+				return new Move(MoveType.INVALID);
+			}
+		}
+		//then it is a jump
+		if(Math.abs(step) == 2){
+			//the move must be a multijump if it has 3 or more coordinate pairs
+			if(coords.length > 2){
+				move.setMoveType(MoveType.MULTIJUMP);
+			} else {
+				move.setMoveType(MoveType.JUMP);
+			}
+		} else {
+			move.setMoveType(MoveType.STEP);
+		}
+		return move;
+	}
+	
+	public static Move[] getAllJumps(Figure figure, Playfield field){
+		//first moves has maximum size to avoid out of bounds exceptions
+		Move[] moves = new Move[4];
+		//used for recursive multijump testing
+		Playfield tmp;
+		if(figure.x + 2 < field.SIZE){
+			if(figure.y + 2 < field.SIZE){
+				if(field.isOccupied(figure.x+1, figure.y+1) 
+					&& field.field[figure.x+1][figure.y+1].color != figure.color
+					&& !field.isOccupied(figure.x+2, figure.y+2)){
+					moves[0] = new Move(MoveDirection.BR, figure.x, figure.y);
+					//TODO die rekursion für multijumps fertigstellen
+					/*tmp = field.copy();
+					tmp.executeMove(moves[0]);
+					getAllJumps(tmp.field[figure.x+2][figure.y+2], tmp);*/
+				}
+			}
+			if(figure.y - 2 < field.SIZE){
+				if(field.isOccupied(figure.x+1, figure.y-1) 
+					&& field.field[figure.x+1][figure.y-1].color != figure.color
+					&& !field.isOccupied(figure.x+2, figure.y-2)){
+					moves[0] = new Move(MoveDirection.BL, figure.x, figure.y);
+					//TODO die rekursion für multijumps fertigstellen
+					/*tmp = field.copy();
+					tmp.executeMove(moves[0]);
+					getAllJumps(tmp.field[figure.x+2][figure.y-2], tmp);*/
+				}
+			}
+		}
+		if(figure.x - 2 < field.SIZE){
+			if(figure.y + 2 < field.SIZE){
+				if(field.isOccupied(figure.x-1, figure.y+1) 
+					&& field.field[figure.x-1][figure.y+1].color != figure.color
+					&& !field.isOccupied(figure.x-2, figure.y+2)){
+					moves[0] = new Move(MoveDirection.FR, figure.x, figure.y);
+					//TODO die rekursion für multijumps fertigstellen
+					/*tmp = field.copy();
+					tmp.executeMove(moves[0]);
+					getAllJumps(tmp.field[figure.x-2][figure.y+2], tmp);*/
+				}
+			}
+			if(figure.y - 2 < field.SIZE){
+				if(field.isOccupied(figure.x-1, figure.y-1) 
+					&& field.field[figure.x-1][figure.y-1].color != figure.color
+					&& !field.isOccupied(figure.x-2, figure.y-2)){
+					moves[0] = new Move(MoveDirection.FL, figure.x, figure.y);
+					//TODO die rekursion für multijumps fertigstellen
+					/*tmp = field.copy();
+					tmp.executeMove(moves[0]);
+					getAllJumps(tmp.field[figure.x-2][figure.y-2], tmp);*/
+				}
+			}
+		}
+	}
 }
+
+
+
+
+
+

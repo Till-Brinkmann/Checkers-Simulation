@@ -69,11 +69,11 @@ public class Playfield {
 		            	index++;
 	                    break;
 		            case '2':
-		            	field[x][y] = new Figure(FigureColor.GREEN, FigureType.NORMAL);
+		            	field[x][y] = new Figure(FigureColor.RED, FigureType.NORMAL);
 		            	index++;
 	                    break;
 		            case '4':
-		            	field[x][y] = new Figure(FigureColor.GREEN, FigureType.KING);
+		            	field[x][y] = new Figure(FigureColor.RED, FigureType.KING);
 		            	index++;
 	                    break;
 	                default:
@@ -144,13 +144,43 @@ public class Playfield {
 		}
 	}
 
-	public int getFigureQuantityWhite(){
-		return 1;
+	public int getFigureQuantity(FigureColor color){
+		int quantity = 0;
+		for(int y = 0;y < SIZE; y++){
+            for(int x = 0;x < SIZE; x++){
+            	if(isOccupied(x,y) && field[x][y].color == color){
+            		quantity++;
+            	}
+            }
+		}
+		return quantity;
 	}
-	public int getFigureQuantityGreen(){
-		return 1;
-	}
+
 	public boolean isOccupied(int x, int y){
 		return field[x][y] != null;
+	}
+
+	public Figure[] getFiguresFor(FigureColor figurecolor) {
+		int counter = 0;
+		Figure[] figures = new Figure[getFigureQuantity(figurecolor)];
+		for(int y = 0;y < SIZE; y++){
+            for(int x = 0;x < SIZE; x++){
+            	if(isOccupied(x,y) && field[x][y].color == figurecolor){
+            		figures[counter] = field[x][y];
+            		counter++;
+            	}
+            }
+		}
+		return figures;
+	}
+
+	public Playfield copy() {
+		Playfield copy = new Playfield(SIZE);
+		for(int y = 0;y < SIZE; y++){
+            for(int x = 0;x < SIZE; x++){
+            	copy.field[x][y] = field[x][y].copy();
+            }
+		}
+		return copy;
 	}
 }

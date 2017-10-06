@@ -3,6 +3,7 @@ package checkers;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveDirection;
+import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Figure.FigureColor;
 import gui.GUI;
@@ -41,7 +42,7 @@ public class GameLogic {
 		int x = m.getX();
 		int y = m.getY();
 		FigureColor color = f.field[x][y].getFigureColor();
-		if(m.getMoveDirection() == MoveDirection.INVALID){
+		if(m.getMoveType() == MoveType.INVALID){
 			return false;
 		}
 		if(f.field[x][y] == null){

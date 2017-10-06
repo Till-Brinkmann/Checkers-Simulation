@@ -9,7 +9,7 @@ package checkers;
 
 public class Figure {
 	
-	public enum FigureColor{WHITE, GREEN};	
+	public enum FigureColor{WHITE, RED};	
 	public enum FigureType{NORMAL,KING};
 	
 	public FigureColor color;
@@ -31,5 +31,11 @@ public class Figure {
 	}
 	public void setFigureType(FigureType pType){
 		type = pType;
+	}
+	public Figure copy() {
+		Figure copy = new Figure(color, type);
+		copy.x = x;
+		copy.y = y;
+		return copy;
 	}
 }
