@@ -29,10 +29,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	Console console;
 	//for move-making
 	private int[][] coords;
-	int x1 = 0;
-	int y1 = 0;
-	int x2 = 0;
-	int y2 = 0;
 	boolean alreadyOneMove = false;
 	
 	//the PlayfieldPanel must support up to two player
@@ -45,6 +41,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		gamelogic = pGamelogic;
 		playfield = gamelogic.getPlayfield();
 		playfield.setPlayfieldDisplay(this);
+		coords = new int[2][2];
 		jumpFigures = new List<Figure>();
 		buttons = new JButton[playfield.SIZE][playfield.SIZE];
 		createPlayfieldPanel();
@@ -142,34 +139,51 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		if(!alreadyOneMove){
 			if(playfield.isOccupied(x, y)){
 				if(jumpIsPossible()){
-					//TODO nur Figuren die jumpen können dürfen angeklickt werden(mit jumpFigures)
+					//if a jump is possible figures that can 
+					jumpFigures.toFirst();
+					while(jumpFigures.hasAccess()){
+						if(playfield.field[x][y] == jumpFigures.getContent()){
+							selectFigure(jumpFigures.getContent().x, jumpFigures.getContent().y);
+						}
+					}
 				}
-				x1 = x;
-				y1 = y;
-				alreadyOneMove = true;
-				buttons[x1][y1].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
+				else {
+					if(playfield.field[x][y].color == figurecolor){
+						selectFigure(x,y);
+					}
+				}
 			}
 		}
 		else{
-			alreadyOneMove = false;
-			if(x1 != x || y1 != y){
-				buttons[x1][y1].setBorder(BorderFactory.createLineBorder(Color.GRAY));
-				x2 = x;
-				y2 = y;
-				
-				/*Move m = createMove();
-				if(GameLogic.makeMove(m, playfield))
-				if(gui.getGameLogic().testMove(m)){
-					playfield.executeMove(m);
+			//you can not move to an occupied field
+			if(!playfield.isOccupied(x, y)){
+				if(coords[0][0] != x && coords[0][1] != y){
+					Move m = Move.makeMove(coords);
+					if(m.isInvalid()){
+						//TODO cancel move
+					}
+					else {
+						if(m.getMoveType() == MoveType.JUMP){
+							//TODO look for possibilities to multijump
+						}
+						else{
+							gamelogic.makeMove(m);
+						}
+					}
 				}
-				else{
-					//Fehlermeldung
-				}*/
-			}//unselect figure
-			else {
-				buttons[x1][y1].setBorder(null);
+				else {
+					//unselect figure
+					buttons[x][y].setBorder(null);
+					alreadyOneMove = false;
+				}
 			}
 		}
+	}
+	private void selectFigure(int x, int y){
+		coords[0][0] = x;
+		coords[0][1] = y;
+		alreadyOneMove = true;
+		buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
 	}
 	
 	private boolean jumpIsPossible() {

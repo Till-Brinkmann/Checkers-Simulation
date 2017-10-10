@@ -32,6 +32,15 @@ public class GameLogic {
 	public GameLogic(Playfield playfield) {
 		field = playfield;
 	}
+	//---methods for game process---
+	public void startGame(){
+		
+	}
+	public void makeMove(Move m) {
+		//TODO test move and all the other things that are need to be done here
+	}
+	//---
+	
 	/**
 	 * tests if the given move is possible on the given playfield
 	 * @param move
@@ -102,5 +111,4 @@ public class GameLogic {
 	public void linkGUI(GUI gui) {
 		this.gui = gui;
 	}
-
 }

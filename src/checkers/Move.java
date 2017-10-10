@@ -32,6 +32,9 @@ public class Move {
 		steps = pSteps;
 		x = pX;
 		y = pY;
+		if(pSteps > 1){
+			type = MoveType.MULTIJUMP;
+		}
 	}
 	public Move(MoveDirection pDirection, int pX, int pY){
 		this(new MoveDirection[4], 0, pX, pY);
@@ -72,7 +75,11 @@ public class Move {
 	public  int getY(){
 		return y;
 	}
-	
+	/**
+	 * turns an array of coordinates into a move object
+	 * @param coords that the figure goes to during the move in chronological order
+	 * @return move object that represents the move described by the coordinates 
+	 */
 	public static Move makeMove(int[][] coords){
 		Move move = new Move(MoveType.INVALID);
 		MoveDirection direction;
@@ -125,6 +132,7 @@ public class Move {
 	public static Move[] getAllJumps(Figure figure, Playfield field){
 		//first moves has maximum size to avoid out of bounds exceptions
 		Move[] moves = new Move[4];
+		int counter = 0;
 		//used for recursive multijump testing
 		Playfield tmp;
 		if(figure.x + 2 < field.SIZE){
@@ -132,7 +140,8 @@ public class Move {
 				if(field.isOccupied(figure.x+1, figure.y+1) 
 					&& field.field[figure.x+1][figure.y+1].color != figure.color
 					&& !field.isOccupied(figure.x+2, figure.y+2)){
-					moves[0] = new Move(MoveDirection.BR, figure.x, figure.y);
+					moves[counter] = new Move(MoveDirection.BR, figure.x, figure.y);
+					counter++;
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
@@ -143,7 +152,8 @@ public class Move {
 				if(field.isOccupied(figure.x+1, figure.y-1) 
 					&& field.field[figure.x+1][figure.y-1].color != figure.color
 					&& !field.isOccupied(figure.x+2, figure.y-2)){
-					moves[0] = new Move(MoveDirection.BL, figure.x, figure.y);
+					moves[counter] = new Move(MoveDirection.BL, figure.x, figure.y);
+					counter++;
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
@@ -156,7 +166,8 @@ public class Move {
 				if(field.isOccupied(figure.x-1, figure.y+1) 
 					&& field.field[figure.x-1][figure.y+1].color != figure.color
 					&& !field.isOccupied(figure.x-2, figure.y+2)){
-					moves[0] = new Move(MoveDirection.FR, figure.x, figure.y);
+					moves[counter] = new Move(MoveDirection.FR, figure.x, figure.y);
+					counter++;
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
@@ -167,7 +178,8 @@ public class Move {
 				if(field.isOccupied(figure.x-1, figure.y-1) 
 					&& field.field[figure.x-1][figure.y-1].color != figure.color
 					&& !field.isOccupied(figure.x-2, figure.y-2)){
-					moves[0] = new Move(MoveDirection.FL, figure.x, figure.y);
+					moves[counter] = new Move(MoveDirection.FL, figure.x, figure.y);
+					counter++;
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
@@ -175,6 +187,15 @@ public class Move {
 				}
 			}
 		}
+		//make a new array of right length
+		Move[] tmpmove = new Move[counter];
+		for(int i = 0; i < tmpmove.length; i++){
+			tmpmove[i] = moves[i];
+		}
+		return tmpmove;
+	}
+	public boolean isInvalid() {
+		return type == MoveType.INVALID;
 	}
 }
 
