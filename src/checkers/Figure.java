@@ -19,9 +19,11 @@ public class Figure {
 	public Figure(){
 		
 	}
-	public Figure(FigureColor pColor, FigureType pType) {
+	public Figure(int px, int py, FigureColor pColor, FigureType pType) {
 		color = pColor;
 		type = pType;
+		x = px;
+		y = py;
 	}
 	public FigureColor getFigureColor(){
 		return color;
@@ -33,9 +35,6 @@ public class Figure {
 		type = pType;
 	}
 	public Figure copy() {
-		Figure copy = new Figure(color, type);
-		copy.x = x;
-		copy.y = y;
-		return copy;
+		return new Figure(x, y, color, type);
 	}
 }

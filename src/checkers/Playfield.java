@@ -47,11 +47,16 @@ public class Playfield {
 		bufferedReader = new BufferedReader(reader);
 
 		String info = bufferedReader.readLine();
-		if(info.length() != SIZE*SIZE+1){
+		if(Integer.parseInt(info) != SIZE){
 			//TODO what to do here?
+			throw new IOException("This savefile does not work for this palyfield!");
 		}
 		else{
-			int index = 1;
+			info = bufferedReader.readLine();
+			if(info.length() != SIZE*SIZE){
+				throw new IOException("The save file is corrupted!");
+			}
+			int index = 0;
 	        for(int y = 0;y < SIZE; y++){
 	            for(int x = 0;x < SIZE; x++){
 	            	switch(info.charAt(index)){
@@ -60,20 +65,19 @@ public class Playfield {
 	            		index++;
 	            		break;
 	                case '1':
-	                	field[x][y] = new Figure(FigureColor.WHITE, FigureType.NORMAL);
-
+	                	field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.NORMAL);
 	                	index++;
 	                	break;
 		            case '3':
-		            	field[x][y] = new Figure(FigureColor.WHITE, FigureType.KING);
+		            	field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.KING);
 		            	index++;
 	                    break;
 		            case '2':
-		            	field[x][y] = new Figure(FigureColor.RED, FigureType.NORMAL);
+		            	field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.NORMAL);
 		            	index++;
 	                    break;
 		            case '4':
-		            	field[x][y] = new Figure(FigureColor.RED, FigureType.KING);
+		            	field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.KING);
 		            	index++;
 	                    break;
 	                default:
@@ -93,13 +97,14 @@ public class Playfield {
 		writer = new PrintWriter(file);
 		//write PlayfieldSize
 		writer.write(String.valueOf(SIZE));
+		writer.write("\n");
 		//write playfield
 		//even numbers:White
-		//uneven numbers:Black
+		//uneven numbers:Red
         for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
             	if(isOccupied(x,y)){
-            		if(field[x][y].getFigureColor() == FigureColor.WHITE){
+            		if(field[x][y].getFigureColor() == FigureColor.RED){
             			if(field[x][y].getFigureType() == FigureType.NORMAL){
             				writer.write("1");
             			}
@@ -135,13 +140,48 @@ public class Playfield {
 	public void changeFigureToKing(int x, int y){
 		field[x][y].setFigureType(FigureType.KING);
 	}
+	
 	public void executeMove(Move m){
+		//TODO alles
 		//x and y after move execution
-		int x = 0;
-		int y = 0;
-		if(m.getMoveType() == MoveType.JUMP ){
-			//createMove(x,y);
+		int x = m.getX();
+		int y = m.getY();
+		if(m.getMoveType() == MoveType.INVALID){
+			//can not execute an invalid move
+			return;
 		}
+		else if(m.getMoveType() == MoveType.STEP ){
+			switch(m.getMoveDirection()){
+			case BL:
+				field[x-1][y-1] = field[x][y];
+				field[x][y] = null;
+				field[x-1][y-1].x = x-1;
+				field[x-1][y-1].y = y-1;
+				return;
+			case BR:
+				field[x+1][y-1] = field[x][y];
+				field[x][y] = null;
+				field[x+1][y-1].x = x+1;
+				field[x+1][y-1].y = y-1;
+				return;
+			case FL:
+				field[x-1][y+1] = field[x][y];
+				field[x][y] = null;
+				field[x-1][y+1].x = x-1;
+				field[x-1][y+1].y = y+1;
+				return;
+			case FR:
+				field[x+1][y+1] = field[x][y];
+				field[x][y] = null;
+				field[x+1][y+1].x = x+1;
+				field[x+1][y+1].y = y+1;
+				return;
+			}
+		}
+		else{
+			//TODO do jump and multijump stuff
+		}
+		if(display != null) display.updateDisplay();
 	}
 
 	public int getFigureQuantity(FigureColor color){
@@ -182,5 +222,13 @@ public class Playfield {
             }
 		}
 		return copy;
+	}
+
+	public FigureColor colorOf(int x, int y) {
+		return field[x][y].getFigureColor();
+	}
+
+	public FigureType getType(int x, int y) {
+		return field[x][y].getFigureType();
 	}
 }

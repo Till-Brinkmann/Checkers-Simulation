@@ -90,6 +90,9 @@ public class List<ContentType> {
 
  // aktuelles Element der Liste
  ListNode current;
+ 
+ // Länge der Liste
+ public int length;
 
  /**
   * Eine leere Liste wird erzeugt.
@@ -98,6 +101,7 @@ public class List<ContentType> {
    first = null;
    last = null;
    current = null;
+   length = 0;
  }
 
  /**
@@ -226,6 +230,7 @@ public class List<ContentType> {
        }
 
      }
+     length++;
    }
  }
 
@@ -252,7 +257,7 @@ public class List<ContentType> {
        last.setNextNode(newNode);
        last = newNode; // Letzten Knoten aktualisieren.
      }
-
+     length++;
    }
  }
 
@@ -277,11 +282,7 @@ public class List<ContentType> {
        this.last.setNextNode(pList.first);
        this.last = pList.last;
      }
-
-     // Liste pList loeschen.
-     pList.first = null;
-     pList.last = null;
-     pList.current = null;
+     length += pList.length;
    }
  }
 
@@ -296,7 +297,7 @@ public class List<ContentType> {
   */
  public void remove() {
    // Nichts tun, wenn es kein aktuelle Element gibt oder die Liste leer ist.
-   if (this.hasAccess() && !this.isEmpty()) { 
+   if (this.hasAccess() && !this.isEmpty()) {
 
      if (current == first) {
        first = first.getNextNode();
@@ -317,6 +318,7 @@ public class List<ContentType> {
      if (this.isEmpty()) {
        last = null;
      }
+     length--;
    }
  }
 

@@ -47,22 +47,17 @@ public class GameSettings extends JFrame{
             public void actionPerformed(ActionEvent event)
             {
             	gameName = gameNameField.getText();
-            	if(gameName.equals("") && recordGameIsEnabled == true){
+            	if(gameName.equals("") && recordGameIsEnabled){
             	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));            	    
             		return;
             	}
             	if(!gameName.equals("")){
             		
-            	}            	
-            	try {
-					gui.getGameLogic().getPlayfield().createStartPosition();
-				} catch (IOException e) {
-					gui.console.printWarning("Playfield loading standard field error: "+ e);
-				}
-            	
-            	setAlwaysOnTop (false);
+            	}
+            	gui.getGameLogic().startGame(gui.playfieldpanel, gui.playfieldpanel);
+            	setAlwaysOnTop(false);
             	setVisible(false);
-            	dispose(); 
+            	dispose();
             }
             
         });

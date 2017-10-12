@@ -49,9 +49,9 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	public void createPlayfieldPanel(){
 		setLayout(new GridLayout(playfield.SIZE,playfield.SIZE));
 		setPreferredSize(new Dimension(700,700));
-        for (int y = 0; y < playfield.SIZE; y++) {
+        for (int y = playfield.SIZE - 1; y >= 0 ; y--) {
             for(int x = 0; x < playfield.SIZE; x++){
-                buttons[x][y] = new JButton ();
+                buttons[x][y] = new JButton();
                 buttons[x][y].setBackground(Color.lightGray);
                 buttons[x][y].setVerticalTextPosition(SwingConstants.BOTTOM);
                 buttons[x][y].setHorizontalTextPosition(SwingConstants.CENTER);
@@ -123,8 +123,8 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 							setButtonColor(x, y, Color.white);
 							return;
 						case RED:
-						//TODO das richtige grün für die figuren finden
-							setButtonColor(x, y, new Color(0,165,0));
+						//TODO das richtige rot für die figuren finden
+							setButtonColor(x, y, new Color(160,10,10));
 							return;
 					}
 			}
@@ -144,37 +144,46 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 					while(jumpFigures.hasAccess()){
 						if(playfield.field[x][y] == jumpFigures.getContent()){
 							selectFigure(jumpFigures.getContent().x, jumpFigures.getContent().y);
+							alreadyOneMove = true;
 						}
+						jumpFigures.next();
 					}
 				}
 				else {
 					if(playfield.field[x][y].color == figurecolor){
 						selectFigure(x,y);
+						alreadyOneMove = true;
 					}
 				}
 			}
 		}
 		else{
+			if(coords[0][0] == x && coords[0][1] == y){
+				//unselect figure
+				buttons[x][y].setBorder(null);
+				alreadyOneMove = false;
+				return;
+			}
 			//you can not move to an occupied field
 			if(!playfield.isOccupied(x, y)){
-				if(coords[0][0] != x && coords[0][1] != y){
-					Move m = Move.makeMove(coords);
-					if(m.isInvalid()){
-						//TODO cancel move
-					}
-					else {
-						if(m.getMoveType() == MoveType.JUMP){
-							//TODO look for possibilities to multijump
-						}
-						else{
-							gamelogic.makeMove(m);
-						}
-					}
+				coords[1][0] = x;
+				coords[1][1] = y;
+				Move m = Move.makeMove(coords);
+				if(m.isInvalid()){
+					//TODO cancel move
+					return;
 				}
 				else {
-					//unselect figure
-					buttons[x][y].setBorder(null);
-					alreadyOneMove = false;
+					if(m.getMoveType() == MoveType.JUMP){
+						//TODO look for possibilities to multijump
+					}
+					else{
+						gamelogic.makeMove(m);
+						if(twoPlayerMode){
+							//toggle color
+							figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
+						}
+					}
 				}
 			}
 		}
@@ -215,12 +224,13 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	}
 	@Override
 	public void requestMove() {
-		if(twoPlayerMode){
-			//toggle color
-			figurecolor = figurecolor == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED;
-			//TODO enable only the own figures(for this figurecolor)
-		} else {
-			enableAllButtons(true);
+		//enable all buttons exept for enemy figures
+		enableAllButtons(true);
+		for(int x = 0; x < playfield.SIZE; x++){
+			for(int y = 0; y < playfield.SIZE; y++){
+				if(playfield.isOccupied(x, y) && playfield.field[x][y].color != figurecolor)
+				buttons[x][y].setEnabled(false);
+			}
 		}
 	}
 	

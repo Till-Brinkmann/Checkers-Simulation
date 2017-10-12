@@ -1,6 +1,6 @@
 package checkers;
 
-import checkers.Move.MoveDirection;
+import generic.List;
 
 /**
  * class to save and share moves in an easy way
@@ -129,10 +129,9 @@ public class Move {
 		return move;
 	}
 	
-	public static Move[] getAllJumps(Figure figure, Playfield field){
+	public static List<Move> getAllJumps(Figure figure, Playfield field){
 		//first moves has maximum size to avoid out of bounds exceptions
-		Move[] moves = new Move[4];
-		int counter = 0;
+		List<Move> moves = new List<Move>();
 		//used for recursive multijump testing
 		Playfield tmp;
 		if(figure.x + 2 < field.SIZE){
@@ -140,20 +139,18 @@ public class Move {
 				if(field.isOccupied(figure.x+1, figure.y+1) 
 					&& field.field[figure.x+1][figure.y+1].color != figure.color
 					&& !field.isOccupied(figure.x+2, figure.y+2)){
-					moves[counter] = new Move(MoveDirection.BR, figure.x, figure.y);
-					counter++;
+					moves.append(new Move(MoveDirection.BR, figure.x, figure.y));
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
 					getAllJumps(tmp.field[figure.x+2][figure.y+2], tmp);*/
 				}
 			}
-			if(figure.y - 2 < field.SIZE){
+			if(figure.y - 2 > field.SIZE){
 				if(field.isOccupied(figure.x+1, figure.y-1) 
 					&& field.field[figure.x+1][figure.y-1].color != figure.color
 					&& !field.isOccupied(figure.x+2, figure.y-2)){
-					moves[counter] = new Move(MoveDirection.BL, figure.x, figure.y);
-					counter++;
+					moves.append(new Move(MoveDirection.BL, figure.x, figure.y));
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
@@ -161,25 +158,23 @@ public class Move {
 				}
 			}
 		}
-		if(figure.x - 2 < field.SIZE){
+		if(figure.x - 2 > field.SIZE){
 			if(figure.y + 2 < field.SIZE){
 				if(field.isOccupied(figure.x-1, figure.y+1) 
 					&& field.field[figure.x-1][figure.y+1].color != figure.color
 					&& !field.isOccupied(figure.x-2, figure.y+2)){
-					moves[counter] = new Move(MoveDirection.FR, figure.x, figure.y);
-					counter++;
+					moves.append(new Move(MoveDirection.FR, figure.x, figure.y));
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
 					getAllJumps(tmp.field[figure.x-2][figure.y+2], tmp);*/
 				}
 			}
-			if(figure.y - 2 < field.SIZE){
+			if(figure.y - 2 > field.SIZE){
 				if(field.isOccupied(figure.x-1, figure.y-1) 
 					&& field.field[figure.x-1][figure.y-1].color != figure.color
 					&& !field.isOccupied(figure.x-2, figure.y-2)){
-					moves[counter] = new Move(MoveDirection.FL, figure.x, figure.y);
-					counter++;
+					moves.append(new Move(MoveDirection.FL, figure.x, figure.y));
 					//TODO die rekursion für multijumps fertigstellen
 					/*tmp = field.copy();
 					tmp.executeMove(moves[0]);
@@ -188,11 +183,7 @@ public class Move {
 			}
 		}
 		//make a new array of right length
-		Move[] tmpmove = new Move[counter];
-		for(int i = 0; i < tmpmove.length; i++){
-			tmpmove[i] = moves[i];
-		}
-		return tmpmove;
+		return moves;
 	}
 	public boolean isInvalid() {
 		return type == MoveType.INVALID;
