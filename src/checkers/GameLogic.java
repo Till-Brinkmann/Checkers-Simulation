@@ -7,7 +7,6 @@ import checkers.Figure.FigureType;
 import checkers.Move.MoveDirection;
 import checkers.Move.MoveType;
 import checkers.Player;
-import checkers.Figure.FigureColor;
 import gui.GUI;
 
 /**
@@ -110,23 +109,22 @@ public class GameLogic {
 	 * tests if the given move is possible on the given playfield
 	 * @param move
 	 * @param field
-	 * @return false if move is not possible
+	 * @return false if move is not possible, true if it is
 	 */
 	public static boolean testMove(Move m, Playfield f){
 		int x = m.getX();
 		int y = m.getY();
-		FigureColor color = f.field[x][y].getFigureColor();
-		if(m.getMoveType() == MoveType.INVALID){
-			return false;
-		}
 		if(!f.isOccupied(x, y)){
 			return false;
 		}
-		
+		FigureColor color = f.colorOf(x, y);
+		FigureType type = f.getType(x, y);
 		switch(m.getMoveType()){
+		case INVALID:
+			return false;
 		case STEP:
 			if(f.getType(x,y) == FigureType.NORMAL){
-				switch (f.colorOf(m.getX(), m.getY())) {
+				switch (color) {
 				case RED:
 					switch(m.getMoveDirection()){
 					case BL:
@@ -166,31 +164,68 @@ public class GameLogic {
 				}
 			}
 		case JUMP:
-			break;
 		case MULTIJUMP:
+			for(int i = 0; i < m.getSteps(); i++){
+				switch(m.getMoveDirection(i)){
+				case BL:
+					if(type == FigureType.NORMAL && color == FigureColor.RED){
+						return false;//normal red figures can not go backwards
+					}
+					if (!(x - 2 >= 0 && y - 2 >= 0 &&//two fields space,
+						f.isOccupied(x-1, y-1) &&//a figure on the next field...
+					   	f.colorOf(x-1, y-1) != color &&//... that is of a different color,
+					   	!f.isOccupied(x-2, y-2))//no figure on the field to land on
+					){
+						return false;
+					}
+					x -= 2;
+					y -= 2;
+					break;
+				case BR:
+					if(type == FigureType.NORMAL && color == FigureColor.RED){
+						return false;
+					}
+					if (!(x + 2 < f.SIZE && y - 2 >= 0 &&
+						f.isOccupied(x+1, y-1) &&
+						f.colorOf(x+1, y-1) != color &&
+						!f.isOccupied(x+2, y-2))
+					){
+						return false;
+					}
+					x += 2;
+					y -= 2;
+					break;
+				case FL:
+					if(type == FigureType.NORMAL && color == FigureColor.WHITE){
+						return false;//normal white figures can not go forwards
+					}
+					if (!(x - 2 >= 0 && y + 2 < f.SIZE &&
+						f.isOccupied(x-1, y+1) &&
+						f.colorOf(x-1, y+1) != color &&
+						!f.isOccupied(x-2, y+2))
+					){
+						return false;
+					}
+					x -= 2;
+					y += 2;
+					break;
+				case FR:
+					if(type == FigureType.NORMAL && color == FigureColor.WHITE){
+						return false;
+					}
+					if (!(x + 2 < f.SIZE && y + 2 < f.SIZE &&
+						f.isOccupied(x+1, y+1) &&
+						f.colorOf(x+1, y+1) != color &&
+						!f.isOccupied(x+2, y+2))
+					){
+						return false;
+					}
+					x += 2;
+					y += 2;
+					break;
+				}
+			}
 			break;
-		}
-		if(f.field[x][y].getFigureType() == FigureType.NORMAL && m.getSteps() < 0)
-		for(int i = 0; i < m.getSteps();i++){
-			if(m.getMoveDirection() == MoveDirection.FR){
-				x++;
-				y++;
-			}
-			if(m.getMoveDirection() == MoveDirection.FL){
-				x--;
-				y++;
-			}
-			if(m.getMoveDirection() == MoveDirection.BR){
-				x++;
-				y--;
-			}
-			if(m.getMoveDirection() == MoveDirection.BL){
-				x--;
-				y--;
-			}
-			if(f.field[x][y] != null){
-				//if()
-			}
 		}
 		return true;
 	}
@@ -198,8 +233,7 @@ public class GameLogic {
 		return testMove(move, field);
 	}
 	public static boolean testForMultiJump(int x, int y, Playfield f){
-		
-		return true;
+		return false;
 	}
 	public boolean testForMultiJump(int x, int y){
 		return testForMultiJump(x,y, field);

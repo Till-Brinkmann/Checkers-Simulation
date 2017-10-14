@@ -144,23 +144,19 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 					while(jumpFigures.hasAccess()){
 						if(playfield.field[x][y] == jumpFigures.getContent()){
 							selectFigure(jumpFigures.getContent().x, jumpFigures.getContent().y);
-							alreadyOneMove = true;
 						}
 						jumpFigures.next();
 					}
 				}
 				else {
-					if(playfield.field[x][y].color == figurecolor){
 						selectFigure(x,y);
-						alreadyOneMove = true;
-					}
 				}
 			}
 		}
 		else{
 			if(coords[0][0] == x && coords[0][1] == y){
 				//unselect figure
-				buttons[x][y].setBorder(null);
+				buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 				alreadyOneMove = false;
 				return;
 			}
@@ -171,19 +167,27 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				Move m = Move.makeMove(coords);
 				if(m.isInvalid()){
 					//TODO cancel move
+					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+					alreadyOneMove = false;
 					return;
 				}
 				else {
 					if(m.getMoveType() == MoveType.JUMP){
-						//TODO look for possibilities to multijump
-					}
-					else{
-						gamelogic.makeMove(m);
-						if(twoPlayerMode){
-							//toggle color
-							figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
+						if(gamelogic.testForMultiJump(m.getX(), m.getY())){
+							//TODO do multijump stuff
+							return;
+						}
+						else {
+							
 						}
 					}
+					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+					alreadyOneMove = false;
+					if(twoPlayerMode){
+						//toggle color
+						figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
+					}
+					gamelogic.makeMove(m);
 				}
 			}
 		}
@@ -205,12 +209,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			}
 		}
 		return canJump;
-	}
-	public void createMove(int x,int y){
-		//Method for Multi jump
-		if(gamelogic.testForMultiJump(x, y)){
-			buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY));
-		}
 	}
 	@Override
 	public void prepare(FigureColor color) {

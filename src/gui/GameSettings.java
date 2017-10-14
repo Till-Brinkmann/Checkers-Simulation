@@ -73,5 +73,4 @@ public class GameSettings extends JFrame{
 		add(okButton);
 		setVisible(true);
 	}
-
 }

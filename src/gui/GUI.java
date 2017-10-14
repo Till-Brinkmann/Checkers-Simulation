@@ -132,7 +132,7 @@ public class GUI extends JFrame{
             {
             	filechooser = new JFileChooser();
             	filter = new FileNameExtensionFilter("pfs","txt");
-            	filechooser.setDialogTitle("Playfield ausw�hlen");
+            	filechooser.setDialogTitle("load playfield file");
             	int rueckgabeWert = filechooser.showOpenDialog(null);
             	filechooser.addChoosableFileFilter(filter);
             	//File muss erst ausgew�hlt werden! Testfile:

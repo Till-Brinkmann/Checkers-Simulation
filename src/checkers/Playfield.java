@@ -157,25 +157,25 @@ public class Playfield {
 				field[x][y] = null;
 				field[x-1][y-1].x = x-1;
 				field[x-1][y-1].y = y-1;
-				return;
+				break;
 			case BR:
 				field[x+1][y-1] = field[x][y];
 				field[x][y] = null;
 				field[x+1][y-1].x = x+1;
 				field[x+1][y-1].y = y-1;
-				return;
+				break;
 			case FL:
 				field[x-1][y+1] = field[x][y];
 				field[x][y] = null;
 				field[x-1][y+1].x = x-1;
 				field[x-1][y+1].y = y+1;
-				return;
+				break;
 			case FR:
 				field[x+1][y+1] = field[x][y];
 				field[x][y] = null;
 				field[x+1][y+1].x = x+1;
 				field[x+1][y+1].y = y+1;
-				return;
+				break;
 			}
 		}
 		else{
