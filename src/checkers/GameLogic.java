@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
-import checkers.Move.MoveDirection;
-import checkers.Move.MoveType;
 import checkers.Player;
 import gui.GUI;
 
@@ -14,37 +12,46 @@ import gui.GUI;
  * @author Till
  *
  */
+
 public class GameLogic {
-	
+	public enum Situations{WHITEWIN, REDWIN, DEADLOCK,NOTHING};
 	/**
 	 * the default playfield to use
 	 */
 	private Playfield field;
-	
+	private boolean recordGameIsEnabled;
+	private String gameName;
+	private int turnCount = 0;
 	private Player playerWhite;
 	private Player playerRed;
 	private boolean redFailedOnce = false;
 	private boolean whiteFailedOnce = false;
-	
+
+	private boolean twoPlayerMode = false;
 	private FigureColor inTurn;
 	private GUI gui;
-	
+
 	public GameLogic(){
 		this(new Playfield());
 	}
 	/**
-	 * 
+	 *
 	 * @param playfield default playfield
 	 */
 	public GameLogic(Playfield playfield) {
 		field = playfield;
 	}
 	//---methods for game process---
-	public void startGame(Player player1, Player player2){
+	public void startGame(Player player1, Player player2, boolean pRecordGameIsEnabled, String pGameName){
+		recordGameIsEnabled = pRecordGameIsEnabled;
+		gameName = pGameName;
+		turnCount = 0;
+		//if both player are one object one Player controls both white and red
+		twoPlayerMode = player1 == player2;
 		//reset variables
 		redFailedOnce = false;
 		whiteFailedOnce = false;
-		
+
 		//choose random beginner
 		if(Math.random() < 0.5){
 			playerWhite = player1;
@@ -63,19 +70,20 @@ public class GameLogic {
 			return;
 		}
 		playerRed.prepare(FigureColor.RED);
-		playerWhite.prepare(FigureColor.WHITE);
+		//prepare only needs to be called once for Red then
+		if(!twoPlayerMode){
+			playerWhite.prepare(FigureColor.WHITE);
+		}
 		//red always starts
 		inTurn = FigureColor.RED;
 		playerRed.requestMove();
 	}
 	public void makeMove(Move m) {
-		//TODO testen ob es einen gewinner gibt und bestimmt noch irgendwas anderes. Außerdem muss man irgendwas gegen patt Situationen tun
-		//test if the move is valid
 		if(!(field.field[m.getX()][m.getY()].color == inTurn) || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
-					//TODO das spiel muss abgebrochen werden und white hat gewonnen
+					finishGameTest(Situations.WHITEWIN);
 				}
 				else {
 					redFailedOnce = true;
@@ -83,15 +91,27 @@ public class GameLogic {
 			}
 			else {
 				if(whiteFailedOnce){
-					//TODO white wird disqualifiziert
+					finishGameTest(Situations.REDWIN);
+
 				}
 				else {
 					whiteFailedOnce = true;
 				}
 			}
 		}
-		else {//move is valid
+		else {
+			//move is valid
 			field.executeMove(m);
+			//automatic figureToKing check
+			testFigureToKing();
+			//test if game is Finished
+			finishGameTest(testFinished());
+			//for game recording
+			if(recordGameIsEnabled) {
+				infosGameRecording();
+			}
+			//changing turn
+			turnCount++;
 			inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 			switch(inTurn){
 			case RED:
@@ -103,8 +123,78 @@ public class GameLogic {
 			}
 		}
 	}
+	public void requestDraw(){
+		if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
+			finishGameTest(Situations.DEADLOCK);
+		}
+	}
 	//---
-	
+	private Situations testFinished() {
+		if(field.getFigureQuantity(FigureColor.WHITE) == 0){
+			return Situations.REDWIN;
+		}
+		if(field.getFigureQuantity(FigureColor.RED) == 0){
+			return Situations.WHITEWIN;
+		}
+		//TODO auf zugunfähigkeit testen
+		//test for draw Situation
+		if(field.getMovesWithoutJumps() == 15) {
+			if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
+				return Situations.DEADLOCK;
+			}
+		}
+		//TODO vielleicht sollte man die zahl ein bisschen höher setzen(30 oder so)
+		if(field.getMovesWithoutJumps() == 20) {
+			return Situations.DEADLOCK;
+		}
+		return Situations.NOTHING;
+	}
+	public void finishGameTest(Situations end) {
+		switch(end) {
+		case DEADLOCK:
+			gui.console.printInfo("GameLogic", "");
+			break;
+
+		case REDWIN:
+			gui.console.printInfo("GameLogic", "");
+			break;
+		case WHITEWIN:
+			gui.console.printInfo("GameLogic", "");
+			break;
+
+		case NOTHING:
+			return;
+		}
+		//TODO reset playfield and everything else
+	}
+	public boolean getTwoPlayerMode(){
+		return twoPlayerMode;
+	}
+	private void infosGameRecording() {
+		try {
+			field.saveGameSituation(gameName, inTurn, turnCount, playerRed.getName(), playerWhite.getName());
+		} catch (IOException e) {
+			gui.console.printWarning("playfield could not be saved. IOException: " + e);
+			e.printStackTrace();
+		}
+	}
+	private void testFigureToKing(){
+		//TODO funktioniert nicht (vllt. Farben andersrum)
+		int y1 = 0;
+		int y2 = 7;
+		for(int x = 0; x < field.getSize();x++) {
+			if(field.isOccupied(x, y1)) {
+				if(field.colorOf(x, y1) == FigureColor.RED && field.getType(x, y1) == FigureType.NORMAL) {
+					field.changeFigureToKing(x, y1);
+				}
+			}
+			if(field.isOccupied(x, y2)) {
+				if(field.colorOf(x, y2) == FigureColor.WHITE && field.getType(x, y2) == FigureType.NORMAL) {
+					field.changeFigureToKing(x, y2);
+				}
+			}
+		}
+	}
 	/**
 	 * tests if the given move is possible on the given playfield
 	 * @param move
@@ -238,20 +328,18 @@ public class GameLogic {
 	public boolean testForMultiJump(int x, int y){
 		return testForMultiJump(x,y, field);
 	}
-	
+
 	public Move[] getPossibleMoves(FigureColor color){
 		return new Move[0];
 	}
-	
+
 	public Playfield getPlayfield(){
 		return field;
 	}
-	public void setPlayfield(Playfield f){
-		field = f;
-	}
-	/*
-	 * TODO vielleicht garnicht nötig
-	 */
+	//TODO das muss eigentlich nicht sein
+	// public void setPlayfield(Playfield f){
+	// 	field = f;
+	// }
 	public void linkGUI(GUI gui) {
 		this.gui = gui;
 	}

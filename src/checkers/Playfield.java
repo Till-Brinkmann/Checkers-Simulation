@@ -22,6 +22,8 @@ public class Playfield {
 	BufferedReader bufferedReader;
 	PrintWriter writer;
 
+	int movesWithoutJumps = 0;
+
 	public Playfield() {
 		this(8);
 	}
@@ -49,7 +51,7 @@ public class Playfield {
 		String info = bufferedReader.readLine();
 		if(Integer.parseInt(info) != SIZE){
 			//TODO what to do here?
-			throw new IOException("This savefile does not work for this palyfield!");
+			throw new IOException("This savefile does not work for this playfield!");
 		}
 		else{
 			info = bufferedReader.readLine();
@@ -89,12 +91,36 @@ public class Playfield {
 	        if(display != null) display.updateDisplay();
 		}
 	}
+	String gameName;
+	int turnCount;
+	FigureColor inTurn;
+	String player1Name;
+	String player2Name;
+	public void saveGameSituation(String pGameName,FigureColor pInTurn, int pTurnCount, String pPlayer1Name, String pPlayer2Name) throws IOException {
+		gameName = pGameName;
+		inTurn = pInTurn;
+		turnCount = pTurnCount;
+		player1Name = pPlayer1Name;
+		player2Name = pPlayer2Name;
+		saveGameSituation();
+	}
 	public void saveGameSituation() throws IOException{
 		long currentTime = new Date().getTime();
 		String fileName = String.valueOf(currentTime);
-		File file = new File("rescources/playfieldSaves/"+ fileName +".pfs");
-		file.createNewFile();
-		writer = new PrintWriter(file);
+		if(recordGame){
+			// TODO es muss nicht jedes mal ein neuer ordner erstellt werden
+			File filePath = new File("resources/" + gameName);
+			filePath.mkdirs();
+			File file = new File("resources/" + gameName + "/" + fileName + ".pfs");
+			file.createNewFile();
+			writer = new PrintWriter(file);
+		}
+		else {
+			File file = new File("resources/playfieldSaves/"+ fileName +".pfs");
+			file.createNewFile();
+			writer = new PrintWriter(file);
+		}
+
 		//write PlayfieldSize
 		writer.write(String.valueOf(SIZE));
 		writer.write("\n");
@@ -123,8 +149,28 @@ public class Playfield {
             	}
             	else{
             		writer.write("0");
+
             	}
             }
+        }
+        if(recordGame) {
+        	writer.write("\n");
+        	writer.write("\ngame name:\n" + gameName);
+        	writer.write("\n");
+        	writer.write("\nWho is playing?\n" + player1Name + " vs. " + player2Name);
+        	writer.write("\n");
+        	writer.write("Turns: " + turnCount + "\n");
+        	if(inTurn == FigureColor.WHITE) {
+        		writer.write("\nIn turn: White\n");
+        	}
+        	else {
+        		writer.write("\nIn turn: Red\n");
+        	}
+        	writer.write("\nFigureQuantities:\n");
+        	writer.write("\nWhitePieces: "+ String.valueOf(getFigureQuantity(FigureColor.WHITE)) + "\n");
+        	writer.write("of it: " + getFigureTypeQuantity(FigureColor.WHITE,FigureType.NORMAL) + "Normal Figures and " + getFigureTypeQuantity(FigureColor.WHITE,FigureType.KING) + "Kings\n");
+        	writer.write("\nRedPieces: "+ String.valueOf(getFigureQuantity(FigureColor.RED)) + "\n");
+        	writer.write("of it: " + getFigureTypeQuantity(FigureColor.RED,FigureType.NORMAL) + "Normal Figures and " + getFigureTypeQuantity(FigureColor.RED,FigureType.KING) + "Kings\n");
         }
 		writer.flush();
 		writer.close();
@@ -140,7 +186,7 @@ public class Playfield {
 	public void changeFigureToKing(int x, int y){
 		field[x][y].setFigureType(FigureType.KING);
 	}
-	
+
 	public void executeMove(Move m){
 		//TODO alles
 		//x and y after move execution
@@ -151,6 +197,7 @@ public class Playfield {
 			return;
 		}
 		else if(m.getMoveType() == MoveType.STEP ){
+			movesWithoutJumps++;
 			switch(m.getMoveDirection()){
 			case BL:
 				field[x-1][y-1] = field[x][y];
@@ -179,6 +226,7 @@ public class Playfield {
 			}
 		}
 		else{
+			movesWithoutJumps = 0;
 			//TODO do jump and multijump stuff
 		}
 		if(display != null) display.updateDisplay();
@@ -195,7 +243,17 @@ public class Playfield {
 		}
 		return quantity;
 	}
-
+	public int getFigureTypeQuantity(FigureColor figurecolor, FigureType figuretype) {
+		int quantity = 0;
+		for(int y = 0;y < SIZE; y++){
+            for(int x = 0;x < SIZE; x++){
+            	if(isOccupied(x,y) && field[x][y].color == figurecolor && field[x][y].type == figuretype){
+            		quantity++;
+            	}
+            }
+		}
+		return quantity;
+	}
 	public boolean isOccupied(int x, int y){
 		return field[x][y] != null;
 	}
@@ -230,5 +288,11 @@ public class Playfield {
 
 	public FigureType getType(int x, int y) {
 		return field[x][y].getFigureType();
+	}
+	public int getMovesWithoutJumps(){
+		return movesWithoutJumps;
+	}
+	public int getSize() {
+		return SIZE;
 	}
 }

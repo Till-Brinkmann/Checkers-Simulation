@@ -9,7 +9,6 @@ import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
-import checkers.Move.MoveDirection;
 import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
@@ -23,22 +22,45 @@ import generic.List;
 @SuppressWarnings("serial")
 public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
+	public ImageIcon king;
 	private Playfield playfield;
 	private JButton[][] buttons;
 	GameLogic gamelogic;
 	Console console;
+	CommandListener drawDecision;
 	//for move-making
 	private int[][] coords;
 	boolean alreadyOneMove = false;
-	
+
 	//the PlayfieldPanel must support up to two player
 	FigureColor figurecolor;
-	boolean twoPlayerMode = false;
 	List<Figure> jumpFigures;
+	private boolean hasChosen;
+	private boolean wantsDraw;
 
 	public PlayfieldPanel(GameLogic pGamelogic, Console pConsole){
 		super();
+		king = new ImageIcon("resources/Icons/dame.png");
 		gamelogic = pGamelogic;
+		console = pConsole;
+		drawDecision = new CommandListener(){
+			@Override
+			public boolean processCommand(String command){
+				switch(command){
+				case "yes":
+				case "y":
+					hasChosen = true;
+					wantsDraw = true;
+					return true;
+				case "no":
+				case "n":
+					hasChosen = true;
+					wantsDraw = false;
+					return true;
+				}
+				return false;
+			}
+		};
 		playfield = gamelogic.getPlayfield();
 		playfield.setPlayfieldDisplay(this);
 		coords = new int[2][2];
@@ -95,10 +117,10 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		return buttons;
 	}
 
-	public void setButtonColor(int x, int y, Color color){
+	private void setButtonColor(int x, int y, Color color){
 		buttons[x][y].setBackground(color);
 	}
-	private void setButtonIcon(int x, int y, Icon icon) {
+	private void setButtonIcon(int x, int y, ImageIcon icon) {
 		buttons[x][y].setIcon(icon);
 	}
 
@@ -114,8 +136,8 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	public void updateField(int x, int y) {
 		if(playfield.isOccupied(x, y)){
 			switch (playfield.field[x][y].getFigureType()){
-				case KING:// TODO add icon for king
-					setButtonIcon(x, y, null);
+				case KING:
+					setButtonIcon(x, y, king);
 				case NORMAL:
 					setButtonIcon(x, y, null);
 					switch (playfield.field[x][y].getFigureColor()){
@@ -139,7 +161,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		if(!alreadyOneMove){
 			if(playfield.isOccupied(x, y)){
 				if(jumpIsPossible()){
-					//if a jump is possible figures that can 
+					//if a jump is possible figures that can
 					jumpFigures.toFirst();
 					while(jumpFigures.hasAccess()){
 						if(playfield.field[x][y] == jumpFigures.getContent()){
@@ -178,15 +200,17 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 							return;
 						}
 						else {
-							
+
 						}
 					}
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 					alreadyOneMove = false;
-					if(twoPlayerMode){
+					if(gamelogic.getTwoPlayerMode()){
 						//toggle color
 						figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 					}
+					//TODO only here for testing. Remove!
+					gamelogic.requestDraw();
 					gamelogic.makeMove(m);
 				}
 			}
@@ -198,7 +222,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		alreadyOneMove = true;
 		buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
 	}
-	
+
 	private boolean jumpIsPossible() {
 		boolean canJump = false;
 		jumpFigures = new List<Figure>();
@@ -210,15 +234,18 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		}
 		return canJump;
 	}
+
+	private void enableAllButtons(boolean enabled) {
+		for(int x = 0; x < playfield.SIZE; x++){
+			for(int y = 0; y < playfield.SIZE; y++){
+				buttons[x][y].setEnabled(enabled);
+			}
+		}
+	}
+
 	@Override
 	public void prepare(FigureColor color) {
-		if(figurecolor == null){
-			figurecolor = color;
-		}
-		else {//two players are wanted
-			figurecolor = FigureColor.RED; //red always starts
-			twoPlayerMode = true;
-		}
+		figurecolor = color;
 	}
 	@Override
 	public void requestMove() {
@@ -231,12 +258,32 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			}
 		}
 	}
-	
-	private void enableAllButtons(boolean enabled) {
-		for(int x = 0; x < playfield.SIZE; x++){
-			for(int y = 0; y < playfield.SIZE; y++){
-				buttons[x][y].setEnabled(enabled);
+	@Override
+	public String getName(){
+		return "Human player (PlayfieldPanel)";
+	}
+	/**
+	 * has to be synchronized because otherwise it is not able to wait.
+	 */
+	@Override
+	public synchronized boolean acceptDraw(){
+		console.addCommandListener(drawDecision);
+		console.printInfo("do you accept a draw? [yes/no] (default no)", "PlayfieldPanel");
+		int counter = 5;
+		//default to false
+		wantsDraw = true;
+		while(!hasChosen && counter != 0){
+			console.print(String.valueOf(counter));
+			try {
+				wait(1000);
+			} catch (InterruptedException e) {
+				//does not really matter
+				e.printStackTrace();
 			}
+			counter--;
 		}
+		console.removeCommandListener(drawDecision);
+		hasChosen = false;
+		return wantsDraw;
 	}
 }

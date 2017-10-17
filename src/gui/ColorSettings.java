@@ -1,16 +1,16 @@
 package gui;
 import javax.swing.event.*;
-import java.awt.event.*;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
+@SuppressWarnings("serial")
 public class ColorSettings extends JFrame{
 
+	private ImageIcon colorSettingsIcon;
 	private JPanel foregroundPanel;
     private JSlider[] foregroundSlider;
     private JLabel labelBg;
@@ -29,6 +29,8 @@ public class ColorSettings extends JFrame{
 		updateColors();
 	}
 	private void initialize(boolean random) {
+		colorSettingsIcon = new ImageIcon("resources/Icons/colorChanger.png");
+		setIconImage(colorSettingsIcon.getImage());
 		backgroundSlider = new JSlider[3];
 		foregroundSlider = new JSlider[3];
 		if(random){
