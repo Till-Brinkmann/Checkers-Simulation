@@ -7,6 +7,7 @@ import java.util.Date;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
+import generic.List;
 import gui.PlayfieldDisplay;
 import gui.PlayfieldPanel;
 
@@ -228,6 +229,50 @@ public class Playfield {
 		else{
 			movesWithoutJumps = 0;
 			//TODO do jump and multijump stuff
+			for(int s = 0; s < m.getSteps(); s++){
+				switch(m.getMoveDirection(s)){
+				case BL:
+					field[x-2][y-2] = field[x][y];
+					field[x][y] = null;
+					//delete opponents figure 
+					field[x-1][y-1] = null;
+					x-=2;
+					y-=2;
+					field[x][y].x = x;
+					field[x][y].y = y;
+					break;
+				case BR:
+					field[x+2][y-2] = field[x][y];
+					field[x][y] = null;
+					//delete opponents figure 
+					field[x+1][y-1] = null;
+					x+=2;
+					y-=2;
+					field[x][y].x = x;
+					field[x][y].y = y;
+					break;
+				case FL:
+					field[x-2][y+2] = field[x][y];
+					field[x][y] = null;
+					//delete opponents figure 
+					field[x-1][y+1] = null;
+					x-=2;
+					y+=2;
+					field[x][y].x = x;
+					field[x][y].y = y;
+					break;
+				case FR:
+					field[x+2][y+2] = field[x][y];
+					field[x][y] = null;
+					//delete opponents figure 
+					field[x+1][y+1] = null;
+					x+=2;
+					y+=2;
+					field[x][y].x = x;
+					field[x][y].y = y;
+					break;
+				}
+			}
 		}
 		if(display != null) display.updateDisplay();
 	}
@@ -292,7 +337,11 @@ public class Playfield {
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
 	}
+	public List getPossibleMoves(FigureColor color){		
+		return new List<Move>();
+	}
 	public int getSize() {
 		return SIZE;
 	}
+	
 }

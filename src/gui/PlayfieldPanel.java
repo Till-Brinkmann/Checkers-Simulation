@@ -209,9 +209,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 						//toggle color
 						figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 					}
-					//TODO only here for testing. Remove!
-					gamelogic.requestDraw();
-					gamelogic.makeMove(m);
+				gamelogic.makeMove(m);
 				}
 			}
 		}
@@ -227,7 +225,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		boolean canJump = false;
 		jumpFigures = new List<Figure>();
 		for(Figure f : playfield.getFiguresFor(figurecolor)){
-			if(Move.getAllJumps(f, playfield).length > 0){
+			if(Move.getPossibleJumps(f, playfield).length > 0){
 				canJump = true;
 				jumpFigures.append(f);
 			}

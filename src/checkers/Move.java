@@ -129,7 +129,7 @@ public class Move {
 		return move;
 	}
 	
-	public static List<Move> getAllJumps(Figure figure, Playfield field){
+	public static List<Move> getPossibleJumps(Figure figure, Playfield field){
 		//first moves has maximum size to avoid out of bounds exceptions
 		List<Move> moves = new List<Move>();
 		//used for recursive multijump testing

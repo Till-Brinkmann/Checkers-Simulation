@@ -1,6 +1,10 @@
 package checkers;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
@@ -14,7 +18,7 @@ import gui.GUI;
  */
 
 public class GameLogic {
-	public enum Situations{WHITEWIN, REDWIN, DEADLOCK,NOTHING};
+	public enum Situations{WHITEWIN, REDWIN, DRAW,NOTHING};
 	/**
 	 * the default playfield to use
 	 */
@@ -30,7 +34,6 @@ public class GameLogic {
 	private boolean twoPlayerMode = false;
 	private FigureColor inTurn;
 	private GUI gui;
-
 	public GameLogic(){
 		this(new Playfield());
 	}
@@ -42,25 +45,25 @@ public class GameLogic {
 		field = playfield;
 	}
 	//---methods for game process---
-	public void startGame(Player player1, Player player2, boolean pRecordGameIsEnabled, String pGameName){
+	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		//if both player are one object one Player controls both white and red
+		twoPlayerMode = pPlayer1 == pPlayer2;
+		//choose random beginner
+		if(Math.random() < 0.5){
+			playerWhite = pPlayer1;
+			playerRed = pPlayer2;
+		}
+		else {
+			playerWhite = pPlayer2;
+			playerRed = pPlayer1;
+		}
 		recordGameIsEnabled = pRecordGameIsEnabled;
 		gameName = pGameName;
 		turnCount = 0;
-		//if both player are one object one Player controls both white and red
-		twoPlayerMode = player1 == player2;
 		//reset variables
 		redFailedOnce = false;
 		whiteFailedOnce = false;
 
-		//choose random beginner
-		if(Math.random() < 0.5){
-			playerWhite = player1;
-			playerRed = player2;
-		}
-		else {
-			playerWhite = player2;
-			playerRed = player1;
-		}
 		try {
 			field.createStartPosition();
 		} catch (IOException e) {
@@ -69,6 +72,7 @@ public class GameLogic {
 					"Gamelogic:startGame");
 			return;
 		}
+		
 		playerRed.prepare(FigureColor.RED);
 		//prepare only needs to be called once for Red then
 		if(!twoPlayerMode){
@@ -78,7 +82,7 @@ public class GameLogic {
 		inTurn = FigureColor.RED;
 		playerRed.requestMove();
 	}
-	public void makeMove(Move m) {
+	public void makeMove(Move m){
 		if(!(field.field[m.getX()][m.getY()].color == inTurn) || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
@@ -125,33 +129,51 @@ public class GameLogic {
 	}
 	public void requestDraw(){
 		if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
-			finishGameTest(Situations.DEADLOCK);
+			finishGameTest(Situations.DRAW);
 		}
 	}
 	//---
-	private Situations testFinished() {
+	private Situations testFinished(){
 		if(field.getFigureQuantity(FigureColor.WHITE) == 0){
 			return Situations.REDWIN;
 		}
 		if(field.getFigureQuantity(FigureColor.RED) == 0){
 			return Situations.WHITEWIN;
 		}
-		//TODO auf zugunfähigkeit testen
+		//there are no moves and jumps left
+		if(field.getPossibleMoves(FigureColor.RED).length == 0) {
+			
+			for( Figure f : field.getFiguresFor(FigureColor.RED)){
+				if(Move.getPossibleJumps(f, field).length == 0) {
+					return Situations.WHITEWIN;
+				}
+			}
+		}	
+		if(field.getPossibleMoves(FigureColor.WHITE).length == 0) {
+			for( Figure f : field.getFiguresFor(FigureColor.WHITE)){
+				if(Move.getPossibleJumps(f, field).length == 0) {
+					return Situations.REDWIN;
+				}
+			}
+		}		
+			
+		
 		//test for draw Situation
 		if(field.getMovesWithoutJumps() == 15) {
-			if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
-				return Situations.DEADLOCK;
+			if(playerRed.acceptDraw() && playerWhite.acceptDraw() ){
+				return Situations.DRAW;
 			}
 		}
-		//TODO vielleicht sollte man die zahl ein bisschen höher setzen(30 oder so)
+		
+		
 		if(field.getMovesWithoutJumps() == 20) {
-			return Situations.DEADLOCK;
+			return Situations.DRAW;
 		}
 		return Situations.NOTHING;
 	}
-	public void finishGameTest(Situations end) {
+	private void finishGameTest(Situations end) {
 		switch(end) {
-		case DEADLOCK:
+		case DRAW:
 			gui.console.printInfo("GameLogic", "");
 			break;
 
@@ -328,11 +350,6 @@ public class GameLogic {
 	public boolean testForMultiJump(int x, int y){
 		return testForMultiJump(x,y, field);
 	}
-
-	public Move[] getPossibleMoves(FigureColor color){
-		return new Move[0];
-	}
-
 	public Playfield getPlayfield(){
 		return field;
 	}
