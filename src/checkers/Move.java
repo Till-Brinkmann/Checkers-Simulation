@@ -83,6 +83,8 @@ public class Move {
 	}
 	/**
 	 * turns an array of coordinates into a move object
+	 * the move is not guaranteed to be valid!
+	 * test with Gamelogic.testMove()!
 	 * @param coords that the figure goes to during the move in chronological order
 	 * @return move object that represents the move described by the coordinates 
 	 */

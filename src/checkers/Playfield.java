@@ -329,7 +329,12 @@ public class Playfield {
 		Playfield copy = new Playfield(SIZE);
 		for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
-            	copy.field[x][y] = field[x][y].copy();
+            	if(isOccupied(x,y)){
+            		copy.field[x][y] = field[x][y].copy();
+            	}
+            	else {
+            		copy.field[x][y] = null;
+            	}
             }
 		}
 		return copy;

@@ -67,6 +67,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		jumpFigures = new List<Figure>();
 		buttons = new JButton[playfield.SIZE][playfield.SIZE];
 		createPlayfieldPanel();
+		enableAllButtons(false);
 	}
 	public void createPlayfieldPanel(){
 		setLayout(new GridLayout(playfield.SIZE,playfield.SIZE));
@@ -163,11 +164,12 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		if(!alreadyOneMove){
 			if(playfield.isOccupied(x, y)){
 				if(jumpIsPossible()){
-					//if a jump is possible figures that can
+					//if a jump is possible only figures that can jump can be clicked
 					jumpFigures.toFirst();
 					while(jumpFigures.hasAccess()){
 						if(playfield.field[x][y] == jumpFigures.getContent()){
-							selectFigure(jumpFigures.getContent().x, jumpFigures.getContent().y);
+							selectFigure(x, y);
+							console.printInfo("JumpFigure selected");
 						}
 						jumpFigures.next();
 					}
@@ -189,31 +191,26 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				coords[1][0] = x;
 				coords[1][1] = y;
 				Move m = Move.createMoveFromCoords(coords);
-				if(m.isInvalid()){
+				if(m.isInvalid() || !gamelogic.testMove(m) || (jumpIsPossible() && m.getMoveType() == MoveType.STEP)){
 					//TODO cancel move
 					console.printWarning("Invalid move", "PP");
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 					alreadyOneMove = false;
 					return;
 				}
-				else {
-					if(m.getMoveType() == MoveType.JUMP){
-						if(gamelogic.testForMultiJump(m.getX(), m.getY())){
-							//TODO do multijump stuff
-							return;
-						}
-						else {
-
-						}
-					}
-					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-					alreadyOneMove = false;
-					if(gamelogic.getTwoPlayerMode()){
-						//toggle color
-						figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
-					}
-				gamelogic.makeMove(m);
+				if(m.getMoveType() == MoveType.MULTIJUMP){
+					//TODO do multijump stuff
+					console.printInfo("Itsa MultiJump!");
+					return;
 				}
+				buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+				alreadyOneMove = false;
+				if(gamelogic.getTwoPlayerMode()){
+					//toggle color
+					figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
+				}
+				enableAllButtons(false);
+				gamelogic.makeMove(m);
 			}
 		}
 	}
@@ -225,6 +222,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	}
 
 	private boolean jumpIsPossible() {
+		//TODO gibt fehlerhafte werte zurück
 		boolean canJump = false;
 		jumpFigures = new List<Figure>();
 		for(Figure f : playfield.getFiguresFor(figurecolor)){

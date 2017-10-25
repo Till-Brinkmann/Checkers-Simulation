@@ -78,8 +78,8 @@ public class GameSettings extends JFrame{
 			
 					try {
 						gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue());
-					} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
-							| IllegalArgumentException | InvocationTargetException | ClassNotFoundException
+					} catch (SecurityException | InstantiationException | IllegalAccessException
+							| IllegalArgumentException | ClassNotFoundException
 							| MalformedURLException e) {
 						gui.console.printWarning("gmlc", "failed to load the ai");
 						e.printStackTrace();

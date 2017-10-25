@@ -129,11 +129,10 @@ public class GameLogic {
 				}
 			}
 		}
-		else {
+		else {//move is valid
+			field.executeMove(m);
 			//automatic figureToKing check
 			testFigureToKing();
-			//move is valid
-			field.executeMove(m);
 			//test if game is Finished
 			finishGameTest(testFinished());
 			//for game recording
