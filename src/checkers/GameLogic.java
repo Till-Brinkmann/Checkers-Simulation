@@ -2,9 +2,6 @@ package checkers;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.net.URLClassLoader;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
@@ -31,9 +28,15 @@ public class GameLogic {
 	private boolean redFailedOnce = false;
 	private boolean whiteFailedOnce = false;
 
+	String namePlayerWhite;
+	String namePlayerRed;
+	
 	private boolean twoPlayerMode = false;
 	private FigureColor inTurn;
 	private GUI gui;
+	
+	private int currentRound = 0;
+	private int rounds;
 	public GameLogic(){
 		this(new Playfield());
 	}
@@ -45,17 +48,36 @@ public class GameLogic {
 		field = playfield;
 	}
 	//---methods for game process---
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2, int pRounds){
+		rounds = pRounds;
 		//if both player are one object one Player controls both white and red
 		twoPlayerMode = pPlayer1 == pPlayer2;
+		String namePlayer1 = "Human Player1";
+		String namePlayer2 = "Human Player2";
+		if(pPlayer1 != null) {
+			namePlayer1 = pPlayer1.getName();
+		}
+		if(pPlayer2 != null) {
+			namePlayer2 = pPlayer2.getName();
+			
+		}
+		
 		//choose random beginner
 		if(Math.random() < 0.5){
 			playerWhite = pPlayer1;
+			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer1 + "");
+			namePlayerWhite = namePlayer1;
 			playerRed = pPlayer2;
+			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer2 + "");
+			namePlayerRed = namePlayer2;
 		}
 		else {
 			playerWhite = pPlayer2;
+			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer2 + "");
+			namePlayerWhite = namePlayer2;
 			playerRed = pPlayer1;
+			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer1 + "");
+			namePlayerRed = namePlayer1;
 		}
 		recordGameIsEnabled = pRecordGameIsEnabled;
 		gameName = pGameName;
@@ -64,21 +86,25 @@ public class GameLogic {
 		redFailedOnce = false;
 		whiteFailedOnce = false;
 
-		try {
-			field.createStartPosition();
-		} catch (IOException e) {
-			gui.console.printWarning(
-					"Could not load startposition. Please check if your playfieldsaves are at the right position",
-					"Gamelogic:startGame");
-			return;
+		//testet ob empty weil ja schon ein psf geloaded werden konnte
+		if(field.isEmpty()) {
+			try {			
+				field.createStartPosition();
+			} catch (IOException e) {
+				gui.console.printWarning(
+						"Could not load startposition. Please check if your playfieldsaves are at the right position",
+						"Gamelogic:startGame");
+				return;
+			}
 		}
-		
 		playerRed.prepare(FigureColor.RED);
 		//prepare only needs to be called once for Red then
 		if(!twoPlayerMode){
 			playerWhite.prepare(FigureColor.WHITE);
 		}
 		//red always starts
+		gui.console.printInfo("gmlc", "Therefore " + namePlayerRed + "starts first");
+		gui.console.printInfo("gmlc","Playing "+ (rounds-currentRound) + " more Rounds before reset");
 		inTurn = FigureColor.RED;
 		playerRed.requestMove();
 	}
@@ -104,10 +130,10 @@ public class GameLogic {
 			}
 		}
 		else {
-			//move is valid
-			field.executeMove(m);
 			//automatic figureToKing check
 			testFigureToKing();
+			//move is valid
+			field.executeMove(m);
 			//test if game is Finished
 			finishGameTest(testFinished());
 			//for game recording
@@ -134,29 +160,12 @@ public class GameLogic {
 	}
 	//---
 	private Situations testFinished(){
-		if(field.getFigureQuantity(FigureColor.WHITE) == 0){
-			return Situations.REDWIN;
-		}
-		if(field.getFigureQuantity(FigureColor.RED) == 0){
+		if(Move.getPossibleMoves(FigureColor.RED, field).length == 0) {
 			return Situations.WHITEWIN;
 		}
-		//there are no moves and jumps left
-		if(field.getPossibleMoves(FigureColor.RED).length == 0) {
-			
-			for( Figure f : field.getFiguresFor(FigureColor.RED)){
-				if(Move.getPossibleJumps(f, field).length == 0) {
-					return Situations.WHITEWIN;
-				}
-			}
-		}	
-		if(field.getPossibleMoves(FigureColor.WHITE).length == 0) {
-			for( Figure f : field.getFiguresFor(FigureColor.WHITE)){
-				if(Move.getPossibleJumps(f, field).length == 0) {
-					return Situations.REDWIN;
-				}
-			}
-		}		
-			
+		if(Move.getPossibleMoves(FigureColor.WHITE, field).length == 0) {
+			return Situations.REDWIN;
+		}
 		
 		//test for draw Situation
 		if(field.getMovesWithoutJumps() == 15) {
@@ -166,7 +175,7 @@ public class GameLogic {
 		}
 		
 		
-		if(field.getMovesWithoutJumps() == 20) {
+		if(field.getMovesWithoutJumps() == 30) {
 			return Situations.DRAW;
 		}
 		return Situations.NOTHING;
@@ -174,19 +183,38 @@ public class GameLogic {
 	private void finishGameTest(Situations end) {
 		switch(end) {
 		case DRAW:
-			gui.console.printInfo("GameLogic", "");
+			gui.console.printInfo("GameLogic", "Game is finished!");
+			gui.console.printInfo("GameLogic", "Result: Draw!");
 			break;
 
 		case REDWIN:
-			gui.console.printInfo("GameLogic", "");
+			gui.console.printInfo("GameLogic", "Game is finished!");
+			gui.console.printInfo("GameLogic", "Result: Red won the game!");
 			break;
 		case WHITEWIN:
-			gui.console.printInfo("GameLogic", "");
+			gui.console.printInfo("GameLogic", "Game is finished!");
+			gui.console.printInfo("GameLogic", "Result: White won the game!");
 			break;
 
 		case NOTHING:
 			return;
 		}
+		try {
+			field.createStartPosition();
+		} catch (IOException e1) {
+			gui.console.printWarning("gmlc","failed to load the pfs file startPositionForSize8");
+			e1.printStackTrace();
+		}
+		currentRound++;
+		if(currentRound == rounds) {
+			//TODO "hard" reset 
+			// TODO maybe statistic for ki playing against each other and creating a file with all information
+		}
+		else {
+			startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds);
+		}
+		
+		
 		//TODO reset playfield and everything else
 	}
 	public boolean getTwoPlayerMode(){
@@ -201,17 +229,16 @@ public class GameLogic {
 		}
 	}
 	private void testFigureToKing(){
-		//TODO funktioniert nicht (vllt. Farben andersrum)
 		int y1 = 0;
 		int y2 = 7;
 		for(int x = 0; x < field.getSize();x++) {
 			if(field.isOccupied(x, y1)) {
-				if(field.colorOf(x, y1) == FigureColor.RED && field.getType(x, y1) == FigureType.NORMAL) {
+				if(field.colorOf(x, y1) == FigureColor.WHITE && field.getType(x, y1) == FigureType.NORMAL) {
 					field.changeFigureToKing(x, y1);
 				}
 			}
 			if(field.isOccupied(x, y2)) {
-				if(field.colorOf(x, y2) == FigureColor.WHITE && field.getType(x, y2) == FigureType.NORMAL) {
+				if(field.colorOf(x, y2) == FigureColor.RED && field.getType(x, y2) == FigureType.NORMAL) {
 					field.changeFigureToKing(x, y2);
 				}
 			}

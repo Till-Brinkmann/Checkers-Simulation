@@ -9,7 +9,6 @@ import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import generic.List;
 import gui.PlayfieldDisplay;
-import gui.PlayfieldPanel;
 
 
 public class Playfield {
@@ -281,7 +280,7 @@ public class Playfield {
 		int quantity = 0;
 		for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
-            	if(isOccupied(x,y) && field[x][y].color == color){
+            	if(isOccupied(x,y) && colorOf(x,y) == color){
             		quantity++;
             	}
             }
@@ -300,9 +299,18 @@ public class Playfield {
 		return quantity;
 	}
 	public boolean isOccupied(int x, int y){
-		return field[x][y] != null;
+		return (field[x][y] != null);
 	}
-
+	public boolean isEmpty(){
+		for(int x = 0; x < 8; x++) {
+			for(int y = 0; y < 8; y++) {
+				if(field[x][y] != null) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 	public Figure[] getFiguresFor(FigureColor figurecolor) {
 		int counter = 0;
 		Figure[] figures = new Figure[getFigureQuantity(figurecolor)];
@@ -336,9 +344,6 @@ public class Playfield {
 	}
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
-	}
-	public List getPossibleMoves(FigureColor color){		
-		return new List<Move>();
 	}
 	public int getSize() {
 		return SIZE;

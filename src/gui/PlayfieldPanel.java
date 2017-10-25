@@ -138,18 +138,20 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			switch (playfield.field[x][y].getFigureType()){
 				case KING:
 					setButtonIcon(x, y, king);
+					break;
 				case NORMAL:
 					setButtonIcon(x, y, null);
-					switch (playfield.field[x][y].getFigureColor()){
-						case WHITE:
-							setButtonColor(x, y, Color.white);
-							return;
-						case RED:
-						//TODO das richtige rot für die figuren finden
-							setButtonColor(x, y, new Color(160,10,10));
-							return;
-					}
+					break;
 			}
+			switch (playfield.field[x][y].getFigureColor()){
+			case WHITE:
+				setButtonColor(x, y, Color.white);
+				return;
+			case RED:
+			//TODO das richtige rot für die figuren finden
+				setButtonColor(x, y, new Color(160,10,10));
+				return;
+		}
 		}
 		else {
 			setButtonColor(x, y, Color.lightGray);
@@ -186,9 +188,10 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			if(!playfield.isOccupied(x, y)){
 				coords[1][0] = x;
 				coords[1][1] = y;
-				Move m = Move.makeMove(coords);
+				Move m = Move.createMoveFromCoords(coords);
 				if(m.isInvalid()){
 					//TODO cancel move
+					console.printWarning("Invalid move", "PP");
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 					alreadyOneMove = false;
 					return;

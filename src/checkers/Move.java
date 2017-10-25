@@ -1,5 +1,7 @@
 package checkers;
 
+import checkers.Figure.FigureColor;
+import checkers.Figure.FigureType;
 import generic.List;
 
 /**
@@ -44,6 +46,10 @@ public class Move {
 		type = pType;
 	}
 	
+	public Move copy(){
+		return new Move(directions, steps, x, y);
+	}
+	
 	public void addStep(MoveDirection dir){
 		if(steps + 1 > directions.length){
 			MoveDirection[] tmp = new MoveDirection[steps+4];
@@ -80,7 +86,7 @@ public class Move {
 	 * @param coords that the figure goes to during the move in chronological order
 	 * @return move object that represents the move described by the coordinates 
 	 */
-	public static Move makeMove(int[][] coords){
+	public static Move createMoveFromCoords(int[][] coords){
 		Move move = new Move(MoveType.INVALID);
 		MoveDirection direction;
 		int step = 0;
@@ -130,59 +136,159 @@ public class Move {
 	}
 	
 	public static List<Move> getPossibleJumps(Figure figure, Playfield field){
-		//first moves has maximum size to avoid out of bounds exceptions
 		List<Move> moves = new List<Move>();
 		//used for recursive multijump testing
-		//Playfield tmp;
-		if(figure.x + 2 < field.SIZE){
+		Playfield tmp;
+		List<Move> multiJumps;
+		Move m;
+		if(figure.x + 2 < field.SIZE
+			&& (figure.getFigureType() == FigureType.KING || figure.getFigureColor() == FigureColor.WHITE)){
 			if(figure.y + 2 < field.SIZE){
 				if(field.isOccupied(figure.x+1, figure.y+1) 
 					&& field.field[figure.x+1][figure.y+1].color != figure.color
 					&& !field.isOccupied(figure.x+2, figure.y+2)){
-					moves.append(new Move(MoveDirection.BR, figure.x, figure.y));
-					//TODO die rekursion für multijumps fertigstellen
-					/*tmp = field.copy();
-					tmp.executeMove(moves[0]);
-					getAllJumps(tmp.field[figure.x+2][figure.y+2], tmp);*/
+					moves.append(new Move(MoveDirection.FR, figure.x, figure.y));
+					moves.toLast();
+					tmp = field.copy();
+					tmp.executeMove(moves.getContent());
+					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y+2], tmp);
+					multiJumps.toFirst();
+					if(multiJumps.length > 0){
+						while(multiJumps.hasAccess()){
+							//take the move we just created and copy it
+							m = moves.getContent().copy();
+							//append the other steps of the multijump
+							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
+								m.addStep(multiJumps.getContent().getMoveDirection(0));
+							}
+							//save temporarily in multiJumps
+							multiJumps.setContent(m);
+							multiJumps.next();
+						}
+						//remove the old single jump
+						//(you can not move a single jump when you can multijump in the same move)
+						moves.remove();
+						//append new moves
+						moves.concat(multiJumps);
+					}
 				}
 			}
-			if(figure.y - 2 > field.SIZE){
+			if(figure.y - 2 >= 0){
 				if(field.isOccupied(figure.x+1, figure.y-1) 
 					&& field.field[figure.x+1][figure.y-1].color != figure.color
 					&& !field.isOccupied(figure.x+2, figure.y-2)){
-					moves.append(new Move(MoveDirection.BL, figure.x, figure.y));
-					//TODO die rekursion für multijumps fertigstellen
-					/*tmp = field.copy();
-					tmp.executeMove(moves[0]);
-					getAllJumps(tmp.field[figure.x+2][figure.y-2], tmp);*/
+					moves.append(new Move(MoveDirection.BR, figure.x, figure.y));
+					moves.toLast();
+					tmp = field.copy();
+					tmp.executeMove(moves.getContent());
+					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y-2], tmp);
+					multiJumps.toFirst();
+					if(multiJumps.length > 0){
+						while(multiJumps.hasAccess()){
+							m = moves.getContent().copy();
+							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
+								m.addStep(multiJumps.getContent().getMoveDirection(0));
+							}
+							multiJumps.setContent(m);
+							multiJumps.next();
+						}
+						moves.remove();
+						moves.concat(multiJumps);
+					}
 				}
 			}
 		}
-		if(figure.x - 2 > field.SIZE){
+		if(figure.x - 2 >= 0
+			&& (figure.getFigureType() == FigureType.KING || figure.getFigureColor() == FigureColor.RED)){
 			if(figure.y + 2 < field.SIZE){
 				if(field.isOccupied(figure.x-1, figure.y+1) 
 					&& field.field[figure.x-1][figure.y+1].color != figure.color
 					&& !field.isOccupied(figure.x-2, figure.y+2)){
-					moves.append(new Move(MoveDirection.FR, figure.x, figure.y));
-					//TODO die rekursion für multijumps fertigstellen
-					/*tmp = field.copy();
-					tmp.executeMove(moves[0]);
-					getAllJumps(tmp.field[figure.x-2][figure.y+2], tmp);*/
+					moves.append(new Move(MoveDirection.FL, figure.x, figure.y));
+					moves.toLast();
+					tmp = field.copy();
+					tmp.executeMove(moves.getContent());
+					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y+2], tmp);
+					multiJumps.toFirst();
+					if(multiJumps.length > 0){
+						while(multiJumps.hasAccess()){
+							m = moves.getContent().copy();
+							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
+								m.addStep(multiJumps.getContent().getMoveDirection(0));
+							}
+							multiJumps.setContent(m);
+							multiJumps.next();
+						}
+						moves.remove();
+						moves.concat(multiJumps);
+					}
 				}
 			}
-			if(figure.y - 2 > field.SIZE){
+			if(figure.y - 2 >= 0){
 				if(field.isOccupied(figure.x-1, figure.y-1) 
 					&& field.field[figure.x-1][figure.y-1].color != figure.color
 					&& !field.isOccupied(figure.x-2, figure.y-2)){
-					moves.append(new Move(MoveDirection.FL, figure.x, figure.y));
-					//TODO die rekursion für multijumps fertigstellen
-					/*tmp = field.copy();
-					tmp.executeMove(moves[0]);
-					getAllJumps(tmp.field[figure.x-2][figure.y-2], tmp);*/
+					moves.append(new Move(MoveDirection.BL, figure.x, figure.y));
+					moves.toLast();
+					tmp = field.copy();
+					tmp.executeMove(moves.getContent());
+					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y-2], tmp);
+					multiJumps.toFirst();
+					if(multiJumps.length > 0){
+						while(multiJumps.hasAccess()){
+							m = moves.getContent().copy();
+							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
+								m.addStep(multiJumps.getContent().getMoveDirection(0));
+							}
+							multiJumps.setContent(m);
+							multiJumps.next();
+						}
+						moves.remove();
+						moves.concat(multiJumps);
+					}
 				}
 			}
 		}
-		//make a new array of right length
+		return moves;
+	}
+	public List<Move> getPossibleSteps(Figure f, Playfield p){
+		List<Move> moves = new List<Move>();
+		if(f.x + 1 < p.SIZE
+				&& (f.getFigureType() == FigureType.KING || f.getFigureColor() == FigureColor.WHITE)){
+			if(f.y + 1 < p.SIZE){
+				if(!p.isOccupied(f.x+1, f.y+1)){
+					moves.append(new Move(MoveDirection.FR, f.x, f.y));
+				}
+			}
+			if(f.y - 1 >= 0){
+				if(!p.isOccupied(f.x+1, f.y+1)){
+					moves.append(new Move(MoveDirection.BR, f.x, f.y));
+				}
+			}
+		}
+		if(f.x - 1 >= 0
+				&& (f.getFigureType() == FigureType.KING || f.getFigureColor() == FigureColor.RED)){
+			if(f.y + 1 < p.SIZE){
+				if(!p.isOccupied(f.x+1, f.y+1)){
+					moves.append(new Move(MoveDirection.FL, f.x, f.y));
+				}
+			}
+			if(f.y - 1 >= 0){
+				if(!p.isOccupied(f.x+1, f.y+1)){
+					moves.append(new Move(MoveDirection.BL, f.x, f.y));
+				}
+			}
+		}
+		return moves;
+	}
+	public List<Move> getPossibleMoves(Figure figure, Playfield playfield){		
+		return getPossibleJumps(figure, playfield).concat(getPossibleSteps(figure, playfield));
+	}
+	public List<Move> gePossibleMoves(FigureColor color, Playfield playfield){
+		List<Move> moves = new List<Move>();
+		for(Figure f : playfield.getFiguresFor(color)){
+			moves.concat(getPossibleMoves(f, playfield));
+		}
 		return moves;
 	}
 	public boolean isInvalid() {

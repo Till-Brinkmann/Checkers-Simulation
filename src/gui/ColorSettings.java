@@ -36,15 +36,18 @@ public class ColorSettings extends JFrame{
 		if(random){
 			for(int i = 0; i < 3; i++){
 				backgroundSlider[i] = new JSlider(0,255,(int)(Math.random()*256));
+				backgroundSlider[i].setBackground(Color.WHITE);
 				foregroundSlider[i] = new JSlider(0,255,(int)(Math.random()*256));
+				foregroundSlider[i].setBackground(Color.WHITE);
 			}
 		}
 		else{
-			//richtige Farbwerte eintragen!
+			//TODO richtige Farbwerte eintragen!
 		}
 		officialFigureColor = new JCheckBox("official figure colors");
+		officialFigureColor.setBackground(Color.WHITE);
 		okButton = new JButton("confirm");
-
+		okButton.setBackground(Color.WHITE);
 		for(int i = 0; i < 3; i++){
 	        backgroundSlider[i].addChangeListener(new ChangeListener()
 	        {
@@ -79,10 +82,12 @@ public class ColorSettings extends JFrame{
 
 	private void createWindow() {
 		setResizable(false);
+		setBackground(Color.WHITE);
 		setSize(350,450);
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		//Background slider
 		backgroundPanel = new JPanel();
+		backgroundPanel.setBackground(Color.WHITE);
 		backgroundPanel.setLayout(new GridLayout(4,1));
 		labelBg = new JLabel("Background");
 		backgroundPanel.add(labelBg);
@@ -93,7 +98,7 @@ public class ColorSettings extends JFrame{
 		//Foreground slider
 		foregroundPanel = new JPanel();
 		foregroundPanel.setLayout(new GridLayout(4,1));
-		labelFg = new JLabel("Background");
+		labelFg = new JLabel("Foreground");
 		foregroundPanel.add(labelFg);
 		for(int i = 0; i < 3; i++){
 			foregroundPanel.add(foregroundSlider[i]);

@@ -5,7 +5,6 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.lang.ClassLoader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,10 +31,11 @@ public class GameSettings extends JFrame{
 	private JTextField gameNameField;
 	private JComboBox<String> player1ComboBox;
 	private JComboBox<String> player2ComboBox;
-
+	private JSpinner roundsSpinner;
 	private boolean recordGameIsEnabled = false;
 	private String gameName;
 	private GUI gui;
+	
 	public GameSettings(GUI pGui) {
 		super("Game Settings");
 		gui = pGui;
@@ -50,8 +50,12 @@ public class GameSettings extends JFrame{
 		okButton  = new JButton("ok");
 		okButton.setBackground(Color.WHITE);
 		player1ComboBox = new JComboBox<String>(createList());
+		player1ComboBox.setBackground(Color.WHITE);
 		player2ComboBox = new JComboBox<String>(createList());
-
+		player2ComboBox.setBackground(Color.WHITE);
+		
+		roundsSpinner = new JSpinner ();
+		roundsSpinner.setValue(1);
 		recordGame.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
@@ -73,7 +77,7 @@ public class GameSettings extends JFrame{
             	}
 			
 					try {
-						gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2());
+						gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue());
 					} catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
 							| IllegalArgumentException | InvocationTargetException | ClassNotFoundException
 							| MalformedURLException e) {
@@ -99,6 +103,7 @@ public class GameSettings extends JFrame{
 		add(okButton);
 		add(player1ComboBox);
 		add(player2ComboBox);
+		add(roundsSpinner);
 		setVisible(true);
 	}
 	private String[] createList() {
@@ -130,21 +135,29 @@ public class GameSettings extends JFrame{
 		if(player1ComboBox.getSelectedItem().equals("player")) {
 			return gui.playfieldpanel;
 		}
+		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
 		url = new URL("file:" + new File("resources/AI").getAbsolutePath());
 		loader = new URLClassLoader(new URL[]{ url });
 		ai = loader.loadClass(((String) player1ComboBox.getSelectedItem()).substring(0,player1ComboBox.getSelectedItem().toString().length()-6));
-		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loade successfully");
+		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
 		if(testForPlayerInterface(ai)) {
 			return (Player)ai.newInstance();
 		}
+		gui.console.printInfo("Gamesettings", "Because of the missing interface Player 1 switches to standard player");
 		return gui.playfieldpanel; 
 	}
 	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException{
-		if(player2ComboBox.getSelectedItem().equals((String) player1ComboBox.getSelectedItem())) {
+		if(player2ComboBox.getSelectedItem().equals("player")) {
+			return gui.playfieldpanel;
+		}
+		if(player1ComboBox.getSelectedItem().equals((String) player2ComboBox.getSelectedItem())) {
+			if(testForPlayerInterface(ai)) {
+				return (Player)ai.newInstance();
+			}
 			return gui.playfieldpanel;
 		} 
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		url = new URL(new File("resources/AI").getAbsolutePath());
+		url = new URL("file:" + new File("resources/AI").getAbsolutePath());
 		loader = new URLClassLoader(new URL[]{ url });
 		ai = loader.loadClass(((String) player2ComboBox.getSelectedItem()).substring(0,player2ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
@@ -152,6 +165,7 @@ public class GameSettings extends JFrame{
 			
 			return (Player)ai.newInstance();
 		}
+		gui.console.printInfo("Gamesettings", "Because of the missing interface Player 2 switches to standard player");
 		return gui.playfieldpanel;
 	}
 	private boolean testForPlayerInterface(Class<?> ai) {
