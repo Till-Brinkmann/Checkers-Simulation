@@ -251,7 +251,7 @@ public class Move {
 		}
 		return moves;
 	}
-	public List<Move> getPossibleSteps(Figure f, Playfield p){
+	public static List<Move> getPossibleSteps(Figure f, Playfield p){
 		List<Move> moves = new List<Move>();
 		if(f.x + 1 < p.SIZE
 				&& (f.getFigureType() == FigureType.KING || f.getFigureColor() == FigureColor.WHITE)){
@@ -261,7 +261,7 @@ public class Move {
 				}
 			}
 			if(f.y - 1 >= 0){
-				if(!p.isOccupied(f.x+1, f.y+1)){
+				if(!p.isOccupied(f.x+1, f.y-1)){
 					moves.append(new Move(MoveDirection.BR, f.x, f.y));
 				}
 			}
@@ -269,22 +269,22 @@ public class Move {
 		if(f.x - 1 >= 0
 				&& (f.getFigureType() == FigureType.KING || f.getFigureColor() == FigureColor.RED)){
 			if(f.y + 1 < p.SIZE){
-				if(!p.isOccupied(f.x+1, f.y+1)){
+				if(!p.isOccupied(f.x-1, f.y+1)){
 					moves.append(new Move(MoveDirection.FL, f.x, f.y));
 				}
 			}
 			if(f.y - 1 >= 0){
-				if(!p.isOccupied(f.x+1, f.y+1)){
+				if(!p.isOccupied(f.x-1, f.y-1)){
 					moves.append(new Move(MoveDirection.BL, f.x, f.y));
 				}
 			}
 		}
 		return moves;
 	}
-	public List<Move> getPossibleMoves(Figure figure, Playfield playfield){		
+	public static List<Move> getPossibleMoves(Figure figure, Playfield playfield){		
 		return getPossibleJumps(figure, playfield).concat(getPossibleSteps(figure, playfield));
 	}
-	public List<Move> gePossibleMoves(FigureColor color, Playfield playfield){
+	public static List<Move> getPossibleMoves(FigureColor color, Playfield playfield){
 		List<Move> moves = new List<Move>();
 		for(Figure f : playfield.getFiguresFor(color)){
 			moves.concat(getPossibleMoves(f, playfield));
