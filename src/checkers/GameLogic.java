@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
+import checkers.Move.MoveType;
 import checkers.Player;
 import gui.GUI;
 
@@ -32,6 +33,8 @@ public class GameLogic {
 	String namePlayerRed;
 	
 	private boolean twoPlayerMode = false;
+	private FigureColor player1Color;
+	private FigureColor player2Color;
 	private FigureColor inTurn;
 	private GUI gui;
 	
@@ -55,6 +58,7 @@ public class GameLogic {
 		String namePlayer1 = "Human Player1";
 		String namePlayer2 = "Human Player2";
 		if(pPlayer1 != null) {
+			
 			namePlayer1 = pPlayer1.getName();
 		}
 		if(pPlayer2 != null) {
@@ -64,17 +68,21 @@ public class GameLogic {
 		
 		//choose random beginner
 		if(Math.random() < 0.5){
-			playerWhite = pPlayer1;
+			player1Color = FigureColor.WHITE;
+			playerWhite = pPlayer1;			
 			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer1 + "");
 			namePlayerWhite = namePlayer1;
+			player2Color = FigureColor.RED;
 			playerRed = pPlayer2;
 			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer2 + "");
 			namePlayerRed = namePlayer2;
 		}
 		else {
+			player2Color = FigureColor.WHITE;
 			playerWhite = pPlayer2;
 			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer2 + "");
 			namePlayerWhite = namePlayer2;
+			player1Color = FigureColor.RED;
 			playerRed = pPlayer1;
 			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer1 + "");
 			namePlayerRed = namePlayer1;
@@ -159,10 +167,11 @@ public class GameLogic {
 	}
 	//---
 	private Situations testFinished(){
-		if(Move.getPossibleMoves(FigureColor.RED, field).length == 0) {
+		//red has to make the next move. So if Red has just moved it does not need to move in the next round
+		if(inTurn == FigureColor.WHITE && Move.getPossibleMoves(FigureColor.RED, field).length == 0) {
 			return Situations.WHITEWIN;
 		}
-		if(Move.getPossibleMoves(FigureColor.WHITE, field).length == 0) {
+		if(inTurn == FigureColor.RED && Move.getPossibleMoves(FigureColor.WHITE, field).length == 0) {
 			return Situations.REDWIN;
 		}
 		
@@ -257,6 +266,10 @@ public class GameLogic {
 		}
 		FigureColor color = f.colorOf(x, y);
 		FigureType type = f.getType(x, y);
+		//TODO wenn es kein Jump ist aber jumps möglich sind return false
+		if(m.getMoveType() == MoveType.STEP && Move.getPossibleJumps(f.field[x][y], f).length != 0){
+			return false;
+		}
 		switch(m.getMoveType()){
 		case INVALID:
 			return false;
@@ -379,11 +392,8 @@ public class GameLogic {
 	public Playfield getPlayfield(){
 		return field;
 	}
-	//TODO das muss eigentlich nicht sein
-	// public void setPlayfield(Playfield f){
-	// 	field = f;
-	// }
 	public void linkGUI(GUI gui) {
 		this.gui = gui;
 	}
+	
 }

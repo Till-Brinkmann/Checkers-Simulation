@@ -15,7 +15,7 @@ package generic;
  * eine konstante Laufzeit, unabhaengig von der Anzahl der verwalteten Objekte.
  * </p>
  * <p>
- * modifiziert um zuverlässig Anfragen von mehreren Threads gleichzeitig behandeln zu können
+ * modifiziert um zuverlï¿½ssig Anfragen von mehreren Threads gleichzeitig behandeln zu kï¿½nnen
  * </p>
  * 
  * @author Qualitaets- und UnterstuetzungsAgentur - Landesinstitut fuer Schule, Materialien zum schulinternen Lehrplan Informatik SII
@@ -27,7 +27,7 @@ public class ThreadSafeQueue<ContentType> {
 	
 	private class QueueNode {
 
-		private ContentType content;
+		private volatile ContentType content;
 		private QueueNode nextNode;
 
 		/**
@@ -89,7 +89,7 @@ public class ThreadSafeQueue<ContentType> {
 	}
 
 	/**
-	 * Die Anfrage liefert den Wert true, wenn die Schlange keine Objekte enthält, 
+	 * Die Anfrage liefert den Wert true, wenn die Schlange keine Objekte enthï¿½lt, 
 	 * sonst liefert sie den Wert false.
 	 * 
 	 * @return true, falls die Schlange leer ist, sonst false
@@ -121,7 +121,7 @@ public class ThreadSafeQueue<ContentType> {
 
 	/**
 	 * Das erste Objekt wird aus der Schlange entfernt. 
-	 * Falls die Schlange leer ist, wird sie nicht verändert.
+	 * Falls die Schlange leer ist, wird sie nicht verï¿½ndert.
 	 */
 	public synchronized void dequeue() {
 		if (!this.isEmpty()) {

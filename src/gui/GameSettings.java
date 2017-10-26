@@ -12,6 +12,7 @@ import java.net.URLClassLoader;
 
 import javax.swing.*;
 
+import checkers.GameLogic;
 import checkers.Player;
 
 
@@ -69,27 +70,28 @@ public class GameSettings extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
+            	setAlwaysOnTop(false);
+            	setVisible(false);
             	gameName = gameNameField.getText();
             	if(gameName.equals("") && recordGameIsEnabled){
             	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));
             	    gui.console.printInfo("When game recording is selected, you have to enter a game name!", "Gamesettings");
             		return;
             	}
-			
-					try {
-						gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue());
-					} catch (SecurityException | InstantiationException | IllegalAccessException
-							| IllegalArgumentException | ClassNotFoundException
-							| MalformedURLException e) {
-						gui.console.printWarning("gmlc", "failed to load the ai");
-						e.printStackTrace();
-					}
-
-            	setAlwaysOnTop(false);
-            	setVisible(false);
             	dispose();
+				new Thread(){
+					public void run(){
+						try {
+							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue());
+						} catch (ClassNotFoundException | MalformedURLException | InstantiationException
+								| IllegalAccessException | IllegalArgumentException | InvocationTargetException
+								| NoSuchMethodException | SecurityException e) {
+							gui.console.printWarning("gmlc", "failed to load the ai");
+							e.printStackTrace();
+						}
+					}
+				}.start();
             }
-
         });
 	}
 	private void createWindow() {
@@ -131,7 +133,7 @@ public class GameSettings extends JFrame{
 		playerNameList[listLength-1] = "player";
 		return playerNameList;
 	}
-	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException{
+	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(player1ComboBox.getSelectedItem().equals("player")) {
 			return gui.playfieldpanel;
 		}
@@ -141,19 +143,21 @@ public class GameSettings extends JFrame{
 		ai = loader.loadClass(((String) player1ComboBox.getSelectedItem()).substring(0,player1ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
 		if(testForPlayerInterface(ai)) {
-			return (Player)ai.newInstance();
+			return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 		}
-		gui.console.printInfo("Gamesettings", "Because of the missing interface Player 1 switches to standard player");
+		gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
 		return gui.playfieldpanel; 
 	}
-	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException{
+	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(player2ComboBox.getSelectedItem().equals("player")) {
 			return gui.playfieldpanel;
 		}
+		
 		if(player1ComboBox.getSelectedItem().equals((String) player2ComboBox.getSelectedItem())) {
 			if(testForPlayerInterface(ai)) {
-				return (Player)ai.newInstance();
+				return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 			}
+			gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
 			return gui.playfieldpanel;
 		} 
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
@@ -161,21 +165,20 @@ public class GameSettings extends JFrame{
 		loader = new URLClassLoader(new URL[]{ url });
 		ai = loader.loadClass(((String) player2ComboBox.getSelectedItem()).substring(0,player2ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
-		if(testForPlayerInterface(ai)) {
-			
-			return (Player)ai.newInstance();
+		if(testForPlayerInterface(ai)) {			
+			return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 		}
 		gui.console.printInfo("Gamesettings", "Because of the missing interface Player 2 switches to standard player");
 		return gui.playfieldpanel;
 	}
-	private boolean testForPlayerInterface(Class<?> ai) {
-		for(Class<?> c : ai.getInterfaces()) {
+	private boolean testForPlayerInterface(Class<?> ai2) {
+		for(Class<?> c : ai2.getInterfaces()) {
 			if(c.equals(Player.class)) {
-				gui.console.printInfo("GameSettings","Interface player was found in " + ai.getName());
+				gui.console.printInfo("GameSettings","Interface player was found in " + ai2.getName());
 				return true;
 			}
 		}
-		gui.console.printWarning("GameSettings","Interface could not be found in "+ ai.getName());
+		gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
 		return false;
 	}
 }

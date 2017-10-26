@@ -43,6 +43,16 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		king = new ImageIcon("resources/Icons/dame.png");
 		gamelogic = pGamelogic;
 		console = pConsole;
+		//TODO darüber muss man noch nachdenken
+//		console.addCommandListener(new CommandListener(){
+//			public boolean processCommand(String command){
+//				if(command.equals("requestDraw")){
+//					gamelogic.requestDraw();
+//					return true;
+//				}
+//				return false;
+//			}
+//		});
 		drawDecision = new CommandListener(){
 			@Override
 			public boolean processCommand(String command){
@@ -276,7 +286,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			try {
 				wait(1000);
 			} catch (InterruptedException e) {
-				//does not really matter
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			counter--;
