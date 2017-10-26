@@ -79,6 +79,7 @@ public class GameSettings extends JFrame{
             		return;
             	}
             	dispose();
+            	//the game is started in a separate Thread to reduce the load on the eventqueue
 				new Thread(){
 					public void run(){
 						try {

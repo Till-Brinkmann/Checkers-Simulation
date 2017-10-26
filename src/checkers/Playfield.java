@@ -88,6 +88,7 @@ public class Playfield {
 	            	}
 	            }
 			}
+	        bufferedReader.close();
 	        if(display != null) display.updateDisplay();
 		}
 	}

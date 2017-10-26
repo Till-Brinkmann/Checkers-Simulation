@@ -276,23 +276,23 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	 */
 	@Override
 	public synchronized boolean acceptDraw(){
-		console.addCommandListener(drawDecision);
+		//console.addCommandListener(drawDecision);
 		console.printInfo("do you accept a draw? [yes/no] (default no)", "PlayfieldPanel");
-		int counter = 5;
-		//default to false
-		wantsDraw = true;
-		while(!hasChosen && counter != 0){
-			console.print(String.valueOf(counter));
-			try {
-				wait(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			counter--;
-		}
-		console.removeCommandListener(drawDecision);
-		hasChosen = false;
+		//int counter = 5;
+		//defaults to false
+		wantsDraw = false;
+//		while(!hasChosen && counter != 0){
+//			console.print(String.valueOf(counter));
+//			try {
+//				wait(1000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			counter--;
+//		}
+//		console.removeCommandListener(drawDecision);
+//		hasChosen = false;
 		return wantsDraw;
 	}
 }

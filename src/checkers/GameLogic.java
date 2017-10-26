@@ -1,5 +1,6 @@
 package checkers;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
@@ -142,21 +143,26 @@ public class GameLogic {
 			//automatic figureToKing check
 			testFigureToKing();
 			//test if game is Finished
-			finishGameTest(testFinished());
-			//for game recording
-			if(recordGameIsEnabled) {
-				infosGameRecording();
+			Situations gamestate = testFinished();
+			if(gamestate != Situations.NOTHING){
+				finishGameTest(gamestate);
 			}
-			//changing turn
-			turnCount++;
-			inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
-			switch(inTurn){
-			case RED:
-				playerRed.requestMove();
-				break;
-			case WHITE:
-				playerWhite.requestMove();
-				break;
+			else {
+				//for game recording
+				if(recordGameIsEnabled) {
+					infosGameRecording();
+				}
+				//changing turn
+				turnCount++;
+				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
+				switch(inTurn){
+				case RED:
+					playerRed.requestMove();
+					break;
+				case WHITE:
+					playerWhite.requestMove();
+					break;
+				}
 			}
 		}
 	}
@@ -176,14 +182,12 @@ public class GameLogic {
 		}
 		
 		//test for draw Situation
-		if(field.getMovesWithoutJumps() == 15) {
-			if(playerRed.acceptDraw() && playerWhite.acceptDraw() ){
-				return Situations.DRAW;
-			}
+		if(field.getMovesWithoutJumps() == 30) {
+			requestDraw();
 		}
 		
 		
-		if(field.getMovesWithoutJumps() == 30) {
+		if(field.getMovesWithoutJumps() == 50) {
 			return Situations.DRAW;
 		}
 		return Situations.NOTHING;
@@ -215,6 +219,13 @@ public class GameLogic {
 		}
 		currentRound++;
 		if(currentRound == rounds) {
+			try {
+				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			gui.playfieldpanel.updateDisplay();
 			//TODO "hard" reset 
 			// TODO maybe statistic for ki playing against each other and creating a file with all information
 		}
