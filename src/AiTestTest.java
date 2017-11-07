@@ -1,3 +1,4 @@
+
 import java.util.Random;
 
 import checkers.Figure.FigureColor;

@@ -2,13 +2,14 @@ package checkers;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import checkers.Player;
+import generic.List;
 import gui.GUI;
+import gui.GameSettings;
+import gui.PlayfieldPanel;
 
 /**
  * provides methods for game logic
@@ -25,6 +26,9 @@ public class GameLogic {
 	private boolean recordGameIsEnabled;
 	private String gameName;
 	private int turnCount = 0;
+	private int winCountRed;
+	private int winCountWhite;
+	private int drawCount;
 	private Player playerWhite;
 	private Player playerRed;
 	private boolean redFailedOnce = false;
@@ -34,11 +38,10 @@ public class GameLogic {
 	String namePlayerRed;
 	
 	private boolean twoPlayerMode = false;
-	private FigureColor player1Color;
-	private FigureColor player2Color;
 	private FigureColor inTurn;
 	private GUI gui;
 	
+	private int slowness;
 	private int currentRound = 0;
 	private int rounds;
 	public GameLogic(){
@@ -50,9 +53,13 @@ public class GameLogic {
 	 */
 	public GameLogic(Playfield playfield) {
 		field = playfield;
+		winCountRed = 0;
+		winCountWhite = 0;
+		drawCount = 0;
+		
 	}
 	//---methods for game process---
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2, int pRounds){
+	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2, int pRounds, int pSlowness){
 		rounds = pRounds;
 		//if both player are one object one Player controls both white and red
 		twoPlayerMode = pPlayer1 == pPlayer2;
@@ -66,24 +73,21 @@ public class GameLogic {
 			namePlayer2 = pPlayer2.getName();
 			
 		}
-		
+		//SlowMode
+		slowness = pSlowness;
 		//choose random beginner
 		if(Math.random() < 0.5){
-			player1Color = FigureColor.WHITE;
 			playerWhite = pPlayer1;			
 			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer1 + "");
 			namePlayerWhite = namePlayer1;
-			player2Color = FigureColor.RED;
 			playerRed = pPlayer2;
 			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer2 + "");
 			namePlayerRed = namePlayer2;
 		}
 		else {
-			player2Color = FigureColor.WHITE;
 			playerWhite = pPlayer2;
 			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer2 + "");
 			namePlayerWhite = namePlayer2;
-			player1Color = FigureColor.RED;
 			playerRed = pPlayer1;
 			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer1 + "");
 			namePlayerRed = namePlayer1;
@@ -115,6 +119,14 @@ public class GameLogic {
 		gui.console.printInfo("gmlc", "Therefore " + namePlayerRed + "starts first");
 		gui.console.printInfo("gmlc","Playing "+ (rounds-currentRound) + " more Rounds before reset");
 		inTurn = FigureColor.RED;
+		if(!playerRed.equals(gui.playfieldpanel)) {
+			try {
+				Thread.sleep(slowness);
+			} catch (InterruptedException e) {
+				gui.console.printWarning("");
+				e.printStackTrace();
+			}
+		}
 		playerRed.requestMove();
 	}
 	public void makeMove(Move m){
@@ -157,9 +169,25 @@ public class GameLogic {
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 				switch(inTurn){
 				case RED:
+					if(!playerRed.equals(gui.playfieldpanel)) {
+						try {
+							Thread.sleep(slowness);
+						} catch (InterruptedException e) {
+							gui.console.printWarning("");
+							e.printStackTrace();
+						}
+					}
 					playerRed.requestMove();
 					break;
 				case WHITE:
+					if(!playerRed.equals(gui.playfieldpanel)) {
+						try {
+							Thread.sleep(slowness);
+						} catch (InterruptedException e) {
+							gui.console.printWarning("");
+							e.printStackTrace();
+						}
+					}
 					playerWhite.requestMove();
 					break;
 				}
@@ -187,7 +215,7 @@ public class GameLogic {
 		}
 		
 		
-		if(field.getMovesWithoutJumps() == 50) {
+		if(field.getMovesWithoutJumps() == 60) {
 			return Situations.DRAW;
 		}
 		return Situations.NOTHING;
@@ -197,15 +225,18 @@ public class GameLogic {
 		case DRAW:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Draw!");
+			drawCount++;
 			break;
 
 		case REDWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Red won the game!");
+			winCountWhite++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: White won the game!");
+			winCountRed++;
 			break;
 
 		case NOTHING:
@@ -213,9 +244,9 @@ public class GameLogic {
 		}
 		try {
 			field.createStartPosition();
-		} catch (IOException e1) {
-			gui.console.printWarning("gmlc","failed to load the pfs file startPositionForSize8");
-			e1.printStackTrace();
+		} catch (IOException e) {
+			gui.console.printWarning("failed to load the pfs file startPositionForSize8","GameLogic");
+			e.printStackTrace();
 		}
 		currentRound++;
 		if(currentRound == rounds) {
@@ -226,11 +257,15 @@ public class GameLogic {
 				e.printStackTrace();
 			}
 			gui.playfieldpanel.updateDisplay();
+			
+			gui.console.printInfo("The AI" + playerWhite.getName() + " (White) won " + winCountWhite + " times.","GameLogic");
+			gui.console.printInfo( "The AI" + playerRed.getName() + " (Red) won " + winCountRed + " times.","GameLogic");
+			gui.console.printInfo("Draw: " + drawCount + " times.", "GameLogic");
 			//TODO "hard" reset 
 			// TODO maybe statistic for ki playing against each other and creating a file with all information
 		}
 		else {
-			startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds);
+			startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness);
 		}
 		
 		
@@ -394,10 +429,17 @@ public class GameLogic {
 	public boolean testMove(Move move){
 		return testMove(move, field);
 	}
-	public static boolean testForMultiJump(int x, int y, Playfield f){
-		return false;
+	public static List<Move> testForMultiJump(int x, int y, Playfield f) {
+		List<Move> list =Move.getPossibleJumps(f.field[x][y], f);
+		if(list.length != 0) {
+			return list;
+		}
+		else
+		{
+		return null;
+		}
 	}
-	public boolean testForMultiJump(int x, int y){
+	public List<Move> testForMultiJump(int x, int y){
 		return testForMultiJump(x,y, field);
 	}
 	public Playfield getPlayfield(){

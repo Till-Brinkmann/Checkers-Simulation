@@ -9,9 +9,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Hashtable;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
+import NNStuff.NNTrainingManager;
 import checkers.GameLogic;
 import checkers.Player;
 
@@ -28,25 +32,31 @@ public class GameSettings extends JFrame{
 	private ImageIcon gameSettingsIcon;
 	String[] playerNameList;
 	private JCheckBox recordGame;
+	private JCheckBox nnTrainingCheckBox;
 	private JButton okButton;
 	private JTextField gameNameField;
 	private JComboBox<String> player1ComboBox;
 	private JComboBox<String> player2ComboBox;
 	private JSpinner roundsSpinner;
+	private JSlider slownessForSlowMode;
 	private boolean recordGameIsEnabled = false;
 	private String gameName;
 	private GUI gui;
-	
-	public GameSettings(GUI pGui) {
+	private NNTrainingManager nnManager;
+	private int slowness;
+	private boolean nnTraining;
+	public GameSettings(GUI pGui) {		
 		super("Game Settings");
 		gui = pGui;
 		initialize();
 		createWindow();
 	}
 	private void initialize() {
+		setBackground(Color.WHITE);
 		gameSettingsIcon = new ImageIcon("resources/Icons/options.png");
 		setIconImage(gameSettingsIcon.getImage());
 		recordGame = new JCheckBox("gameRecording");
+		recordGame.setBackground(Color.WHITE);
 		gameNameField = new JTextField(10);
 		okButton  = new JButton("ok");
 		okButton.setBackground(Color.WHITE);
@@ -57,6 +67,33 @@ public class GameSettings extends JFrame{
 		
 		roundsSpinner = new JSpinner ();
 		roundsSpinner.setValue(1);
+		nnTrainingCheckBox = new JCheckBox("NNTraining");
+		nnTrainingCheckBox.setBackground(Color.WHITE);
+		slownessForSlowMode = new JSlider(0,4000,0);
+		slownessForSlowMode.setPaintLabels(true);
+		Hashtable<Integer, JLabel> table = new Hashtable<Integer, JLabel>();
+		
+		table.put(0, new JLabel("fast"));
+		table.put(2000, new JLabel("medium"));
+		table.put(4000, new JLabel("slow"));
+		slownessForSlowMode.setLabelTable (table);
+		slownessForSlowMode.setForeground(Color.CYAN);
+		slownessForSlowMode.setBackground(Color.WHITE);
+		slownessForSlowMode.addChangeListener(new ChangeListener()
+        {
+        	public void stateChanged(ChangeEvent evt){
+        		slowness = slownessForSlowMode.getValue();
+            }
+        });
+		
+		nnTrainingCheckBox.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	nnTraining = nnTrainingCheckBox.isSelected();
+            }
+
+        });
 		recordGame.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
@@ -79,19 +116,24 @@ public class GameSettings extends JFrame{
             		return;
             	}
             	dispose();
-            	//the game is started in a separate Thread to reduce the load on the eventqueue
-				new Thread(){
-					public void run(){
-						try {
-							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue());
-						} catch (ClassNotFoundException | MalformedURLException | InstantiationException
-								| IllegalAccessException | IllegalArgumentException | InvocationTargetException
-								| NoSuchMethodException | SecurityException e) {
-							gui.console.printWarning("gmlc", "failed to load the ai");
-							e.printStackTrace();
+            	if(nnTraining) {
+            		nnManager = new NNTrainingManager(gui);
+            	}
+            	else {
+	            	//the game is started in a separate Thread to reduce the load on the eventqueue
+					new Thread(){
+						public void run(){
+							try {
+								gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue(),slowness);
+							} catch (ClassNotFoundException | MalformedURLException | InstantiationException
+									| IllegalAccessException | IllegalArgumentException | InvocationTargetException
+									| NoSuchMethodException | SecurityException e) {
+								gui.console.printWarning("gmlc", "failed to load the ai");
+								e.printStackTrace();
+							}
 						}
-					}
-				}.start();
+					}.start();
+            	}
             }
         });
 	}
@@ -107,6 +149,8 @@ public class GameSettings extends JFrame{
 		add(player1ComboBox);
 		add(player2ComboBox);
 		add(roundsSpinner);
+		add(nnTrainingCheckBox);
+		add(slownessForSlowMode);
 		setVisible(true);
 	}
 	private String[] createList() {

@@ -354,5 +354,10 @@ public class Playfield {
 	public int getSize() {
 		return SIZE;
 	}
-	
+	//for ai:
+	public void makeMoveAI(Move m) {
+		
+	}
 }
+
+	

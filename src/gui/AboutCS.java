@@ -43,7 +43,7 @@ public class AboutCS extends JFrame{
 				"\r\n" + 
 				"In the finished program you will be able to add your own checker algorithms or neutral networks as a module written in java.\n\n" +
 				"Creator:\n" +
-				"Till Brinkmann\nMarco Adamczyk\nCan Ward");
+				"Till Brinkmann\nMarco Adamczyk\nCan Timur Ward");
 		text.add(textarea);
 		add(text);
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);

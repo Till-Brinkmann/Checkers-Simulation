@@ -26,7 +26,7 @@ public class Move {
 	private MoveType type;
 	private MoveDirection[] directions;
 	private int steps;
-	
+	private FigureColor color;
 	private int x, y;
 	
 	public Move(MoveDirection[] pDirection, int pSteps, int pX, int pY) {
@@ -165,7 +165,7 @@ public class Move {
 							m = moves.getContent().copy();
 							//append the other steps of the multijump
 							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(0));
+								m.addStep(multiJumps.getContent().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
 							//save temporarily in multiJumps
@@ -194,7 +194,7 @@ public class Move {
 						while(multiJumps.hasAccess()){
 							m = moves.getContent().copy();
 							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(0));
+								m.addStep(multiJumps.getContent().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
 							multiJumps.setContent(m);
@@ -222,7 +222,7 @@ public class Move {
 						while(multiJumps.hasAccess()){
 							m = moves.getContent().copy();
 							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(0));
+								m.addStep(multiJumps.getContent().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
 							multiJumps.setContent(m);
@@ -247,7 +247,7 @@ public class Move {
 						while(multiJumps.hasAccess()){
 							m = moves.getContent().copy();
 							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(0));
+								m.addStep(multiJumps.getContent().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
 							multiJumps.setContent(m);
@@ -321,6 +321,14 @@ public class Move {
 	}
 	public boolean isInvalid() {
 		return type == MoveType.INVALID;
+	}
+	//for ai:
+	int score = 0;
+	public void setScore(int pScore) {
+		score = pScore;
+	}
+	public int getScore() {
+		return score;
 	}
 }
 

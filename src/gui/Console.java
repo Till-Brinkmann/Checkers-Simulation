@@ -25,9 +25,9 @@ public class Console extends JPanel{
 	private List<CommandListener> listener;
 	private JScrollPane scrollpaneOutput;
 	private JScrollPane scrollpaneInput;
-  public JTextArea output;
+	public JTextArea output;
 	private JTextArea input;
-  private DefaultCaret caret;
+	private DefaultCaret caret;
 
 	public Console() {
 		super();
@@ -41,20 +41,23 @@ public class Console extends JPanel{
 	}
 	private JScrollPane createOutput(){
 		output = new JTextArea();
-		output.setPreferredSize(new Dimension(300,650));
 		output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
-		output.setFont(new Font("Arial", Font.BOLD, 15));
+		output.setFont(new Font("Arial", Font.BOLD, 14));
 		caret = (DefaultCaret)output.getCaret();
+		
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		scrollpaneOutput = new JScrollPane(output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollpaneOutput.setPreferredSize(new Dimension(300,650));
 		return scrollpaneOutput;
 	}
 	private JScrollPane createInput(){
 		input = new JTextArea();
 		input.setPreferredSize(new Dimension(315,19));
-		input.setFont(new Font("Arial", Font.BOLD, 15));
+		input.setLineWrap(true);
+		input.setWrapStyleWord(true);
+		input.setFont(new Font("Arial", Font.BOLD, 14));
 		scrollpaneInput = new JScrollPane(input);
 
 
