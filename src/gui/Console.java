@@ -18,18 +18,16 @@ import generic.List;
  * @author Till
  *
  */
+@SuppressWarnings("serial")
 public class Console extends JPanel{
-
-	//TODO eine printCommand, print, printWarning, printError methode (oder so)
 	private DLList<String> previousCommands;
 
 	private List<CommandListener> listener;
-
 	private JScrollPane scrollpaneOutput;
 	private JScrollPane scrollpaneInput;
-    public JTextArea output;
-    private JTextArea input;
-    private DefaultCaret caret;
+	public JTextArea output;
+	private JTextArea input;
+	private DefaultCaret caret;
 
 	public Console() {
 		super();
@@ -43,20 +41,23 @@ public class Console extends JPanel{
 	}
 	private JScrollPane createOutput(){
 		output = new JTextArea();
-		output.setPreferredSize(new Dimension(300,650));
 		output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
-		output.setFont(new Font("Arial", Font.BOLD, 15));
+		output.setFont(new Font("Arial", Font.BOLD, 14));
 		caret = (DefaultCaret)output.getCaret();
+		
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		scrollpaneOutput = new JScrollPane(output, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollpaneOutput.setPreferredSize(new Dimension(300,650));
 		return scrollpaneOutput;
 	}
 	private JScrollPane createInput(){
 		input = new JTextArea();
 		input.setPreferredSize(new Dimension(315,19));
-		input.setFont(new Font("Arial", Font.BOLD, 15));
+		input.setLineWrap(true);
+		input.setWrapStyleWord(true);
+		input.setFont(new Font("Arial", Font.BOLD, 14));
 		scrollpaneInput = new JScrollPane(input);
 
 
@@ -112,6 +113,17 @@ public class Console extends JPanel{
 	public void addCommandListener(CommandListener l){
 		listener.append(l);
 	}
+	
+	public void removeCommandListener(CommandListener l){
+		listener.toFirst();
+		while(listener.hasAccess()){
+			if(listener.getContent() == l){
+				listener.remove();
+				return;
+			}
+			listener.next();
+		}
+	}
 
 	private void processCommand(String in) {
 		boolean wasProcessed = true;
@@ -132,17 +144,18 @@ public class Console extends JPanel{
 		//go through all listeners
 		listener.toFirst();
 		while(listener.hasAccess()){
-			//if processCommand returned true AND was
-			if(listener.getContent().processCommand(in) && !wasProcessed){
+			if(listener.getContent().processCommand(in)){
 				wasProcessed = true;
 			}
 			listener.next();
 		}
 		if(!wasProcessed){
-			printWarning("The command could not be processed by any module.\nMaybe you wrote it wrong.", "Console");
+			printCommandOutput("The command could not be processed by any module.", "Maybe you wrote it wrong.");
 		}
 	}
-
+	public void print(String arg){
+		output.append(arg + "\n");
+	}
 	private void printCommand(String arg){
 		output.append(">>" + arg + "\n");
 	}
