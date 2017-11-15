@@ -9,7 +9,7 @@ package checkers;
 
 public class Figure {
 	
-	public enum FigureColor{WHITE, GREEN};	
+	public enum FigureColor{WHITE, RED};	
 	public enum FigureType{NORMAL,KING};
 	
 	public FigureColor color;
@@ -19,9 +19,11 @@ public class Figure {
 	public Figure(){
 		
 	}
-	public Figure(FigureColor pColor, FigureType pType) {
+	public Figure(int px, int py, FigureColor pColor, FigureType pType) {
 		color = pColor;
 		type = pType;
+		x = px;
+		y = py;
 	}
 	public FigureColor getFigureColor(){
 		return color;
@@ -31,5 +33,8 @@ public class Figure {
 	}
 	public void setFigureType(FigureType pType){
 		type = pType;
+	}
+	public Figure copy() {
+		return new Figure(x, y, color, type);
 	}
 }

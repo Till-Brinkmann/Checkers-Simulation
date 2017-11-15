@@ -5,43 +5,90 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
+import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
-import checkers.Move.MoveDirection;
+import checkers.Move.MoveType;
+import checkers.Player;
 import checkers.Playfield;
+
+import generic.List;
 /**
  *
  * @author Till
  *
  */
 @SuppressWarnings("serial")
-public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
+public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
+	public ImageIcon king;
 	private Playfield playfield;
 	private JButton[][] buttons;
-	public GUI gui;
+	GameLogic gamelogic;
+	Console console;
+	CommandListener drawDecision;
 	//for move-making
-	int x1 = 0;
-	int y1 = 0;
-	int x2 = 0;
-	int y2 = 0;
-	boolean alreadyOneMove = false;
+	private int[][] coords;
+	private int[][] multiJumpOptions;
 
-	public PlayfieldPanel(Playfield pPlayfield,GUI pGui){
+	private enum Click{ZERO,FIRST,SECOND};
+	private Click clickSituation = Click.ZERO;
+	//the PlayfieldPanel must support up to two player
+	FigureColor figurecolor;
+	List<Figure> jumpFigures;
+	private boolean hasChosen;
+	private boolean wantsDraw;
+	List<Move> list;
+
+	public PlayfieldPanel(GameLogic pGamelogic, Console pConsole){
 		super();
-		gui = pGui;
-		playfield = pPlayfield;
+		king = new ImageIcon("resources/Icons/dame.png");
+		gamelogic = pGamelogic;
+		console = pConsole;
+		//TODO darüber muss man noch nachdenken
+//		console.addCommandListener(new CommandListener(){
+//			public boolean processCommand(String command){
+//				if(command.equals("requestDraw")){
+//					gamelogic.requestDraw();
+//					return true;
+//				}
+//				return false;
+//			}
+//		});
+		drawDecision = new CommandListener(){
+			@Override
+			public boolean processCommand(String command){
+				switch(command){
+				case "yes":
+				case "y":
+					hasChosen = true;
+					wantsDraw = true;
+					return true;
+				case "no":
+				case "n":
+					hasChosen = true;
+					wantsDraw = false;
+					return true;
+				}
+				return false;
+			}
+		};
+		playfield = gamelogic.getPlayfield();
 		playfield.setPlayfieldDisplay(this);
+		coords = new int[2][2];
+		multiJumpOptions = new int[3][2];
+		jumpFigures = new List<Figure>();
 		buttons = new JButton[playfield.SIZE][playfield.SIZE];
 		createPlayfieldPanel();
+		enableAllButtons(false);
 	}
 	public void createPlayfieldPanel(){
 		setLayout(new GridLayout(playfield.SIZE,playfield.SIZE));
 		setPreferredSize(new Dimension(700,700));
-        for (int y = 0; y < playfield.SIZE; y++) {
+        for (int y = playfield.SIZE - 1; y >= 0 ; y--) {
             for(int x = 0; x < playfield.SIZE; x++){
-                buttons[x][y] = new JButton ();
+                buttons[x][y] = new JButton();
                 buttons[x][y].setBackground(Color.lightGray);
                 buttons[x][y].setVerticalTextPosition(SwingConstants.BOTTOM);
                 buttons[x][y].setHorizontalTextPosition(SwingConstants.CENTER);
@@ -85,10 +132,10 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
 		return buttons;
 	}
 
-	public void setButtonColor(int x, int y, Color color){
+	private void setButtonColor(int x, int y, Color color){
 		buttons[x][y].setBackground(color);
 	}
-	private void setButtonIcon(int x, int y, Icon icon) {
+	private void setButtonIcon(int x, int y, ImageIcon icon) {
 		buttons[x][y].setIcon(icon);
 	}
 
@@ -104,20 +151,22 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
 	public void updateField(int x, int y) {
 		if(playfield.isOccupied(x, y)){
 			switch (playfield.field[x][y].getFigureType()){
-				case KING:// TODO add icon for king
-					setButtonIcon(x, y, null);
+				case KING:
+					setButtonIcon(x, y, king);
+					break;
 				case NORMAL:
 					setButtonIcon(x, y, null);
-					switch (playfield.field[x][y].getFigureColor()){
-						case WHITE:
-							setButtonColor(x, y, Color.white);
-							return;
-						case GREEN:
-						//TODO das richtige grün für die figuren finden
-							setButtonColor(x, y, new Color(0,165,0));
-							return;
-					}
+					break;
 			}
+			switch (playfield.field[x][y].getFigureColor()){
+			case WHITE:
+				setButtonColor(x, y, Color.white);
+				return;
+			case RED:
+			//TODO das richtige rot für die figuren finden
+				setButtonColor(x, y, new Color(160,10,10));
+				return;
+		}
 		}
 		else {
 			setButtonColor(x, y, Color.lightGray);
@@ -126,63 +175,197 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay{
 	}
 
 	private void saveCoordinates(int x, int y) {
-
-		if(!alreadyOneMove){
+		switch(clickSituation) {
+		case ZERO:
 			if(playfield.isOccupied(x, y)){
-				x1 = x;
-				y1 = y;
-				alreadyOneMove = true;
-				buttons[x1][y1].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
-			}
-		}
-		else{
-			alreadyOneMove = false;
-			if(x1 != x || y1 !=y){
-				buttons[x1][y1].setBorder(BorderFactory.createLineBorder(Color.GRAY));
-				x2 = x;
-				y2 = y;
-				createMove();
-			}//unselect figure
-			else {
-				buttons[x1][y1].setBorder(null);
-			}
-		}
-	}
-	public void createMove(){
-		MoveDirection direction = MoveDirection.INVALID;
-		int steps = y2-y1;
-		int xShift = x2-x1;
-		if(Math.abs(steps) == Math.abs(xShift)){
-			if(steps < 0){
-				if(xShift < 0){
-					direction = MoveDirection.BL;
+				if(jumpIsPossible()){
+					//if a jump is possible only figures that can jump can be clicked
+					jumpFigures.toFirst();
+					while(jumpFigures.hasAccess()){
+						if(playfield.field[x][y] == jumpFigures.getContent()){
+							selectFigure(x, y);
+						}
+						jumpFigures.next();
+					}
 				}
-				if(xShift > 0){
-					direction = MoveDirection.BR;
+				else {
+						selectFigure(x,y);
 				}
 			}
-			if(steps > 0){
-				if(xShift < 0){
-					direction = MoveDirection.FL;
+			break;
+		case FIRST:
+			if(coords[0][0] == x && coords[0][1] == y){
+				//unselect figure
+				buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+				clickSituation = Click.ZERO;
+				return;
+			}
+			//you can not move to an occupied field
+			if(!playfield.isOccupied(x, y)){
+				coords[1][0] = x;
+				coords[1][1] = y;
+				Move m = Move.createMoveFromCoords(coords);
+				if(m.isInvalid() || !gamelogic.testMove(m) || (jumpIsPossible() && m.getMoveType() == MoveType.STEP)){
+					//TODO cancel move
+					console.printWarning("Invalid move", "playfieldPnael");
+					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+					clickSituation = Click.ZERO;
+					return;
 				}
-				if(xShift > 0){
-					direction = MoveDirection.FR;
+				if(m.getMoveType() == MoveType.JUMP){
+					//multiJumpTesting
+					list = gamelogic.testForMultiJump(coords[0][0],coords[0][1]);
+					list.toFirst();
+					while(list.hasAccess()) {
+						if(list.getContent().getMoveType() == MoveType.MULTIJUMP ) {
+							if(list.getContent().getMoveDirection(0).equals(m.getMoveDirection(0))){
+								console.printInfo("A Mulitjump was found","playfieldPanel");
+							}
+							else {
+								list.remove();
+							}
+						}else {
+							list.remove();
+						}
+						list.next();
+					}
+					if(list.length != 0) {
+						list.toFirst();
+						int i = 0;
+						while(list.hasAccess()) {
+							switch(list.getContent().getMoveDirection(1)) {
+								case BL:
+									multiJumpOptions[i][0]	= coords[1][0]-2;
+									multiJumpOptions[i][1]	= coords[1][1]-2;
+									break;
+								case BR:
+									multiJumpOptions[i][0]	= coords[1][0]+2;
+									multiJumpOptions[i][1]	= coords[1][1]-2;
+									break;
+								case FL:
+									multiJumpOptions[i][0]	= coords[1][0]-2;
+									multiJumpOptions[i][1]	= coords[1][1]+2;
+									break;
+								case FR:
+									multiJumpOptions[i][0]	= coords[1][0]+2;
+									multiJumpOptions[i][1]	= coords[1][1]+2;
+									break;
+							}
+							buttons[multiJumpOptions[i][0]][multiJumpOptions[i][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
+							i++;
+							list.next();
+						}
+						clickSituation = Click.SECOND;
+						return;
+					}	
+					
+				}
+				if(m.getMoveType() == MoveType.JUMP) {
+				console.printInfo("Jump: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ")","playfieldPanel");
+				}
+				if(m.getMoveType() == MoveType.STEP) {
+				console.printInfo("Step: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ")","playfieldPanel");
+				}
+				resetAndExecute(m,0);
+				
+			}
+			break;
+		case SECOND:
+			for(int i = 0; i < list.length;i++) {
+				if(multiJumpOptions[i][0] == x && multiJumpOptions[i][1] == y) {
+					list.toFirst();
+					for(int j = 0; i < j;j++) {
+						list.next();
+					}
+					console.printInfo("Multijump: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ") - ("+ multiJumpOptions[i][0] + "/" + multiJumpOptions[i][1] + ")","PlayfieldPanel");
+					resetAndExecute(list.getContent(),i);
 				}
 			}
-		}
-		Move m = new Move(direction, steps, x1, y1);
-		if(gui.getGameLogic().testMove(m)){
-			playfield.executeMove(m);
-		}
-		else{
-			//Fehlermeldung
+			break;
 		}
 
 	}
-	public void createMove(int x,int y){
-		//Method for Multi jump
-		if(gui.getGameLogic().testForMultiJump(x, y)){
-			buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY));
+	private void resetAndExecute(Move m,int i) {
+		if(gamelogic.getTwoPlayerMode()){
+			//toggle color
+			figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
+		}		
+		buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+		buttons[coords[1][0]][coords[1][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+		buttons[multiJumpOptions[i][0]][multiJumpOptions[i][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+		clickSituation = Click.ZERO;
+		enableAllButtons(false);
+		gamelogic.makeMove(m);
+	}
+	private void selectFigure(int x, int y){
+		coords[0][0] = x;
+		coords[0][1] = y;
+		clickSituation = Click.FIRST;
+		buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
+	}
+
+	private boolean jumpIsPossible() {
+		//TODO gibt fehlerhafte werte zurück
+		boolean canJump = false;
+		jumpFigures = new List<Figure>();
+		for(Figure f : playfield.getFiguresFor(figurecolor)){
+			if(Move.getPossibleJumps(f, playfield).length > 0){
+				canJump = true;
+				jumpFigures.append(f);
+			}
 		}
+		return canJump;
+	}
+
+	private void enableAllButtons(boolean enabled) {
+		for(int x = 0; x < playfield.SIZE; x++){
+			for(int y = 0; y < playfield.SIZE; y++){
+				buttons[x][y].setEnabled(enabled);
+			}
+		}
+	}
+
+	@Override
+	public void prepare(FigureColor color) {
+		figurecolor = color;
+	}
+	@Override
+	public void requestMove() {
+		//enable all buttons exept for enemy figures
+		enableAllButtons(true);
+		for(int x = 0; x < playfield.SIZE; x++){
+			for(int y = 0; y < playfield.SIZE; y++){
+				if(playfield.isOccupied(x, y) && playfield.field[x][y].color != figurecolor)
+				buttons[x][y].setEnabled(false);
+			}
+		}
+	}
+	@Override
+	public String getName(){
+		return "Human player (PlayfieldPanel)";
+	}
+	/**
+	 * has to be synchronized because otherwise it is not able to wait.
+	 */
+	@Override
+	public synchronized boolean acceptDraw(){
+		//console.addCommandListener(drawDecision);
+		console.printInfo("do you accept a draw? [yes/no] (default no)", "PlayfieldPanel");
+		//int counter = 5;
+		//defaults to false
+		wantsDraw = false;
+//		while(!hasChosen && counter != 0){
+//			console.print(String.valueOf(counter));
+//			try {
+//				wait(1000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			counter--;
+//		}
+//		console.removeCommandListener(drawDecision);
+//		hasChosen = false;
+		return wantsDraw;
 	}
 }
