@@ -16,7 +16,7 @@ public class NN
     }
     
     private double sigmoid(double x) {
-        return (1/( 1 + Math.pow(Math.E,(-1*x))) + ((sigmin + sigmax) / 2)-0.5) * (sigmax-sigmin);
+        return (1/( 1 + Math.pow(Math.E,(-x))) + ((sigmin + sigmax) / 2)-0.5) * (sigmax-sigmin);
     }
     
     private double[] vector_matix_multiplication(double[] vector, double[][] matrix){
@@ -66,7 +66,7 @@ public class NN
             }
         }
     }
-    public void changeAll(double quality){ //in percent
+    public void changeAllPercent(double quality){ //in percent
         for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
                 afterInputWeights[i][x] *= 1 + (Math.random() - 0.5) * 2 * quality / 100;
@@ -86,7 +86,7 @@ public class NN
         }
     }
     
-    public void changeAll2(double quality){ //in percent
+    public void changeAllReal(double quality){ //real
         for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
                 afterInputWeights[i][x] += (Math.random() - 0.5) * 2 * quality / 100;

@@ -114,10 +114,12 @@ public class ColorSettings extends JFrame{
 		return color;
 	}
 	private void updateColors(){
-		gui.updateBackground(sliderMixer(backgroundSlider));
-		gui.updateForeground(sliderMixer(foregroundSlider));
-		backgroundPanel.setBackground(sliderMixer(backgroundSlider));
-		foregroundPanel.setBackground(sliderMixer(foregroundSlider));
+		Color backgroundColor = sliderMixer(backgroundSlider);
+		Color foregroundColor = sliderMixer(foregroundSlider); 
+		gui.updateBackground(backgroundColor);
+		gui.updateForeground(foregroundColor);
+		backgroundPanel.setBackground(backgroundColor);
+		foregroundPanel.setBackground(foregroundColor);
 	}
 
 }

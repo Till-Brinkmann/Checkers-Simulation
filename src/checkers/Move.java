@@ -156,7 +156,7 @@ public class Move {
 					moves.append(new Move(MoveDirection.FR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent());
+					tmp.executeMove(moves.getContent(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y+2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
@@ -187,7 +187,7 @@ public class Move {
 					moves.append(new Move(MoveDirection.FL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent());
+					tmp.executeMove(moves.getContent(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y+2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
@@ -215,7 +215,7 @@ public class Move {
 					moves.append(new Move(MoveDirection.BR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent());
+					tmp.executeMove(moves.getContent(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y-2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
@@ -240,7 +240,7 @@ public class Move {
 					moves.append(new Move(MoveDirection.BL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent());
+					tmp.executeMove(moves.getContent(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y-2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){

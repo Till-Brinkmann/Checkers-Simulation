@@ -317,7 +317,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		return canJump;
 	}
 
-	private void enableAllButtons(boolean enabled) {
+	public void enableAllButtons(boolean enabled) {
 		for(int x = 0; x < playfield.SIZE; x++){
 			for(int y = 0; y < playfield.SIZE; y++){
 				buttons[x][y].setEnabled(enabled);

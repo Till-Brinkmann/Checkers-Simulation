@@ -1,16 +1,24 @@
 package NNStuff;
+import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import gui.Console;
 import checkers.GameLogic;
 import checkers.Move;
+import checkers.Move.MoveDirection;
+import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
+import generic.List;
 
 public class NNPlayer implements Player {
+	/*
+	 * das nn bekommt das feld als input und gibt das feld nach dem zug aus.
+	 * Dann wird der h�chste wert im outputfeld genommen und es wird geguckt ob eine figur dieses erreichen kann
+	 * 
+	 */
 
 	private double[] inputVector;
-	private double[] outputVector;
 	private FigureColor aiFigureColor;
 	private int round = 0;
     private double changeQuality = 50;
@@ -51,34 +59,26 @@ public class NNPlayer implements Player {
             	}
 			}
 		}
-        outputVector = net.run(inputVector);
-        double max = outputVector[0];
-        int choiceField = 0;
-        for(int i = 1; i< 32; i++) {
-        	if(outputVector[i] > max){
-        		max = outputVector[i];
-        		choiceField = i;
+        Move m = moveDecision(net.run(inputVector));
+        
+        if(m.getMoveType() == MoveType.JUMP){
+        	if(gmlc.testMove(m)) {
+        		List<Move> moveList = gmlc.testForMultiJump(m.getX(),m.getY());
+        		while(!moveList.isEmpty()) {
+        			if(moveList.getContent().getMoveDirection(0) == m.getMoveDirection(0)) {
+        				multiJumpRun();
+        				
+        			}
+        		}
+        			
+        	}
+        	else {
+        		m.setMoveType(MoveType.INVALID);
         	}
         }
-        
-        int x = 8 / (choiceField - 8 % choiceField);
-        int y = 8 % choiceField;
-        x = (x+1)*2-1;
-        y = (y+1)*2-1;
-        
-        max = outputVector[32];
-        int choiceDirection = 0;
-        for(int i = 32; i< 36; i++) {
-        	if(outputVector[i] > max){
-        		max = outputVector[i];
-        		choiceDirection = i;
-        	}
-        }
-        
-//      Move m.Move.createMoveFromCoords(coords);
-//;
-//       gmlc.makeMove(m);
+    	gmlc.makeMove(m);
 	}
+	
 	public void addValueTOInputVector(int x, int y, int field) {
 		if(playfield.isOccupied(x, y)) {
 			if(playfield.colorOf(x,y) == aiFigureColor) {
@@ -106,7 +106,82 @@ public class NNPlayer implements Player {
 			inputVector[field] = 0;			
 		}
 	}
+	
+	private void multiJumpRun() {
+		
+		
+	}
+	private Move moveDecision(double[] outputVector) {
+		Move move = new Move(MoveType.INVALID);
+		//find out the field it wants to move to
+		double max = Integer.MIN_VALUE;
+        int choiceField = 0;
+        for(int i = 1; i < 32; i++) {
+        	if(outputVector[i] > max){
+        		max = outputVector[i];
+        		choiceField = i;
+        	}
+        }
+        //test which figures can reach this field
+        //TODO do it!
+        List<Move> availableMoves = new List<Move>();
+        int[][] coords = new int[2][2];
+        for( Figure f : gmlc.getPlayfield().getFiguresFor(aiFigureColor)) {
+        	coords[0][0] = f.x;
+        	coords[0][1] = f.y;
+        	coords[1] = fieldToCoords(choiceField);
+        	move = Move.createMoveFromCoords(coords);
+        	if(move.getMoveType() != MoveType.INVALID) {
+        		//TODO der move zu dem feld ist m�glichirgendwie speichern oder so
+        		availableMoves.append(move);
+        	}
+        }
+        availableMoves.toFirst();
+        if(availableMoves.length == 0){
+        	move = new Move(MoveType.INVALID);
+        }
+        else {//case: there is a move that ends at this field
+        	//find out if a figure that can do the move is on the field which is chosen by the nn to be the move start
+        	max = Integer.MIN_VALUE;
+        	for(int i = 32; i < 64; i++) {
+            	if(outputVector[i] > max){
+            		max = outputVector[i];
+            		choiceField = i;
+            	}
+            }
+        	coords[0] = fieldToCoords(choiceField);
+        	
+    		for(;availableMoves.hasAccess();availableMoves.next()){
+    			move = availableMoves.getContent();
+    			if(move.getX() == coords[0][0] && move.getY() == coords[0][1]){
+    				break;
+    			}
+    			else{
+    				move = new Move(MoveType.INVALID);
+    			}
+    		}
+        }
+        return move;
+	}
 
+	private int[] fieldToCoords(int choiceField) {
+		int[] c = new int[2];
+		c[0] = (choiceField - choiceField % 4) / 4;
+        c[1] = choiceField % 4;
+        c[1] *= 2;
+        if(c[0]%2 == 1) {
+        	c[1]++;
+        	c[0] *= 2;
+        	c[1]--;
+        }
+        else {
+        	c[0] *= 2;
+        }
+		return c;
+	}
+	public void setGL(GameLogic gl){
+		gmlc = gl;
+	}
 	@Override
 	public String getName() {
 		// TODO Auto-generated method stub
@@ -118,5 +193,7 @@ public class NNPlayer implements Player {
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
+	public FigureColor getFigureColor() {
+		return aiFigureColor;	
+	}
 }

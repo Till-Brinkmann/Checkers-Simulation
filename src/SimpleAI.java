@@ -22,7 +22,7 @@ public class SimpleAI implements Player {
 	int depth = 3;
 	
 	public SimpleAI(GameLogic pGmlc, Console pConsole) {
-		name = "MiniMaxAlgorithm";
+		name = "Simple AI";
 		gmlc = pGmlc;
 		console = pConsole;
 	}
@@ -58,7 +58,7 @@ public class SimpleAI implements Player {
 		Playfield newPlayfield;
 		while(moveList.hasAccess()) {
 			newPlayfield = playfield.copy();
-			newPlayfield.executeMove(moveList.getContent());
+			newPlayfield.executeMove(moveList.getContent(),true);
 			int quality = moveEvaluation(moveList.getContent(),newPlayfield);
 			moveListLoop(moveOutsorting(newPlayfield,reverseFigureColor(aiFigureColor)),0, newPlayfield, reverseFigureColor(aiFigureColor), moveNumber, quality);
 			moveNumber++;
@@ -87,11 +87,11 @@ public class SimpleAI implements Player {
 			while(moveList.hasAccess()) {
 				Move m = moveList.getContent();
 				if(gmlc.testMove(m,newPlayfield)) {
-					newPlayfield.executeMove(m);
+					newPlayfield.executeMove(m,true);
 				}
 				else {
 					
-					console.printWarning("SimpleAI","Move not Possible. Depth:" + currentDepth );
+					//console.printWarning("SimpleAI","Move not Possible. Depth:" + currentDepth );
 					return;
 				}
 				if(currentDepth < depth) {

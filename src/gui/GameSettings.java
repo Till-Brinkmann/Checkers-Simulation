@@ -1,7 +1,10 @@
 package gui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -18,6 +21,7 @@ import javax.swing.event.ChangeListener;
 import NNStuff.NNTrainingManager;
 import checkers.GameLogic;
 import checkers.Player;
+import gui.GUI.AISpeed;
 
 
 @SuppressWarnings("serial")
@@ -29,22 +33,29 @@ public class GameSettings extends JFrame{
 	Class<?> ai;
 	URL url;
 	URLClassLoader loader;
+	
+	private JPanel backgroundPanel;
 	private ImageIcon gameSettingsIcon;
 	String[] playerNameList;
 	private JCheckBox recordGame;
-	private JCheckBox nnTrainingCheckBox;
 	private JButton okButton;
 	private JTextField gameNameField;
+	
 	private JComboBox<String> player1ComboBox;
+	private String currentSelectionPlayer1;
+	
 	private JComboBox<String> player2ComboBox;
+	private String currentSelectionPlayer2;
+	
 	private JSpinner roundsSpinner;
 	private JSlider slownessForSlowMode;
+	private JCheckBox displayCheckBox;
 	private boolean recordGameIsEnabled = false;
 	private String gameName;
 	private GUI gui;
-	private NNTrainingManager nnManager;
 	private int slowness;
-	private boolean nnTraining;
+	
+	private Thread gmlcThread;
 	public GameSettings(GUI pGui) {		
 		super("Game Settings");
 		gui = pGui;
@@ -58,41 +69,42 @@ public class GameSettings extends JFrame{
 		recordGame = new JCheckBox("gameRecording");
 		recordGame.setBackground(Color.WHITE);
 		gameNameField = new JTextField(10);
-		okButton  = new JButton("ok");
+		okButton  = new JButton("confirm");
 		okButton.setBackground(Color.WHITE);
 		player1ComboBox = new JComboBox<String>(createList());
 		player1ComboBox.setBackground(Color.WHITE);
+		player1ComboBox.setSelectedItem("player");
+		currentSelectionPlayer1 = player1ComboBox.getSelectedItem().toString();
 		player2ComboBox = new JComboBox<String>(createList());
 		player2ComboBox.setBackground(Color.WHITE);
+		player2ComboBox.setSelectedItem("player");
+		currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
 		
-		roundsSpinner = new JSpinner ();
+		roundsSpinner = new JSpinner (new SpinnerNumberModel(1, 1, 1000, 1));
 		roundsSpinner.setValue(1);
-		nnTrainingCheckBox = new JCheckBox("NNTraining");
-		nnTrainingCheckBox.setBackground(Color.WHITE);
-		slownessForSlowMode = new JSlider(0,4000,0);
+		slownessForSlowMode = new JSlider(0,2000,0);
+		slownessForSlowMode.setMajorTickSpacing(1000);
+		slownessForSlowMode.setSnapToTicks (true);
 		slownessForSlowMode.setPaintLabels(true);
 		Hashtable<Integer, JLabel> table = new Hashtable<Integer, JLabel>();
 		
 		table.put(0, new JLabel("fast"));
-		table.put(2000, new JLabel("medium"));
-		table.put(4000, new JLabel("slow"));
+		table.put(1000, new JLabel("medium"));
+		table.put(2000, new JLabel("slow"));
 		slownessForSlowMode.setLabelTable (table);
 		slownessForSlowMode.setForeground(Color.CYAN);
 		slownessForSlowMode.setBackground(Color.WHITE);
+		
+		displayCheckBox = new JCheckBox("Display enabled",true);
+		displayCheckBox.setBackground(Color.WHITE);
+		displayCheckBox.setEnabled(false);
+		
+		
 		slownessForSlowMode.addChangeListener(new ChangeListener()
         {
         	public void stateChanged(ChangeEvent evt){
         		slowness = slownessForSlowMode.getValue();
             }
-        });
-		
-		nnTrainingCheckBox.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent event)
-            {
-            	nnTraining = nnTrainingCheckBox.isSelected();
-            }
-
         });
 		recordGame.addActionListener(new ActionListener()
         {
@@ -115,42 +127,116 @@ public class GameSettings extends JFrame{
             	    gui.console.printInfo("When game recording is selected, you have to enter a game name!", "Gamesettings");
             		return;
             	}
-            	dispose();
-            	if(nnTraining) {
-            		nnManager = new NNTrainingManager(gui);
-            	}
-            	else {
-	            	//the game is started in a separate Thread to reduce the load on the eventqueue
-					new Thread(){
-						public void run(){
-							try {
-								gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue(),slowness);
-							} catch (ClassNotFoundException | MalformedURLException | InstantiationException
-									| IllegalAccessException | IllegalArgumentException | InvocationTargetException
-									| NoSuchMethodException | SecurityException e) {
-								gui.console.printWarning("gmlc", "failed to load the ai");
-								e.printStackTrace();
+            	
+            	//the game is started in a separate Thread to reduce the load on the eventqueue
+            	gmlcThread = new Thread(new Runnable() {
+            	    public void run()
+            	    {
+            	    	try {
+							if(currentSelectionPlayer1.equals("player") && currentSelectionPlayer2.equals("player")) {
+								gui.setAISpeed(AISpeed.NOTACTIVE);
 							}
+							else {
+								if(slownessForSlowMode.getValue() == 0) {
+									gui.setAISpeed(AISpeed.FAST);
+								}
+								else if(slownessForSlowMode.getValue() == 1000) {
+									gui.setAISpeed(AISpeed.MEDIUM);
+								}
+								else {
+									gui.setAISpeed(AISpeed.SLOW);
+								}
+							}
+							gui.setEnableResume(false);
+							gui.setEnablePause(true);
+							gui.setEnableStop(true);
+							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected());
+						} catch (ClassNotFoundException | MalformedURLException | InstantiationException
+								| IllegalAccessException | IllegalArgumentException | InvocationTargetException
+								| NoSuchMethodException | SecurityException e) {
+							gui.console.printWarning("gmlc", "failed to load the ai");
+							e.printStackTrace();
 						}
-					}.start();
-            	}
-            }
+            	    }
+        	    });  
+            	gmlcThread.start();
+            }           
+        });
+		player1ComboBox.addActionListener(new ActionListener()
+        {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				currentSelectionPlayer1 = player1ComboBox.getSelectedItem().toString();
+				if(!currentSelectionPlayer1.equals("player") && !currentSelectionPlayer2.equals("player")) {
+					displayCheckBox.setEnabled(true);
+				}
+				else {
+					displayCheckBox.setEnabled(false);
+
+				}
+			}
+        });
+		player2ComboBox.addActionListener(new ActionListener()
+        {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
+				if(!currentSelectionPlayer1.equals("player") && !currentSelectionPlayer2.equals("player")) {
+					displayCheckBox.setEnabled(true);
+				}
+				else {
+					displayCheckBox.setEnabled(false);
+				}
+			}
         });
 	}
 	private void createWindow() {
 		setResizable(false);
-		setLayout(new FlowLayout());
-		setSize(350,450);
+		setSize(300,250);
 		setAlwaysOnTop (true);
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		add(recordGame);
-		add(gameNameField);
-		add(okButton);
-		add(player1ComboBox);
-		add(player2ComboBox);
-		add(roundsSpinner);
-		add(nnTrainingCheckBox);
-		add(slownessForSlowMode);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		
+		backgroundPanel = new JPanel();
+		//backgroundPanel.setPreferredSize(new Dimension(200,300));
+		backgroundPanel.setLayout(new BoxLayout(backgroundPanel,BoxLayout.Y_AXIS ));
+		JPanel gameNamePanel = new JPanel();
+		gameNamePanel.setBackground(Color.WHITE);
+		gameNamePanel.setLayout(new FlowLayout());
+		gameNamePanel.setPreferredSize(new Dimension(300,4));
+		gameNamePanel.add(new JLabel("Game Name:"));
+		gameNamePanel.add(gameNameField);
+		
+		JPanel recordGamePanel = new JPanel();
+		recordGamePanel.setBackground(Color.WHITE);
+		recordGamePanel.setLayout(new FlowLayout());
+		recordGamePanel.setPreferredSize(new Dimension(300,4));
+		recordGamePanel.add(recordGame);
+		recordGamePanel.add(new JLabel("Rounds:"));
+		recordGamePanel.add(roundsSpinner);	
+		
+		JPanel playerSelection = new JPanel();
+		playerSelection.setBackground(Color.WHITE);
+		playerSelection.setLayout(new FlowLayout());
+		playerSelection.add(player1ComboBox);
+		playerSelection.add(player2ComboBox);
+		playerSelection.add(displayCheckBox);
+		
+		JPanel slownessPanel = new JPanel();
+		slownessPanel.setPreferredSize(new Dimension(300,6));
+		slownessPanel.setBackground(Color.WHITE);
+		slownessPanel.add(slownessForSlowMode);
+		
+		JPanel okButtonPanel = new JPanel();
+		okButtonPanel.setPreferredSize(new Dimension(300,6));
+		okButtonPanel.setBackground(Color.WHITE);
+		okButtonPanel.add(okButton);
+		
+		backgroundPanel.add(gameNamePanel);
+		backgroundPanel.add(recordGamePanel);
+		backgroundPanel.add(playerSelection);
+		backgroundPanel.add(slownessPanel);
+		backgroundPanel.add(okButtonPanel);
+		add(backgroundPanel);		
 		setVisible(true);
 	}
 	private String[] createList() {
@@ -179,7 +265,7 @@ public class GameSettings extends JFrame{
 		return playerNameList;
 	}
 	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		if(player1ComboBox.getSelectedItem().equals("player")) {
+		if(currentSelectionPlayer1.equals("player")) {
 			return gui.playfieldpanel;
 		}
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
@@ -194,7 +280,7 @@ public class GameSettings extends JFrame{
 		return gui.playfieldpanel; 
 	}
 	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		if(player2ComboBox.getSelectedItem().equals("player")) {
+		if(currentSelectionPlayer2.equals("player")) {
 			return gui.playfieldpanel;
 		}
 		
@@ -225,6 +311,12 @@ public class GameSettings extends JFrame{
 		}
 		gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
 		return false;
+	}
+	public void updateBackground( Color color){
+		backgroundPanel.setBackground(color);
+	}
+	public void interruptThread() {
+		gmlcThread.interrupt();
 	}
 }
 
