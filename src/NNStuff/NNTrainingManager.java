@@ -18,7 +18,7 @@ public class NNTrainingManager {
 	private GameLogic gmlc;
 	private Playfield thePlayfield;
 	private NNPlayer[] nnPlayer;
-	private int nNquantity = 2;
+	private int nNquantity = 4;
     private double changeQuality = 50;
     private NN net;
     private int[] nnFitness;
@@ -109,11 +109,11 @@ public class NNTrainingManager {
             	if(i != x) {
             		int i2 = i;
             		int x2 = x;
-            		ForkJoinPool.commonPool().execute(new Runnable(){
-                		public void run(){
+            		//ForkJoinPool.commonPool().execute(new Runnable(){
+                		//public void run(){
                 			netVSnet(i2,x2);
-                		}
-                	});
+                	//	}
+                //	});
             	}
             }
         }
@@ -127,10 +127,10 @@ public class NNTrainingManager {
     	nnPlayer[net2].setGL(gl);
     	gl.startGame(false, "Training", nnPlayer[net2], nnPlayer[net1], 1, 0, false);
        	if(FigureColor.RED == nnPlayer[net1].getFigureColor()) {
-    		evaluateFitness(net1,net2);
+    		evaluateFitness(net1,net2, gl);
     	}
     	else {
-    		evaluateFitness(net2, net1);
+    		evaluateFitness(net2, net1, gl);
 
     	}
     	
@@ -140,9 +140,9 @@ public class NNTrainingManager {
             nnPlayer[i].net.changeAllPercent(changeQuality);
         }
     }
-    public void evaluateFitness(int startedNet, int secondNet) {
-    	Situations situation = gmlc.getFinalSituation();
-    	boolean failed = gmlc.getFailed();
+    public void evaluateFitness(int startedNet, int secondNet, GameLogic gl) {
+    	Situations situation = gl.getFinalSituation();
+    	boolean failed = gl.getFailed();
     	switch(situation) {
 		case DRAW:
 			nnFitness[startedNet] += 20;
@@ -164,8 +164,8 @@ public class NNTrainingManager {
 			console.printInfo("NNTrainingManager", "game was either stopped or paused");
 			return;
     	}
-    	nnFitness[startedNet] += gmlc.getPlayfield().getFigureQuantity(FigureColor.RED);
-    	nnFitness[secondNet] += gmlc.getPlayfield().getFigureQuantity(FigureColor.WHITE);
+    	nnFitness[startedNet] += gl.getPlayfield().getFigureQuantity(FigureColor.RED);
+    	nnFitness[secondNet] += gl.getPlayfield().getFigureQuantity(FigureColor.WHITE);
     	//console.printInfo("NNTrainingManager",nnFitness[startedNet] , nnFitness[secondNet]);
     	console.print("Net " + startedNet + " scored: " + nnFitness[startedNet]);
     }

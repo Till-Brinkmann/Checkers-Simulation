@@ -145,23 +145,26 @@ public class GameLogic {
 		playerRed.requestMove();
 	}
 	public void makeMove(Move m){
-		if(!(field.field[m.getX()][m.getY()].color == inTurn) || !testMove(m)){
+		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].color != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
 					finishGameTest(Situations.WHITEWIN,true);
+					return;
 				}
 				else {
 					redFailedOnce = true;
+					playerRed.requestMove();
 				}
 			}
 			else {
 				if(whiteFailedOnce){
 					finishGameTest(Situations.REDWIN,true);
-
+					return;
 				}
 				else {
 					whiteFailedOnce = true;
+					playerWhite.requestMove();
 				}
 			}
 		}
@@ -186,7 +189,6 @@ public class GameLogic {
 					moveRequesting();
 				}
 			}
-		
 		}
 	}
 	private void moveRequesting() {
@@ -275,7 +277,7 @@ public class GameLogic {
 			return;
 		}
 		
-		currentRound++;
+		++currentRound;
 		if(currentRound == rounds || end == Situations.STOP) {
 			try {
 				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
@@ -293,7 +295,7 @@ public class GameLogic {
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);
 			gui.setEnableStop(false);
-			currentRound = 0;
+			//currentRound = 0;
 			//TODO "hard" reset 
 			// TODO maybe statistic for ki playing against each other and creating a file with all information
 		}
@@ -310,7 +312,7 @@ public class GameLogic {
 						}
 					}
 				}.start();
-				startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
+				//startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
 			} catch (IOException e) {
 				gui.console.printWarning("failed to load the pfs file startPositionForSize8","GameLogic");
 				e.printStackTrace();
