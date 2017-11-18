@@ -1,16 +1,16 @@
 package gui;
 import javax.swing.event.*;
-import java.awt.event.*;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
+@SuppressWarnings("serial")
 public class ColorSettings extends JFrame{
 
+	private ImageIcon colorSettingsIcon;
 	private JPanel foregroundPanel;
     private JSlider[] foregroundSlider;
     private JLabel labelBg;
@@ -21,28 +21,34 @@ public class ColorSettings extends JFrame{
     private JButton okButton;
     GUI gui;
 
-	public ColorSettings(GUI pGui,boolean random) {
+	public ColorSettings(GUI pGui) {
+		this(pGui, new Color((int)Math.round((Math.random()*Integer.MAX_VALUE*2)+Integer.MIN_VALUE)),
+				new Color((int)Math.round((Math.random()*Integer.MAX_VALUE*2)+Integer.MIN_VALUE)));
+	}
+	public ColorSettings(GUI gui, Color fg ,Color bg) {
 		super("Color Settings");
-		gui = pGui;
-		initialize(random);
+		this.gui = gui;
+		initialize(fg, bg);
 		createWindow();
 		updateColors();
 	}
-	private void initialize(boolean random) {
+	
+	private void initialize(Color fg, Color bg) {
+		colorSettingsIcon = new ImageIcon("resources/Icons/colorChanger.png");
+		setIconImage(colorSettingsIcon.getImage());
 		backgroundSlider = new JSlider[3];
 		foregroundSlider = new JSlider[3];
-		if(random){
-			for(int i = 0; i < 3; i++){
-				backgroundSlider[i] = new JSlider(0,255,(int)(Math.random()*256));
-				foregroundSlider[i] = new JSlider(0,255,(int)(Math.random()*256));
-			}
-		}
-		else{
-			//richtige Farbwerte eintragen!
+		for(int i = 0; i < 3; i++){
+			//some fancy bitmath to get red,green and blue separately inside the loop
+			backgroundSlider[i] = new JSlider(0,255,(bg.getRGB() & (255 << 8*i))>> 8*i);
+			backgroundSlider[i].setBackground(Color.WHITE);
+			foregroundSlider[i] = new JSlider(0,255,(fg.getRGB() & (255 << 8*i))>> 8*i);
+			foregroundSlider[i].setBackground(Color.WHITE);
 		}
 		officialFigureColor = new JCheckBox("official figure colors");
+		officialFigureColor.setBackground(Color.WHITE);
 		okButton = new JButton("confirm");
-
+		okButton.setBackground(Color.WHITE);
 		for(int i = 0; i < 3; i++){
 	        backgroundSlider[i].addChangeListener(new ChangeListener()
 	        {
@@ -77,10 +83,12 @@ public class ColorSettings extends JFrame{
 
 	private void createWindow() {
 		setResizable(false);
+		setBackground(Color.WHITE);
 		setSize(350,450);
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		//Background slider
 		backgroundPanel = new JPanel();
+		backgroundPanel.setBackground(Color.WHITE);
 		backgroundPanel.setLayout(new GridLayout(4,1));
 		labelBg = new JLabel("Background");
 		backgroundPanel.add(labelBg);
@@ -91,7 +99,7 @@ public class ColorSettings extends JFrame{
 		//Foreground slider
 		foregroundPanel = new JPanel();
 		foregroundPanel.setLayout(new GridLayout(4,1));
-		labelFg = new JLabel("Background");
+		labelFg = new JLabel("Foreground");
 		foregroundPanel.add(labelFg);
 		for(int i = 0; i < 3; i++){
 			foregroundPanel.add(foregroundSlider[i]);
@@ -107,10 +115,12 @@ public class ColorSettings extends JFrame{
 		return color;
 	}
 	private void updateColors(){
-		gui.updateBackground(sliderMixer(backgroundSlider));
-		gui.updateForeground(sliderMixer(foregroundSlider));
-		backgroundPanel.setBackground(sliderMixer(backgroundSlider));
-		foregroundPanel.setBackground(sliderMixer(foregroundSlider));
+		Color backgroundColor = sliderMixer(backgroundSlider);
+		Color foregroundColor = sliderMixer(foregroundSlider); 
+		gui.updateBackground(backgroundColor);
+		gui.updateForeground(foregroundColor);
+		backgroundPanel.setBackground(backgroundColor);
+		foregroundPanel.setBackground(foregroundColor);
 	}
 
 }
