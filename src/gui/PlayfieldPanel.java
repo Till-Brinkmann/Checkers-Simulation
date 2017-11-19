@@ -182,7 +182,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 					//if a jump is possible only figures that can jump can be clicked
 					jumpFigures.toFirst();
 					while(jumpFigures.hasAccess()){
-						if(playfield.field[x][y] == jumpFigures.getContent()){
+						if(playfield.field[x][y] == jumpFigures.get()){
 							selectFigure(x, y);
 						}
 						jumpFigures.next();
@@ -217,8 +217,8 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 					list = gamelogic.testForMultiJump(coords[0][0],coords[0][1]);
 					list.toFirst();
 					while(list.hasAccess()) {
-						if(list.getContent().getMoveType() == MoveType.MULTIJUMP ) {
-							if(list.getContent().getMoveDirection(0).equals(m.getMoveDirection(0))){
+						if(list.get().getMoveType() == MoveType.MULTIJUMP ) {
+							if(list.get().getMoveDirection(0).equals(m.getMoveDirection(0))){
 								console.printInfo("A Mulitjump was found","playfieldPanel");
 							}
 							else {
@@ -233,7 +233,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 						list.toFirst();
 						int i = 0;
 						while(list.hasAccess()) {
-							switch(list.getContent().getMoveDirection(1)) {
+							switch(list.get().getMoveDirection(1)) {
 								case BL:
 									multiJumpOptions[i][0]	= coords[1][0]-2;
 									multiJumpOptions[i][1]	= coords[1][1]-2;
@@ -278,7 +278,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 						list.next();
 					}
 					console.printInfo("Multijump: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ") - ("+ multiJumpOptions[i][0] + "/" + multiJumpOptions[i][1] + ")","PlayfieldPanel");
-					resetAndExecute(list.getContent(),i);
+					resetAndExecute(list.get(),i);
 				}
 			}
 			break;

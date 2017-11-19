@@ -65,7 +65,7 @@ public class NNPlayer implements Player {
         	if(gmlc.testMove(m)) {
         		List<Move> moveList = gmlc.testForMultiJump(m.getX(),m.getY());
         		while(!moveList.isEmpty()) {
-        			if(moveList.getContent().getMoveDirection(0) == m.getMoveDirection(0)) {
+        			if(moveList.get().getMoveDirection(0) == m.getMoveDirection(0)) {
         				multiJumpRun();
         				
         			}
@@ -152,7 +152,7 @@ public class NNPlayer implements Player {
         	coords[0] = fieldToCoords(choiceField);
         	
     		for(;availableMoves.hasAccess();availableMoves.next()){
-    			move = availableMoves.getContent();
+    			move = availableMoves.get();
     			if(move.getX() == coords[0][0] && move.getY() == coords[0][1]){
     				break;
     			}

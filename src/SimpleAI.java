@@ -58,8 +58,8 @@ public class SimpleAI implements Player {
 		Playfield newPlayfield;
 		while(moveList.hasAccess()) {
 			newPlayfield = playfield.copy();
-			newPlayfield.executeMove(moveList.getContent(),true);
-			int quality = moveEvaluation(moveList.getContent(),newPlayfield);
+			newPlayfield.executeMove(moveList.get(),true);
+			int quality = moveEvaluation(moveList.get(),newPlayfield);
 			moveListLoop(moveOutsorting(newPlayfield,reverseFigureColor(aiFigureColor)),0, newPlayfield, reverseFigureColor(aiFigureColor), moveNumber, quality);
 			moveNumber++;
 			moveList.next();
@@ -74,7 +74,7 @@ public class SimpleAI implements Player {
 		moveList.toFirst();
 		for(int i = 0; i < moveList.length;i++) {
 			if(i == bestQualityMove) {
-				return moveList.getContent();
+				return moveList.get();
 			}
 			moveList.next();
 		}
@@ -85,7 +85,7 @@ public class SimpleAI implements Player {
 		if(moveList != null) {
 			moveList.toFirst();
 			while(moveList.hasAccess()) {
-				Move m = moveList.getContent();
+				Move m = moveList.get();
 				if(gmlc.testMove(m,newPlayfield)) {
 					newPlayfield.executeMove(m,true);
 				}
@@ -96,11 +96,11 @@ public class SimpleAI implements Player {
 				}
 				if(currentDepth < depth) {
 					if(newColor == aiFigureColor) {
-						quality += moveEvaluation(moveList.getContent(),newPlayfield);
+						quality += moveEvaluation(moveList.get(),newPlayfield);
 						moveListLoop(moveOutsorting(newPlayfield,reverseFigureColor(newColor)),currentDepth, newPlayfield.copy(), reverseFigureColor(newColor),moveNumber, quality);
 					}
 					else {
-						quality -= moveEvaluation(moveList.getContent(),newPlayfield);
+						quality -= moveEvaluation(moveList.get(),newPlayfield);
 						moveListLoop(moveOutsorting(newPlayfield,reverseFigureColor(newColor)),currentDepth+1, newPlayfield.copy(), reverseFigureColor(newColor), moveNumber, quality);
 					}
 					moveList.next();
@@ -117,7 +117,7 @@ public class SimpleAI implements Player {
 		List<Move> moveList = Move.getPossibleMoves(figureColor,newPlayfield);
 		moveList.toFirst();
 		while(moveList.hasAccess()) {			
-			moveList.getContent().setScore(moveEvaluation(moveList.getContent(),newPlayfield));
+			moveList.get().setScore(moveEvaluation(moveList.get(),newPlayfield));
 			moveList.next();
 		}
 		if(moveList.isEmpty()) {
@@ -138,17 +138,17 @@ public class SimpleAI implements Player {
 		while(finalList.length != 6) {		
 			moveList.toFirst();
 			while(moveList.hasAccess()) {
-				currentScore = moveList.getContent().getScore();
+				currentScore = moveList.get().getScore();
 				if(currentScore > bestScore) {
 					bestScore = currentScore;
 				}
 				moveList.next();
 			}
 			moveList.toFirst();
-			while(moveList.getContent().getScore() != bestScore) {
+			while(moveList.get().getScore() != bestScore) {
 				moveList.next();
 			}
-			finalList.append(moveList.getContent());
+			finalList.append(moveList.get());
 			moveList.remove();
 			bestScore = 0;
 		}

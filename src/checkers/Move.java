@@ -156,20 +156,20 @@ public class Move {
 					moves.append(new Move(MoveDirection.FR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y+2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
 							//take the move we just created and copy it
-							m = moves.getContent().copy();
+							m = moves.get().copy();
 							//append the other steps of the multijump
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
 							//save temporarily in multiJumps
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						//remove the old single jump
@@ -187,17 +187,17 @@ public class Move {
 					moves.append(new Move(MoveDirection.FL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y+2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
-							m = moves.getContent().copy();
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							m = moves.get().copy();
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						moves.remove();
@@ -215,17 +215,17 @@ public class Move {
 					moves.append(new Move(MoveDirection.BR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y-2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
-							m = moves.getContent().copy();
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							m = moves.get().copy();
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						moves.remove();
@@ -240,17 +240,17 @@ public class Move {
 					moves.append(new Move(MoveDirection.BL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get(),true);
 					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y-2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
-							m = moves.getContent().copy();
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							m = moves.get().copy();
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						moves.remove();
@@ -308,8 +308,8 @@ public class Move {
 		List<Move> jumps = new List<Move>();
 		moves.toFirst();
 		while(moves.hasAccess()){
-			if(moves.getContent().getMoveType() != MoveType.STEP){
-				jumps.append(moves.getContent());
+			if(moves.get().getMoveType() != MoveType.STEP){
+				jumps.append(moves.get());
 				jumps.remove();
 			}
 			moves.next();

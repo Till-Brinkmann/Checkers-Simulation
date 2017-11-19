@@ -289,7 +289,6 @@ public class SoundSettings extends JFrame
                         }
                         changeSoundState(checkBoxName, isSelected);
                 }
-                 
             });
         }
         add(sounds);

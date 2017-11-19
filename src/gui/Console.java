@@ -117,7 +117,7 @@ public class Console extends JPanel{
 	public void removeCommandListener(CommandListener l){
 		listener.toFirst();
 		while(listener.hasAccess()){
-			if(listener.getContent() == l){
+			if(listener.get() == l){
 				listener.remove();
 				return;
 			}
@@ -144,7 +144,7 @@ public class Console extends JPanel{
 		//go through all listeners
 		listener.toFirst();
 		while(listener.hasAccess()){
-			if(listener.getContent().processCommand(in)){
+			if(listener.get().processCommand(in)){
 				wasProcessed = true;
 			}
 			listener.next();

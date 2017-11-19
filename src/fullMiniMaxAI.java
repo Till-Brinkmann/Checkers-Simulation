@@ -60,7 +60,7 @@ public class fullMiniMaxAI implements Player {
 		Playfield newPlayfield;
 		while(moveList.hasAccess()) {
 			newPlayfield = playfield.copy();
-			newPlayfield.executeMove(moveList.getContent(),true);
+			newPlayfield.executeMove(moveList.get(),true);
 			moveListLoop(getNewMoveList(newPlayfield,reverseFigureColor(aiFigureColor)),0, newPlayfield, reverseFigureColor(aiFigureColor), moveNumber);
 			moveNumber++;
 			moveList.next();
@@ -85,14 +85,14 @@ public class fullMiniMaxAI implements Player {
 		for(int i = 0; i < bestMove; i++) {
 			moveList.next();
 		}
-		return moveList.getContent();
+		return moveList.get();
 	}
 	@SuppressWarnings("static-access")
 	private void moveListLoop(List<Move> moveList, int currentDepth, Playfield newPlayfield,FigureColor newColor, int moveNumber) {
 		if(moveList != null) {
 			moveList.toFirst();
 			while(moveList.hasAccess()) {
-				Move m = moveList.getContent();
+				Move m = moveList.get();
 				if(gmlc.testMove(m,newPlayfield)) {
 					newPlayfield.executeMove(m,true);
 				}
