@@ -6,5 +6,5 @@ public interface CommandListener {
 	 * @param command
 	 * @return true if the command could be processed otherwise false
 	 */
-	public boolean processCommand(String command);
+	public boolean processCommand(String command, String[] args);
 }

@@ -35,7 +35,7 @@ public class AiTestTest implements Player {
 		for(int i = 0;i < randomNumber; i++) {
 			moveList.next();
 		}
-		gmlc.makeMove(moveList.getContent());
+		gmlc.makeMove(moveList.get());
 	}
 
 	@Override

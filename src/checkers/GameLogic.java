@@ -70,47 +70,28 @@ public class GameLogic {
 		
 	}
 	//---methods for game process---
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2, int pRounds, int pSlowness, boolean pDisplayActivated){
+	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated){
 		pause = false;
 		//how many game should be played
 		rounds = pRounds;
 		//if both player are one object one Player controls both white and red
-		twoPlayerMode = pPlayer1 == pPlayer2;
-		String namePlayer1 = "Human Player1";
-		String namePlayer2 = "Human Player2";
-		if(pPlayer1 != null) {
-			
-			namePlayer1 = pPlayer1.getName();
-		}
-		if(pPlayer2 != null) {
-			namePlayer2 = pPlayer2.getName();
-			
-		}
+		twoPlayerMode = pPlayerRed == pPlayerWhite;
+		
+		namePlayerRed = pPlayerRed.getName();
+		namePlayerWhite = pPlayerWhite.getName();
+		
+		playerRed = pPlayerRed;
+		playerWhite = pPlayerWhite;
 		//SlowMode
 		slowness = pSlowness;
 		//display
 		displayActivated = pDisplayActivated;
-		//choose random beginner
-		if(Math.random() < 0.5){
-			playerWhite = pPlayer1;			
-			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer1 + "");
-			namePlayerWhite = namePlayer1;
-			playerRed = pPlayer2;
-			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer2 + "");
-			namePlayerRed = namePlayer2;
-		}
-		else {
-			playerWhite = pPlayer2;
-			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer2 + "");
-			namePlayerWhite = namePlayer2;
-			playerRed = pPlayer1;
-			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer1 + "");
-			namePlayerRed = namePlayer1;
-		}
+		
 		recordGameIsEnabled = pRecordGameIsEnabled;
 		gameName = pGameName;
 		turnCount = 0;
 		//reset variables
+		//TODO das gilt nicht beim richtigen game
 		redFailedOnce = true;
 		whiteFailedOnce = true;
 
@@ -256,19 +237,19 @@ public class GameLogic {
 		case REDWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			if(failed) {
-				gui.console.printInfo("GameLogic", playerRed.getName() +"(White) did a wrong move!");
+				gui.console.printInfo("GameLogic", playerWhite.getName() +"(White) did a wrong move!");
 			}
 			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
-			winCountWhite++;
+			winCountRed++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			if(failed) {
-				gui.console.printInfo("GameLogic", playerWhite.getName() +"(Red) did a wrong move!");
+				gui.console.printInfo("GameLogic", playerRed.getName() +"(Red) did a wrong move!");
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
-			winCountRed++;
+			winCountWhite++;
 			break;
 		case STOP:
 			gui.console.printInfo("GameLogic", "Game was stopped");
@@ -305,7 +286,7 @@ public class GameLogic {
 				new Thread(){
 					public void run(){
 						try {
-							startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
+							startGame(recordGameIsEnabled, gameName, playerWhite, playerRed, rounds, slowness, displayActivated);
 						} catch (IllegalArgumentException | SecurityException e) {
 							gui.console.printWarning("gmlc", "failed to load the ai");
 							e.printStackTrace();

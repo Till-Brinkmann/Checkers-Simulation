@@ -81,7 +81,7 @@ public class GUI extends JFrame{
 
 		console = new Console();
 		playfieldpanel = new PlayfieldPanel(gmlc ,console);
-		colorsettings = new ColorSettings(this,true);
+		colorsettings = new ColorSettings(this, Color.BLACK, Color.LIGHT_GRAY);
 		soundsettings = new SoundSettings(this);
 		aboutcsWindow = new AboutCS(); 
 		guideWindow = new Guide();
