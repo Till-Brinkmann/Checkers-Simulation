@@ -150,7 +150,7 @@ public class GameLogic {
 			}
 		}
 		else {//move is valid			
-			field.executeMove(m, displayActivated);
+			field.executeMove(m);
 			//automatic figureToKing check
 			testFigureToKing();
 			//test if game is Finished

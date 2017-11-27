@@ -58,7 +58,7 @@ public class SimpleAI implements Player {
 		Playfield newPlayfield;
 		while(moveList.hasAccess()) {
 			newPlayfield = playfield.copy();
-			newPlayfield.executeMove(moveList.get(),true);
+			newPlayfield.executeMove(moveList.get());
 			int quality = moveEvaluation(moveList.get(),newPlayfield);
 			moveListLoop(moveOutsorting(newPlayfield,reverseFigureColor(aiFigureColor)),0, newPlayfield, reverseFigureColor(aiFigureColor), moveNumber, quality);
 			moveNumber++;
@@ -87,7 +87,7 @@ public class SimpleAI implements Player {
 			while(moveList.hasAccess()) {
 				Move m = moveList.get();
 				if(gmlc.testMove(m,newPlayfield)) {
-					newPlayfield.executeMove(m,true);
+					newPlayfield.executeMove(m);
 				}
 				else {
 					

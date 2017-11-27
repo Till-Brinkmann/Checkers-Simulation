@@ -188,7 +188,7 @@ public class Playfield {
 		field[x][y].setFigureType(FigureType.KING);
 	}
 
-	public void executeMove(Move m, boolean displayActivated){
+	public void executeMove(Move m){
 		//TODO alles
 		//x and y after move execution
 		int x = m.getX();
@@ -274,9 +274,7 @@ public class Playfield {
 				}
 			}
 		}
-		if(displayActivated) {
-			if(display != null) display.updateDisplay();
-		}
+		if(display != null) display.updateDisplay();
 	}
 
 	public int getFigureQuantity(FigureColor color){

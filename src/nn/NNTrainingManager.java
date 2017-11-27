@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
@@ -36,15 +37,27 @@ public class NNTrainingManager {
     double[][][][] hiddenWeights;
     double[][][] toOutputWeights;
     
+    int notFailedCount = 0;
+    
+    public final Comparator<NNPlayer> nNPlayerComparator;
     //anzahl von Netzen die per Epoche weiterkommen
     public int nnSurviver = 10;
     public int epochs = 200;
-	public NNTrainingManager(GUI pGui, int epochs, int quantity) {
+	public NNTrainingManager(GUI pGui, int epochs, int quantity, int nnSurviver) {
+		nNPlayerComparator = new Comparator<NNPlayer>(){
+			@Override
+			public int compare(NNPlayer o1, NNPlayer o2) {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+			
+		};
 		gui = pGui;
 		console = gui.console;
 		gmlc = gui.getGameLogic();
 		this.epochs = epochs;
 		nNquantity = quantity;
+		this.nnSurviver = nnSurviver;
 		//just a playfield with the startposition to make copies for all games
 		thePlayfield = new Playfield();
 		try{
@@ -75,6 +88,7 @@ public class NNTrainingManager {
             }
             change();
         }
+        console.printInfo("Stats: \nNotFailed: " + notFailedCount, "NNTM");
     }
     public void theBest(){
     	allVSall();
@@ -155,6 +169,9 @@ public class NNTrainingManager {
     public void evaluateFitness(int startedNet, int secondNet, GameLogic gl) {
     	Situations situation = gl.getFinalSituation();
     	boolean failed = gl.getFailed();
+    	if(gl.getTurnCount() > 1){
+    		notFailedCount++;
+    	}
     	switch(situation) {
 		case DRAW:
 			nnFitness[startedNet] += 20;

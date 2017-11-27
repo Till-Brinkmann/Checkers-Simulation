@@ -20,6 +20,7 @@ public class NNTrainingSettings extends JFrame{
 	private JButton confirm;
 	private JSpinner epochsS;
 	private JSpinner quantityS;
+	private JSpinner surviver;
 	
 	private NNTrainingManager manager;
 	private static final long serialVersionUID = 1L;
@@ -35,6 +36,8 @@ public class NNTrainingSettings extends JFrame{
 		epochsS = new JSpinner();
 		
 		quantityS = new JSpinner();
+		
+		surviver = new JSpinner();
 
 		
 		confirm = new JButton("Confirm");
@@ -44,7 +47,7 @@ public class NNTrainingSettings extends JFrame{
             {
             	new Thread(new Runnable(){
             		public void run(){
-            			manager = new NNTrainingManager(gui, (int)epochsS.getValue(), (int)quantityS.getValue());
+            			manager = new NNTrainingManager(gui, (int)epochsS.getValue(), (int)quantityS.getValue(), Math.min((int)surviver.getValue(), (int)quantityS.getValue()));
             		}
             	}).start();
             	dispose();
@@ -55,6 +58,8 @@ public class NNTrainingSettings extends JFrame{
 		add(epochsS);
 		add(new JLabel("Quantity:"));
 		add(quantityS);
+		add(new JLabel("Surviver:"));
+		add(surviver);
 		add(confirm);
 		setVisible(true);
 	}

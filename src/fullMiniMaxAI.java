@@ -60,7 +60,7 @@ public class fullMiniMaxAI implements Player {
 		Playfield newPlayfield;
 		while(moveList.hasAccess()) {
 			newPlayfield = playfield.copy();
-			newPlayfield.executeMove(moveList.get(),true);
+			newPlayfield.executeMove(moveList.get());
 			moveListLoop(getNewMoveList(newPlayfield,reverseFigureColor(aiFigureColor)),0, newPlayfield, reverseFigureColor(aiFigureColor), moveNumber);
 			moveNumber++;
 			moveList.next();
@@ -94,7 +94,7 @@ public class fullMiniMaxAI implements Player {
 			while(moveList.hasAccess()) {
 				Move m = moveList.get();
 				if(gmlc.testMove(m,newPlayfield)) {
-					newPlayfield.executeMove(m,true);
+					newPlayfield.executeMove(m);
 				}
 				else {
 					
