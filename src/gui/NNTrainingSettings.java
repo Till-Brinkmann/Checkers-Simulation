@@ -34,11 +34,11 @@ public class NNTrainingSettings extends JFrame{
 		setLayout(new FlowLayout());
 		
 		epochsS = new JSpinner();
-		
+		epochsS.setValue(new Integer(20));
 		quantityS = new JSpinner();
-		
+		quantityS.setValue(new Integer(20));
 		surviver = new JSpinner();
-
+		surviver.setValue(new Integer(10));
 		
 		confirm = new JButton("Confirm");
         confirm.addActionListener(new ActionListener()

@@ -87,7 +87,8 @@ public class Move {
 	}
 	/**
 	 * turns an array of coordinates into a move object
-	 * the move is not guaranteed to be valid!
+	 * !ATTENTION!:the method does not apply complete move validation!
+	 * So the move could not be valid although it is not set invalid!
 	 * test with Gamelogic.testMove()!
 	 * @param coords that the figure goes to during the move in chronological order
 	 * @return move object that represents the move described by the coordinates 

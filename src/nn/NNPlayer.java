@@ -20,9 +20,7 @@ public class NNPlayer implements Player {
 
 	private double[] inputVector;
 	private FigureColor aiFigureColor;
-	private int round = 0;
-    private double changeQuality = 50;
-    //public int 
+    public double fitness;
     NN net;
     public GameLogic gmlc;
     public Console console;
@@ -31,8 +29,6 @@ public class NNPlayer implements Player {
 		gmlc = pGmlc;
 		console = pConsole;        
         net = pNet;
-        net.randomWeights(-1, 1);
-        
         playfield = gmlc.getPlayfield();
 	}
 	@Override
@@ -60,21 +56,6 @@ public class NNPlayer implements Player {
             	}
 			}
 		}
-//        if(m.getMoveType() == MoveType.JUMP){
-//        	if(gmlc.testMove(m)) {
-//        		List<Move> moveList = gmlc.testForMultiJump(m.getX(),m.getY());
-//        		while(!moveList.isEmpty()) {
-//        			if(moveList.get().getMoveDirection(0) == m.getMoveDirection(0)) {
-//        				multiJumpRun();
-//        				
-//        			}
-//        		}
-//        			
-//        	}
-//        	else {
-//        		m.setMoveType(MoveType.INVALID);
-//        	}
-//        }
     	gmlc.makeMove(moveDecision(net.run(inputVector)));
 	}
 	
@@ -127,12 +108,11 @@ public class NNPlayer implements Player {
         	coords[0][0] = f.x;
         	coords[0][1] = f.y;
         	move = Move.createMoveFromCoords(coords);
-        	if(move.getMoveType() != MoveType.INVALID) {
-        		//TODO der move zu dem feld ist m�glichirgendwie speichern oder so
+        	//check if the move is valid(see createMoveFromCoords doc)
+        	if(gmlc.testMove(move)) {
         		availableMoves.append(move);
         	}
         }
-        availableMoves.toFirst();
         if(availableMoves.length == 0){
         	//return an invalid move
         	return bestMove;
@@ -141,10 +121,10 @@ public class NNPlayer implements Player {
         	//find out if a figure that can do the move is on the field which is chosen by the nn to be the move start
         	max = Integer.MIN_VALUE;
     		double score = 0;
-        	for(;availableMoves.hasAccess();availableMoves.next()){
+        	for(availableMoves.toFirst();availableMoves.hasAccess();availableMoves.next()){
     			move = availableMoves.get();
     			score = outputVector[coordsToField(move.getX(), move.getY()) + 32];
-    			if(score < max){
+    			if(score > max){
     				bestMove = move;
     				max = score;
     			}
