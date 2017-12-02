@@ -21,12 +21,12 @@ public class Figure {
 		
 	}
 	/**
-	 * In order to initialize a Figure object the following parameters are needed:
+	 * In order to initialize a Figure object, the following parameters are needed:
 	 * <p>
-	 * @param x       an integer variable which is representing a point on the horizontal axis of the playfield.
+	 * @param x       an integer variable which is representing a point on the vertical axis of the playfield.
 	 * @param y	 	  an integer variable which is representing a point on the horizontal axis of the playfield.	
-	 * @param color   a global predefined constant variable from the enumeration FigureColor. 
-	 * @param type	  a global predefined constant variable from the enumeration FigureType. 
+	 * @param color   a global predefined constant from the enumeration FigureColor. 
+	 * @param type	  a global predefined constant from the enumeration FigureType. 
 	 */
 	public Figure(int x, int y, FigureColor color, FigureType type) {
 		this.color = color;
@@ -62,7 +62,7 @@ public class Figure {
 	/**
 	 * It returns a new Figure Object with the same properties. 
 	 * <p>
-	 * @return Figure  a new instance of the object;
+	 * @return Figure  a new instance of the object Figure;
 	 */
 	public Figure copy() {
 		return new Figure(x, y, color, type);

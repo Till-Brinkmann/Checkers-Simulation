@@ -34,7 +34,7 @@ public class NNTrainingManager {
     int notFailedCount = 0;
     
     public final Comparator<NNPlayer> nNPlayerComparator;
-    //anzahl von Netzen die per Epoche weiterkommen
+    //anzahl von Netzen die pro Epoche weiterkommen
     public int nnSurviver = 10;
     public int epochs = 200;
     
@@ -152,9 +152,9 @@ public class NNTrainingManager {
     public void evaluateFitness(NNPlayer startedNet, NNPlayer secondNet, GameLogic gl) {
     	Situations situation = gl.getFinalSituation();
     	boolean failed = gl.getFailed();
-    	if(gl.getTurnCount() > 1){
+    	if((gl.getTurnCountRed() + gl.getTurnCountWhite()) > 1){
     		notFailedCount++;
-    	}
+    	}   	
     	switch(situation) {
 		case DRAW:
 			startedNet.fitness += 20;
@@ -176,6 +176,8 @@ public class NNTrainingManager {
 			console.printInfo("NNTrainingManager", "game was either stopped or paused");
 			return;
     	}
+    	startedNet.fitness += gl.getTurnCountRed();
+    	secondNet.fitness += gl.getTurnCountWhite();
     	startedNet.fitness += gl.getPlayfield().getFigureQuantity(FigureColor.RED);
     	secondNet.fitness += gl.getPlayfield().getFigureQuantity(FigureColor.WHITE);
     	//console.printInfo("NNTrainingManager",nnFitness[startedNet] , nnFitness[secondNet]);
