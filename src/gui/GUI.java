@@ -81,7 +81,7 @@ public class GUI extends JFrame{
 
 		console = new Console();
 		playfieldpanel = new PlayfieldPanel(gmlc ,console);
-		colorsettings = new ColorSettings(this,true);
+		colorsettings = new ColorSettings(this, Color.BLACK, Color.LIGHT_GRAY);
 		soundsettings = new SoundSettings(this);
 		aboutcsWindow = new AboutCS(); 
 		guideWindow = new Guide();
@@ -312,6 +312,7 @@ public class GUI extends JFrame{
             	resume.setEnabled(false);
             	pause.setEnabled(true);
             	gmlc.setPause(false);
+            	playfieldpanel.enableAllButtons(true);
             }
         });
         pause.addActionListener(new ActionListener()
@@ -321,6 +322,7 @@ public class GUI extends JFrame{
             	pause.setEnabled(false);
             	resume.setEnabled(true);
             	gmlc.setPause(true);
+            	playfieldpanel.enableAllButtons(false);
             }
         });
         stop.addActionListener(new ActionListener()
@@ -328,7 +330,9 @@ public class GUI extends JFrame{
             public void actionPerformed(ActionEvent event)
             {
             	stop.setEnabled(false);
+            	gmlc.setPause(true);
             	gmlc.finishGameTest(Situations.STOP,false);
+            	playfieldpanel.enableAllButtons(false);
             }
         });
         

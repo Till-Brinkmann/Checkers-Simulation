@@ -16,7 +16,12 @@ import gui.GameSettings;
 import gui.PlayfieldPanel;
 
 /**
- * provides methods for game logic
+ * The GameLogic is responsible for the process of one game. Every game a new GameLogic has to be created.
+ * Because it has to communicate with various other objects, it has access to the GUI and the playfield.
+ * <p>
+ * It also includes the static testing methods, with are responsible for correct execution of the rules.
+ * <p>
+ * Moreover, the GameLogic is running on a different thread in order to avoid collision with the PlayfieldPanel.
  * @author Till
  *
  */
@@ -59,8 +64,8 @@ public class GameLogic {
 		this(new Playfield());
 	}
 	/**
-	 *
-	 * @param playfield default playfield
+	 * The Constructor resets all counters to 0 and passes a new Playfield.
+	 * @param playfield  default playfield
 	 */
 	public GameLogic(Playfield playfield) {
 		field = playfield;
@@ -69,48 +74,32 @@ public class GameLogic {
 		drawCount = 0;
 		
 	}
-	//---methods for game process---
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayer1, Player pPlayer2, int pRounds, int pSlowness, boolean pDisplayActivated){
+	/**
+	 * The Constructor resets all counters to 0 and passes a new Playfield.
+	 * @param playfield  default playfield
+	 */
+	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated){
 		pause = false;
 		//how many game should be played
 		rounds = pRounds;
 		//if both player are one object one Player controls both white and red
-		twoPlayerMode = pPlayer1 == pPlayer2;
-		String namePlayer1 = "Human Player1";
-		String namePlayer2 = "Human Player2";
-		if(pPlayer1 != null) {
-			
-			namePlayer1 = pPlayer1.getName();
-		}
-		if(pPlayer2 != null) {
-			namePlayer2 = pPlayer2.getName();
-			
-		}
+		twoPlayerMode = pPlayerRed == pPlayerWhite;
+		
+		namePlayerRed = pPlayerRed.getName();
+		namePlayerWhite = pPlayerWhite.getName();
+		
+		playerRed = pPlayerRed;
+		playerWhite = pPlayerWhite;
 		//SlowMode
 		slowness = pSlowness;
 		//display
 		displayActivated = pDisplayActivated;
-		//choose random beginner
-		if(Math.random() < 0.5){
-			playerWhite = pPlayer1;			
-			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer1 + "");
-			namePlayerWhite = namePlayer1;
-			playerRed = pPlayer2;
-			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer2 + "");
-			namePlayerRed = namePlayer2;
-		}
-		else {
-			playerWhite = pPlayer2;
-			gui.console.printInfo("gmlc","The White pieces have been assigned to " + namePlayer2 + "");
-			namePlayerWhite = namePlayer2;
-			playerRed = pPlayer1;
-			gui.console.printInfo("gmlc","The red pieces have been assigned to " + namePlayer1 + "");
-			namePlayerRed = namePlayer1;
-		}
+		
 		recordGameIsEnabled = pRecordGameIsEnabled;
 		gameName = pGameName;
 		turnCount = 0;
 		//reset variables
+		//TODO das gilt nicht beim richtigen game
 		redFailedOnce = true;
 		whiteFailedOnce = true;
 
@@ -145,28 +134,31 @@ public class GameLogic {
 		playerRed.requestMove();
 	}
 	public void makeMove(Move m){
-		if(!(field.field[m.getX()][m.getY()].color == inTurn) || !testMove(m)){
+		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
 					finishGameTest(Situations.WHITEWIN,true);
+					return;
 				}
 				else {
 					redFailedOnce = true;
+					playerRed.requestMove();
 				}
 			}
 			else {
 				if(whiteFailedOnce){
 					finishGameTest(Situations.REDWIN,true);
-
+					return;
 				}
 				else {
 					whiteFailedOnce = true;
+					playerWhite.requestMove();
 				}
 			}
 		}
 		else {//move is valid			
-			field.executeMove(m, displayActivated);
+			field.executeMove(m);
 			//automatic figureToKing check
 			testFigureToKing();
 			//test if game is Finished
@@ -186,7 +178,6 @@ public class GameLogic {
 					moveRequesting();
 				}
 			}
-		
 		}
 	}
 	private void moveRequesting() {
@@ -258,7 +249,7 @@ public class GameLogic {
 			}
 			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
-			winCountWhite++;
+			winCountRed++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
@@ -266,16 +257,16 @@ public class GameLogic {
 				gui.console.printInfo("GameLogic", playerRed.getName() +"(Red) did a wrong move!");
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
-			winCountRed++;
+			winCountWhite++;
 			break;
 		case STOP:
-			gui.console.printInfo("GameLogic", "Game was stoped");
+			gui.console.printInfo("GameLogic", "Game was stopped");
 			break;
 		case NOTHING:
 			return;
 		}
 		
-		currentRound++;
+		++currentRound;
 		if(currentRound == rounds || end == Situations.STOP) {
 			try {
 				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
@@ -293,7 +284,7 @@ public class GameLogic {
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);
 			gui.setEnableStop(false);
-			currentRound = 0;
+			//currentRound = 0;
 			//TODO "hard" reset 
 			// TODO maybe statistic for ki playing against each other and creating a file with all information
 		}
@@ -303,14 +294,14 @@ public class GameLogic {
 				new Thread(){
 					public void run(){
 						try {
-							startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
+							startGame(recordGameIsEnabled, gameName, playerWhite, playerRed, rounds, slowness, displayActivated);
 						} catch (IllegalArgumentException | SecurityException e) {
 							gui.console.printWarning("gmlc", "failed to load the ai");
 							e.printStackTrace();
 						}
 					}
 				}.start();
-				startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
+				//startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
 			} catch (IOException e) {
 				gui.console.printWarning("failed to load the pfs file startPositionForSize8","GameLogic");
 				e.printStackTrace();
@@ -496,7 +487,8 @@ public class GameLogic {
 	}
 	public void setSlowness(int pSlowness) {
 		slowness = pSlowness;
-	} public void setPause(boolean b) {
+	}
+	public void setPause(boolean b) {
 		pause = b;
 		if(b == false) {			
 			moveRequesting();

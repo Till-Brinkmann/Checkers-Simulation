@@ -3,8 +3,6 @@ package gui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -13,12 +11,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Hashtable;
+import java.util.concurrent.ForkJoinPool;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import NNStuff.NNTrainingManager;
 import checkers.GameLogic;
 import checkers.Player;
 import gui.GUI.AISpeed;
@@ -54,8 +52,8 @@ public class GameSettings extends JFrame{
 	private String gameName;
 	private GUI gui;
 	private int slowness;
-	
-	private Thread gmlcThread;
+	//TODO remove after other solution is tested
+	//private Thread gmlcThread;
 	public GameSettings(GUI pGui) {		
 		super("Game Settings");
 		gui = pGui;
@@ -91,7 +89,7 @@ public class GameSettings extends JFrame{
 		table.put(0, new JLabel("fast"));
 		table.put(1000, new JLabel("medium"));
 		table.put(2000, new JLabel("slow"));
-		slownessForSlowMode.setLabelTable (table);
+		slownessForSlowMode.setLabelTable(table);
 		slownessForSlowMode.setForeground(Color.CYAN);
 		slownessForSlowMode.setBackground(Color.WHITE);
 		
@@ -129,28 +127,39 @@ public class GameSettings extends JFrame{
             	}
             	
             	//the game is started in a separate Thread to reduce the load on the eventqueue
-            	gmlcThread = new Thread(new Runnable() {
+            	if(currentSelectionPlayer1.equals("player") && currentSelectionPlayer2.equals("player")) {
+					gui.setAISpeed(AISpeed.NOTACTIVE);
+				}
+				else {
+					if(slownessForSlowMode.getValue() == 0) {
+						gui.setAISpeed(AISpeed.FAST);
+					}
+					else if(slownessForSlowMode.getValue() == 1000) {
+						gui.setAISpeed(AISpeed.MEDIUM);
+					}
+					else {
+						gui.setAISpeed(AISpeed.SLOW);
+					}
+				}
+				gui.setEnableResume(false);
+				gui.setEnablePause(true);
+				gui.setEnableStop(true);
+            	//gmlcThread = new Thread(
+				ForkJoinPool.commonPool().execute(new Runnable() {
             	    public void run()
             	    {
             	    	try {
-							if(currentSelectionPlayer1.equals("player") && currentSelectionPlayer2.equals("player")) {
-								gui.setAISpeed(AISpeed.NOTACTIVE);
-							}
-							else {
-								if(slownessForSlowMode.getValue() == 0) {
-									gui.setAISpeed(AISpeed.FAST);
-								}
-								else if(slownessForSlowMode.getValue() == 1000) {
-									gui.setAISpeed(AISpeed.MEDIUM);
-								}
-								else {
-									gui.setAISpeed(AISpeed.SLOW);
-								}
-							}
-							gui.setEnableResume(false);
-							gui.setEnablePause(true);
-							gui.setEnableStop(true);
-							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, getPlayer1(),getPlayer2(),(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected());
+            	    		Player red;
+            	    		Player white;
+            	    		if(Math.random() < 0.5){
+            	    			red = getPlayer1();
+            	    			white = getPlayer2();
+            	    		}
+            	    		else{
+            	    			white = getPlayer1();
+            	    			red = getPlayer2();
+            	    		}
+							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected());
 						} catch (ClassNotFoundException | MalformedURLException | InstantiationException
 								| IllegalAccessException | IllegalArgumentException | InvocationTargetException
 								| NoSuchMethodException | SecurityException e) {
@@ -159,7 +168,7 @@ public class GameSettings extends JFrame{
 						}
             	    }
         	    });  
-            	gmlcThread.start();
+            	//gmlcThread.start();
             }           
         });
 		player1ComboBox.addActionListener(new ActionListener()
@@ -194,7 +203,7 @@ public class GameSettings extends JFrame{
 		setResizable(false);
 		setSize(300,250);
 		setAlwaysOnTop (true);
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		backgroundPanel = new JPanel();
 		//backgroundPanel.setPreferredSize(new Dimension(200,300));
@@ -264,7 +273,8 @@ public class GameSettings extends JFrame{
 		playerNameList[listLength-1] = "player";
 		return playerNameList;
 	}
-	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
+	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
+	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(currentSelectionPlayer1.equals("player")) {
 			return gui.playfieldpanel;
 		}
@@ -279,7 +289,8 @@ public class GameSettings extends JFrame{
 		gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
 		return gui.playfieldpanel; 
 	}
-	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
+	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
+	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(currentSelectionPlayer2.equals("player")) {
 			return gui.playfieldpanel;
 		}
@@ -314,9 +325,6 @@ public class GameSettings extends JFrame{
 	}
 	public void updateBackground( Color color){
 		backgroundPanel.setBackground(color);
-	}
-	public void interruptThread() {
-		gmlcThread.interrupt();
 	}
 }
 

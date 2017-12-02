@@ -87,7 +87,8 @@ public class Move {
 	}
 	/**
 	 * turns an array of coordinates into a move object
-	 * the move is not guaranteed to be valid!
+	 * !ATTENTION!:the method does not apply complete move validation!
+	 * So the move could not be valid although it is not set invalid!
 	 * test with Gamelogic.testMove()!
 	 * @param coords that the figure goes to during the move in chronological order
 	 * @return move object that represents the move described by the coordinates 
@@ -151,25 +152,25 @@ public class Move {
 			&& (figure.getFigureType() == FigureType.KING || figure.getFigureColor() == FigureColor.RED)){
 			if(figure.x + 2 < field.SIZE){
 				if(field.isOccupied(figure.x+1, figure.y+1) 
-					&& field.field[figure.x+1][figure.y+1].color != figure.color
+					&& field.field[figure.x+1][figure.y+1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x+2, figure.y+2)){
 					moves.append(new Move(MoveDirection.FR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get());
 					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y+2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
 							//take the move we just created and copy it
-							m = moves.getContent().copy();
+							m = moves.get().copy();
 							//append the other steps of the multijump
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
 							//save temporarily in multiJumps
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						//remove the old single jump
@@ -182,22 +183,22 @@ public class Move {
 			}
 			if(figure.x - 2 >= 0){
 				if(field.isOccupied(figure.x-1, figure.y+1) 
-					&& field.field[figure.x-1][figure.y+1].color != figure.color
+					&& field.field[figure.x-1][figure.y+1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x-2, figure.y+2)){
 					moves.append(new Move(MoveDirection.FL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get());
 					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y+2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
-							m = moves.getContent().copy();
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							m = moves.get().copy();
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						moves.remove();
@@ -210,22 +211,22 @@ public class Move {
 			&& (figure.getFigureType() == FigureType.KING || figure.getFigureColor() == FigureColor.WHITE)){
 			if(figure.x + 2 < field.SIZE){
 				if(field.isOccupied(figure.x+1, figure.y-1) 
-					&& field.field[figure.x+1][figure.y-1].color != figure.color
+					&& field.field[figure.x+1][figure.y-1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x+2, figure.y-2)){
 					moves.append(new Move(MoveDirection.BR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get());
 					multiJumps = getPossibleJumps(tmp.field[figure.x+2][figure.y-2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
-							m = moves.getContent().copy();
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							m = moves.get().copy();
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						moves.remove();
@@ -235,22 +236,22 @@ public class Move {
 			}
 			if(figure.x - 2 >= 0){
 				if(field.isOccupied(figure.x-1, figure.y-1) 
-					&& field.field[figure.x-1][figure.y-1].color != figure.color
+					&& field.field[figure.x-1][figure.y-1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x-2, figure.y-2)){
 					moves.append(new Move(MoveDirection.BL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
 					tmp = field.copy();
-					tmp.executeMove(moves.getContent(),true);
+					tmp.executeMove(moves.get());
 					multiJumps = getPossibleJumps(tmp.field[figure.x-2][figure.y-2], tmp);
 					multiJumps.toFirst();
 					if(multiJumps.length > 0){
 						while(multiJumps.hasAccess()){
-							m = moves.getContent().copy();
-							for(int steps = 0; steps < multiJumps.getContent().getSteps(); steps++){
-								m.addStep(multiJumps.getContent().getMoveDirection(steps));
+							m = moves.get().copy();
+							for(int steps = 0; steps < multiJumps.get().getSteps(); steps++){
+								m.addStep(multiJumps.get().getMoveDirection(steps));
 								m.setMoveType(MoveType.MULTIJUMP);
 							}
-							multiJumps.setContent(m);
+							multiJumps.set(m);
 							multiJumps.next();
 						}
 						moves.remove();
@@ -308,8 +309,8 @@ public class Move {
 		List<Move> jumps = new List<Move>();
 		moves.toFirst();
 		while(moves.hasAccess()){
-			if(moves.getContent().getMoveType() != MoveType.STEP){
-				jumps.append(moves.getContent());
+			if(moves.get().getMoveType() != MoveType.STEP){
+				jumps.append(moves.get());
 				jumps.remove();
 			}
 			moves.next();

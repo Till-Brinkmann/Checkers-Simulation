@@ -79,7 +79,7 @@ public class SoundSettings extends JFrame
         File[] fileArray = new File[1000];
         fileArray = fileDirectory.listFiles();
         
-        for(int i = 0; i< fileDirectory.listFiles().length; i++) {
+        for(int i = 0; i < fileDirectory.listFiles().length; i++) {
         	if(fileArray[i].getName().endsWith(".wav"))
         	musicFiles.enqueue(fileArray[i]);
         }   
@@ -124,7 +124,9 @@ public class SoundSettings extends JFrame
 		
         currentMusicImage = new JLabel(standardImage);
         currentMusicImage.setPreferredSize(new Dimension(250,100));
-		displayMusicInfo(musicFiles.front().getName());
+        if(!musicFiles.isEmpty()){
+        	displayMusicInfo(musicFiles.front().getName());
+        }
 		
         musicPlayerButtons = new JPanel();
         musicPlayerButtons.setBackground(Color.WHITE);
@@ -287,7 +289,6 @@ public class SoundSettings extends JFrame
                         }
                         changeSoundState(checkBoxName, isSelected);
                 }
-                 
             });
         }
         add(sounds);
