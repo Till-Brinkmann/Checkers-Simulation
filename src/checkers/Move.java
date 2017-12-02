@@ -152,7 +152,7 @@ public class Move {
 			&& (figure.getFigureType() == FigureType.KING || figure.getFigureColor() == FigureColor.RED)){
 			if(figure.x + 2 < field.SIZE){
 				if(field.isOccupied(figure.x+1, figure.y+1) 
-					&& field.field[figure.x+1][figure.y+1].color != figure.color
+					&& field.field[figure.x+1][figure.y+1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x+2, figure.y+2)){
 					moves.append(new Move(MoveDirection.FR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
@@ -183,7 +183,7 @@ public class Move {
 			}
 			if(figure.x - 2 >= 0){
 				if(field.isOccupied(figure.x-1, figure.y+1) 
-					&& field.field[figure.x-1][figure.y+1].color != figure.color
+					&& field.field[figure.x-1][figure.y+1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x-2, figure.y+2)){
 					moves.append(new Move(MoveDirection.FL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
@@ -211,7 +211,7 @@ public class Move {
 			&& (figure.getFigureType() == FigureType.KING || figure.getFigureColor() == FigureColor.WHITE)){
 			if(figure.x + 2 < field.SIZE){
 				if(field.isOccupied(figure.x+1, figure.y-1) 
-					&& field.field[figure.x+1][figure.y-1].color != figure.color
+					&& field.field[figure.x+1][figure.y-1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x+2, figure.y-2)){
 					moves.append(new Move(MoveDirection.BR, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();
@@ -236,7 +236,7 @@ public class Move {
 			}
 			if(figure.x - 2 >= 0){
 				if(field.isOccupied(figure.x-1, figure.y-1) 
-					&& field.field[figure.x-1][figure.y-1].color != figure.color
+					&& field.field[figure.x-1][figure.y-1].getFigureColor() != figure.getFigureColor()
 					&& !field.isOccupied(figure.x-2, figure.y-2)){
 					moves.append(new Move(MoveDirection.BL, MoveType.JUMP, figure.x, figure.y));
 					moves.toLast();

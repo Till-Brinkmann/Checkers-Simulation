@@ -2,8 +2,6 @@ package checkers;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
@@ -12,15 +10,17 @@ import checkers.Player;
 import generic.List;
 import gui.GUI;
 import gui.GUI.AISpeed;
-import gui.GameSettings;
-import gui.PlayfieldPanel;
 
 /**
- * provides methods for game logic
+ * The GameLogic is responsible for the process of one game with the same players. Every game a new GameLogic has to be created.
+ * Because it has to communicate with various other objects, it has access to the GUI and the playfield.
+ * <p>
+ * It also includes the static testing methods, which are responsible for the correct execution of the rules.
+ * <p>
+ * Moreover, the GameLogic is running on a different thread in order to avoid collision with the PlayfieldPanel.
  * @author Till
  *
  */
-
 public class GameLogic {
 	public enum Situations{WHITEWIN, REDWIN, DRAW,NOTHING, STOP};
 	/**
@@ -29,7 +29,8 @@ public class GameLogic {
 	private Playfield field;
 	private boolean recordGameIsEnabled;
 	private String gameName;
-	private int turnCount = 0;
+	private int turnCounterRed;
+	private int turnCounterWhite;
 	private int winCountRed;
 	private int winCountWhite;
 	private int drawCount;
@@ -59,8 +60,9 @@ public class GameLogic {
 		this(new Playfield());
 	}
 	/**
-	 *
-	 * @param playfield default playfield
+	 * The Constructor resets all counters to 0 and passes a new Playfield.
+	 * <p>
+	 * @param playfield  default playfield
 	 */
 	public GameLogic(Playfield playfield) {
 		field = playfield;
@@ -69,7 +71,11 @@ public class GameLogic {
 		drawCount = 0;
 		
 	}
-	//---methods for game process---
+	/**
+	 * The Constructor resets all counters to 0 and passes a new Playfield.
+	 * <p>
+	 * @param playfield  default playfield
+	 */
 	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated){
 		pause = false;
 		//how many game should be played
@@ -89,7 +95,8 @@ public class GameLogic {
 		
 		recordGameIsEnabled = pRecordGameIsEnabled;
 		gameName = pGameName;
-		turnCount = 0;
+		turnCounterRed = 0;
+		turnCounterWhite = 0;
 		//reset variables
 		//TODO das gilt nicht beim richtigen game
 		redFailedOnce = true;
@@ -126,7 +133,7 @@ public class GameLogic {
 		playerRed.requestMove();
 	}
 	public void makeMove(Move m){
-		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].color != inTurn || !testMove(m)){
+		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
@@ -149,7 +156,9 @@ public class GameLogic {
 				}
 			}
 		}
-		else {//move is valid			
+		else {//move is valid		
+			//increment turn count
+			incrementTurnCounter();
 			field.executeMove(m);
 			//automatic figureToKing check
 			testFigureToKing();
@@ -163,13 +172,19 @@ public class GameLogic {
 				if(recordGameIsEnabled) {
 					infosGameRecording();
 				}
-				//changing turn
-				turnCount++;
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 				if(!pause) {
 					moveRequesting();
 				}
 			}
+		}
+	}
+	private void incrementTurnCounter() {
+		if(inTurn == FigureColor.RED) {
+			turnCounterRed++;
+		}
+		else {
+			turnCounterWhite++;
 		}
 	}
 	private void moveRequesting() {
@@ -305,7 +320,7 @@ public class GameLogic {
 	}
 	private void infosGameRecording() {
 		try {
-			field.saveGameSituation(gameName, inTurn, turnCount, playerRed.getName(), playerWhite.getName());
+			field.saveGameSituation(gameName, inTurn, (turnCounterRed + turnCounterWhite), playerRed.getName(), playerWhite.getName());
 		} catch (IOException e) {
 			gui.console.printWarning("playfield could not be saved. IOException: " + e);
 			e.printStackTrace();
@@ -494,7 +509,11 @@ public class GameLogic {
 	public boolean getFailed() {
 		return failed;
 	}
-	public int getTurnCount() {
-		return turnCount;
+	
+	public int getTurnCountRed() {
+		return turnCounterRed;
+	}
+	public int getTurnCountWhite() {
+		return turnCounterWhite;
 	}
 }

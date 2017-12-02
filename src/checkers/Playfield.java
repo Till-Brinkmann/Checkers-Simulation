@@ -292,7 +292,7 @@ public class Playfield {
 		int quantity = 0;
 		for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
-            	if(isOccupied(x,y) && field[x][y].color == figurecolor && field[x][y].type == figuretype){
+            	if(isOccupied(x,y) && field[x][y].getFigureColor() == figurecolor && field[x][y].getFigureType() == figuretype){
             		quantity++;
             	}
             }
@@ -317,7 +317,7 @@ public class Playfield {
 		Figure[] figures = new Figure[getFigureQuantity(figurecolor)];
 		for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
-            	if(isOccupied(x,y) && field[x][y].color == figurecolor){
+            	if(isOccupied(x,y) && field[x][y].getFigureColor() == figurecolor){
             		figures[counter] = field[x][y];
             		counter++;
             	}

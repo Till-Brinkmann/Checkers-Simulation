@@ -21,7 +21,7 @@ public class NNTrainingManager {
 	private Playfield thePlayfield;
 	private NNPlayer[] nnPlayer;
 	private int nnQuantity = 20;
-    private double changePercentage = 50;
+    private double changePercentage = 40;
     private double weightsMax = 10;
     private double weightsMin = -10;
     private double sigmoidMax = 1;
@@ -34,7 +34,7 @@ public class NNTrainingManager {
     int notFailedCount = 0;
     
     public final Comparator<NNPlayer> nNPlayerComparator;
-    //anzahl von Netzen die per Epoche weiterkommen
+    //anzahl von Netzen die pro Epoche weiterkommen
     public int nnSurviver = 10;
     public int epochs = 200;
     
@@ -86,26 +86,11 @@ public class NNTrainingManager {
             for(int s = 0; s < nnSurviver; s++){
             	saveNN(nnPlayer[s].net.getAfterInputWeights(), nnPlayer[s].net.getHiddenWeights(), nnPlayer[s].net.getToOutputWeights(), "I am the best! (Nr." + s + ")");
             }
-            //change();
         }
         console.printInfo("Stats: \nNotFailed: " + notFailedCount, "NNTM");
     }
     public void theBest(){
     	allVSall();
-    	Arrays.parallelSort(nnPlayer, nNPlayerComparator);
-    	//refill poulation and reset fitness (because it is a "new" NN now) 
-    	for(int i = nnSurviver; i < nnQuantity; i++){
-    		nnPlayer[i].net.randomWeights();
-    		nnPlayer[i].net.changeAllPercent(changePercentage);
-    		nnPlayer[i].fitness = 0;
-    	}
-    	//mutate(make next generation) survivors and reset fitness
-    	for(int i = 0; i < nnSurviver; i++){
-    		console.printInfo("BestNet #" + i + " scored: " + nnPlayer[i].fitness);
-    		nnPlayer[i].net.childFrom(randomSurvivor().net, randomSurvivor().net);
-    		nnPlayer[i].fitness = 0;
-    	}
-    	//mix it again to give nets that have equal scores a better chance
     	NNPlayer tmp;
     	int oldIndex;
     	int newIndex;
@@ -116,17 +101,33 @@ public class NNTrainingManager {
     		nnPlayer[oldIndex] = nnPlayer[newIndex];
     		nnPlayer[newIndex] = tmp;
     	}
-    	return;
+    	for(NNPlayer p : nnPlayer){
+    		p.fitness = 0;
+    	}
     }
     public void allVSall(){
-        for (int i = 0; i < nnQuantity; i++){
+        for (int n = 0; n < nnQuantity; n++){
             for (int x = 0; x < nnQuantity; x++){
-            	if(i != x) {
-                	netVSnet(i,x);
+            	//don't play against yourself
+            	if(n != x) {
+                	netVSnet(n,x);
             	}
             }
+            Arrays.parallelSort(nnPlayer, nNPlayerComparator);
+        	//refill poulation and reset fitness (because it is a "new" NN now) 
+        	for(int i = nnSurviver; i < nnQuantity; i++){
+        		nnPlayer[i].net.randomWeights();
+        		nnPlayer[i].net.changeAllPercent(changePercentage);
+        		
+        	}
+        	//mutate(make next generation) survivors and reset fitness
+        	for(int i = 0; i < nnSurviver; i++){
+        		console.printInfo("BestNet #" + i + " scored: " + nnPlayer[i].fitness);
+        		nnPlayer[i].net.childFrom(randomSurvivor().net, randomSurvivor().net);
+        	}
+        	//mix it again to give nets that have equal scores a better chance
+        	
         }
-        //ForkJoinPool.commonPool().awaitQuiescence(1, TimeUnit.DAYS);
     }
     private void netVSnet(int net1, int net2)
     {
@@ -152,33 +153,39 @@ public class NNTrainingManager {
     public void evaluateFitness(NNPlayer startedNet, NNPlayer secondNet, GameLogic gl) {
     	Situations situation = gl.getFinalSituation();
     	boolean failed = gl.getFailed();
-    	if(gl.getTurnCount() > 1){
+    	if((gl.getTurnCountRed() + gl.getTurnCountWhite()) > 1){
     		notFailedCount++;
-    	}
+    	}   	
     	switch(situation) {
 		case DRAW:
 			startedNet.fitness += 20;
 			secondNet.fitness += 20;
 			break;
 		case WHITEWIN:
-			secondNet.fitness += 100;
 			if(failed) {
-				startedNet.fitness += -500;
+				startedNet.fitness += -200;
+			}
+			else{
+				secondNet.fitness += 500;
 			}
 			break;
 		case REDWIN:
-			startedNet.fitness += 80;
 			if(failed) {
-				secondNet.fitness += -500;
+				secondNet.fitness += -200;
+			}
+			else{
+				startedNet.fitness += 500;
 			}
 			break;
 		default:			 
 			console.printInfo("NNTrainingManager", "game was either stopped or paused");
 			return;
     	}
+    	startedNet.fitness += gl.getTurnCountRed()*10;
+    	secondNet.fitness += gl.getTurnCountWhite()*10;
+    	//TODO this does not do anything because the playfield is cleared after the game
     	startedNet.fitness += gl.getPlayfield().getFigureQuantity(FigureColor.RED);
     	secondNet.fitness += gl.getPlayfield().getFigureQuantity(FigureColor.WHITE);
-    	//console.printInfo("NNTrainingManager",nnFitness[startedNet] , nnFitness[secondNet]);
     	console.print("Net scored: " + startedNet.fitness);
     }
     
