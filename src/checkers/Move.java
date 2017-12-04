@@ -26,7 +26,7 @@ public class Move {
 	private MoveType type;
 	private MoveDirection[] directions;
 	private int steps;
-	private FigureColor color;
+
 	private int x, y;
 	
 	public Move(MoveDirection[] pDirection, int pSteps, int pX, int pY) {

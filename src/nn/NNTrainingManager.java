@@ -21,15 +21,15 @@ public class NNTrainingManager {
 	private Playfield thePlayfield;
 	private NNPlayer[] nnPlayer;
 	private int nnQuantity = 20;
-    private double changePercentage = 50;
-    private double weightsMax = 10;
-    private double weightsMin = -10;
-    private double sigmoidMax = 1;
-    private double sigmoidMin = -1;
-    public int inputNeurons = 64;
-    public int outputNeurons = 64;
-    public int hiddenNeurons = 64;
-    public int hiddenLayer = 10;
+    private double changePercentage = 40;
+    private double weightsMax;
+    private double weightsMin;
+    private double sigmoidMax;
+    private double sigmoidMin;
+    public int inputNeurons;
+    public int outputNeurons;
+    public int hiddenNeurons;
+    public int hiddenLayer;
     
     int notFailedCount = 0;
     
@@ -38,8 +38,9 @@ public class NNTrainingManager {
     public int nnSurviver = 10;
     public int epochs = 200;
     
-	public NNTrainingManager(GUI pGui, int epochs, int quantity, int nnSurviver) {
-		nNPlayerComparator = new Comparator<NNPlayer>(){
+	public NNTrainingManager(boolean continueT, GUI pGui, int epochs, int quantity, int nnSurviver, int inputNeurons, int outputNeurons,
+			                 int hiddenNeurons, int hiddenLayer, double sigmoidMin, double sigmoidMax, double weightsMin, double weightsMax) {
+		nNPlayerComparator = new Comparator<NNPlayer>(){			
 			@Override
 			public int compare(NNPlayer o1, NNPlayer o2) {
 				if(o1.fitness > o2.fitness){
@@ -53,6 +54,14 @@ public class NNTrainingManager {
 			}
 			
 		};
+		this.inputNeurons = inputNeurons;
+		this.outputNeurons = outputNeurons;
+		this.hiddenNeurons = hiddenNeurons;
+		this.hiddenLayer = hiddenLayer;
+		this.sigmoidMin = (double)sigmoidMin;
+		this.sigmoidMax = (double)sigmoidMax;
+		this.weightsMin = (double)weightsMin;
+		this.weightsMax = (double)weightsMax;
 		gui = pGui;
 		console = gui.console;
 		gmlc = gui.getGameLogic();
@@ -86,26 +95,11 @@ public class NNTrainingManager {
             for(int s = 0; s < nnSurviver; s++){
             	saveNN(nnPlayer[s].net.getAfterInputWeights(), nnPlayer[s].net.getHiddenWeights(), nnPlayer[s].net.getToOutputWeights(), "I am the best! (Nr." + s + ")");
             }
-            //change();
         }
         console.printInfo("Stats: \nNotFailed: " + notFailedCount, "NNTM");
     }
     public void theBest(){
     	allVSall();
-    	Arrays.parallelSort(nnPlayer, nNPlayerComparator);
-    	//refill poulation and reset fitness (because it is a "new" NN now) 
-    	for(int i = nnSurviver; i < nnQuantity; i++){
-    		nnPlayer[i].net.randomWeights();
-    		nnPlayer[i].net.changeAllPercent(changePercentage);
-    		nnPlayer[i].fitness = 0;
-    	}
-    	//mutate(make next generation) survivors and reset fitness
-    	for(int i = 0; i < nnSurviver; i++){
-    		console.printInfo("BestNet #" + i + " scored: " + nnPlayer[i].fitness);
-    		nnPlayer[i].net.childFrom(randomSurvivor().net, randomSurvivor().net);
-    		nnPlayer[i].fitness = 0;
-    	}
-    	//mix it again to give nets that have equal scores a better chance
     	NNPlayer tmp;
     	int oldIndex;
     	int newIndex;
@@ -116,17 +110,33 @@ public class NNTrainingManager {
     		nnPlayer[oldIndex] = nnPlayer[newIndex];
     		nnPlayer[newIndex] = tmp;
     	}
-    	return;
+    	for(NNPlayer p : nnPlayer){
+    		p.fitness = 0;
+    	}
     }
     public void allVSall(){
-        for (int i = 0; i < nnQuantity; i++){
+        for (int n = 0; n < nnQuantity; n++){
             for (int x = 0; x < nnQuantity; x++){
-            	if(i != x) {
-                	netVSnet(i,x);
+            	//don't play against yourself
+            	if(n != x) {
+                	netVSnet(n,x);
             	}
             }
+            Arrays.parallelSort(nnPlayer, nNPlayerComparator);
+        	//refill poulation and reset fitness (because it is a "new" NN now) 
+        	for(int i = nnSurviver; i < nnQuantity; i++){
+        		nnPlayer[i].net.randomWeights();
+        		nnPlayer[i].net.changeAllPercent(changePercentage);
+        		
+        	}
+        	//mutate(make next generation) survivors and reset fitness
+        	for(int i = 0; i < nnSurviver; i++){
+        		console.printInfo("BestNet #" + i + " scored: " + nnPlayer[i].fitness);
+        		nnPlayer[i].net.childFrom(randomSurvivor().net, randomSurvivor().net);
+        	}
+        	//mix it again to give nets that have equal scores a better chance
+        	
         }
-        //ForkJoinPool.commonPool().awaitQuiescence(1, TimeUnit.DAYS);
     }
     private void netVSnet(int net1, int net2)
     {
@@ -161,26 +171,30 @@ public class NNTrainingManager {
 			secondNet.fitness += 20;
 			break;
 		case WHITEWIN:
-			secondNet.fitness += 100;
 			if(failed) {
-				startedNet.fitness += -500;
+				startedNet.fitness += -200;
+			}
+			else{
+				secondNet.fitness += 500;
 			}
 			break;
 		case REDWIN:
-			startedNet.fitness += 80;
 			if(failed) {
-				secondNet.fitness += -500;
+				secondNet.fitness += -200;
+			}
+			else{
+				startedNet.fitness += 500;
 			}
 			break;
 		default:			 
 			console.printInfo("NNTrainingManager", "game was either stopped or paused");
 			return;
     	}
-    	startedNet.fitness += gl.getTurnCountRed();
-    	secondNet.fitness += gl.getTurnCountWhite();
+    	startedNet.fitness += gl.getTurnCountRed()*10;
+    	secondNet.fitness += gl.getTurnCountWhite()*10;
+    	//TODO this does not do anything because the playfield is cleared after the game
     	startedNet.fitness += gl.getPlayfield().getFigureQuantity(FigureColor.RED);
     	secondNet.fitness += gl.getPlayfield().getFigureQuantity(FigureColor.WHITE);
-    	//console.printInfo("NNTrainingManager",nnFitness[startedNet] , nnFitness[secondNet]);
     	console.print("Net scored: " + startedNet.fitness);
     }
     
@@ -194,7 +208,7 @@ public class NNTrainingManager {
     	if(!dir.exists()){
 			dir.mkdirs();
     	}
-    	File file = new File("resources/NNSave/" + name);
+    	File file = new File("resources/NNSave/" + name  + "info" + ".nni");
     	try {
 			file.createNewFile();
 		} catch (IOException e) {
@@ -204,45 +218,49 @@ public class NNTrainingManager {
     	PrintWriter writer;
 		try {
 			writer = new PrintWriter(file);
-			//inputs
-			writer.write("{\n");
+			writer.write("\nweightsMax:\n");
+			writer.write(Double.toString(weightsMax));
+			writer.write("\n weightsMin:\n");
+			writer.write(Double.toString(weightsMin));
+			writer.write("\n sigmoidMax:\n");
+			writer.write(Double.toString(sigmoidMax));
+			writer.write("\n sigmoidMin:\n");
+			writer.write(Double.toString(sigmoidMin));
+			writer.write("\n inputNeurons:\n");
+			writer.write(Double.toString(inputNeurons));
+			writer.write("\n outputNeurons:\n");
+			writer.write(Double.toString(outputNeurons));
+			writer.write("\n hiddenNeurons:\n");
+			writer.write(Double.toString(hiddenNeurons));
+			writer.write("\n hiddenLayer:\n");
+			writer.write(Double.toString(hiddenLayer));
+			writer.write("\n afterInputWeigths:\n");
 	    	for(double[] ws : aIW){
-	    		writer.write("{\n");
 	    		for(double w : ws){
-	    			writer.write(Double.toString(w) + ", ");
+	    			writer.write(Double.toString(w) + "\n");	    			
 	    		}
-	    		writer.write("}\n");
 	    	}
-	    	writer.write("}\n");
-	    	//hidden
-	    	writer.write("{\n");
+	    	writer.write("\n hiddenWeights:\n");
 	    	for(double[][] l : hW){
-	    		writer.write("{\n");
 	    		for(double[] ws : l){
-		    		writer.write("{\n");
 		    		for(double w : ws){
-		    			writer.write(Double.toString(w) + ", ");
+		    			writer.write(Double.toString(w) + "\n");
 		    		}
-		    		writer.write("}\n");
 		    	}
-	    	writer.write("}\n");
 	    	}
-	    	writer.write("}\n");
-	    	//outputs
-	    	writer.write("{\n");
+	    	writer.write("\n toOutputWeights:\n");
 	    	for(double[] ws : tOW){
-	    		writer.write("{\n");
 	    		for(double w : ws){
-	    			writer.write(Double.toString(w) + ", ");
+	    			writer.write(Double.toString(w) + "\n");
 	    		}
-	    		writer.write("}\n");
 	    	}
-	    	writer.write("}\n");
 	    	writer.flush();
 	    	writer.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	
+
     }
 }

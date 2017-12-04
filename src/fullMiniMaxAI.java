@@ -6,7 +6,6 @@ import gui.Console;
 
 import checkers.GameLogic;
 import checkers.Move;
-import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
 

@@ -69,6 +69,7 @@ public class GameLogic {
 		winCountRed = 0;
 		winCountWhite = 0;
 		drawCount = 0;
+		currentRound = 0;
 		
 	}
 	/**
@@ -80,6 +81,7 @@ public class GameLogic {
 		pause = false;
 		//how many game should be played
 		rounds = pRounds;
+		
 		//if both player are one object one Player controls both white and red
 		twoPlayerMode = pPlayerRed == pPlayerWhite;
 		
@@ -246,7 +248,8 @@ public class GameLogic {
 		case DRAW:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Draw!");
-			drawCount++;			
+			drawCount++;	
+			currentRound++;
 			break;
 
 		case REDWIN:
@@ -257,6 +260,7 @@ public class GameLogic {
 			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
 			winCountRed++;
+			currentRound++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
@@ -265,16 +269,17 @@ public class GameLogic {
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
 			winCountWhite++;
+			currentRound++;
 			break;
 		case STOP:
 			gui.console.printInfo("GameLogic", "Game was stopped");
 			break;
 		case NOTHING:
 			return;
-		}
-		
-		++currentRound;
+		}		
 		if(currentRound == rounds || end == Situations.STOP) {
+			currentRound = 0;
+			
 			try {
 				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
 			} catch (IOException e) {
@@ -283,10 +288,13 @@ public class GameLogic {
 			}
 			gui.playfieldpanel.updateDisplay();
 			
-			gui.console.printInfo("The AI" + playerWhite.getName() + " (White) won " + winCountWhite + " times.","GameLogic");
-			gui.console.printInfo( "The AI" + playerRed.getName() + " (Red) won " + winCountRed + " times.","GameLogic");
+			gui.console.printInfo("The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.","GameLogic");
+			gui.console.printInfo( "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.","GameLogic");
 			gui.console.printInfo("Draw: " + drawCount + " times.", "GameLogic");
 			
+			winCountWhite = 0;
+			winCountRed = 0;
+			drawCount = 0;
 			gui.setAISpeed(AISpeed.NOTACTIVE);
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);

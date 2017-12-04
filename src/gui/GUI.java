@@ -188,7 +188,7 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	nnTrainingSettings = new NNTrainingSettings(GUI.this);
+            	nnTrainingSettings = new NNTrainingSettings(GUI.this,console);
             }
         });
         loadgame.addActionListener(new ActionListener()
