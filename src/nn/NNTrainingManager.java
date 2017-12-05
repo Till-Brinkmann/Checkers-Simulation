@@ -22,14 +22,14 @@ public class NNTrainingManager {
 	private NNPlayer[] nnPlayer;
 	private int nnQuantity = 20;
     private double changePercentage = 40;
-    private double weightsMax = 10;
-    private double weightsMin = -10;
-    private double sigmoidMax = 1;
-    private double sigmoidMin = -1;
-    public int inputNeurons = 64;
-    public int outputNeurons = 64;
-    public int hiddenNeurons = 64;
-    public int hiddenLayer = 10;
+    private double weightsMax;
+    private double weightsMin;
+    private double sigmoidMax;
+    private double sigmoidMin;
+    public int inputNeurons;
+    public int outputNeurons;
+    public int hiddenNeurons;
+    public int hiddenLayer;
     
     int notFailedCount = 0;
     
@@ -38,8 +38,9 @@ public class NNTrainingManager {
     public int nnSurviver = 10;
     public int epochs = 200;
     
-	public NNTrainingManager(GUI pGui, int epochs, int quantity, int nnSurviver) {
-		nNPlayerComparator = new Comparator<NNPlayer>(){
+	public NNTrainingManager(boolean continueT, GUI pGui, int epochs, int quantity, int nnSurviver, int inputNeurons, int outputNeurons,
+			                 int hiddenNeurons, int hiddenLayer, double sigmoidMin, double sigmoidMax, double weightsMin, double weightsMax) {
+		nNPlayerComparator = new Comparator<NNPlayer>(){			
 			@Override
 			public int compare(NNPlayer o1, NNPlayer o2) {
 				if(o1.fitness > o2.fitness){
@@ -53,6 +54,14 @@ public class NNTrainingManager {
 			}
 			
 		};
+		this.inputNeurons = inputNeurons;
+		this.outputNeurons = outputNeurons;
+		this.hiddenNeurons = hiddenNeurons;
+		this.hiddenLayer = hiddenLayer;
+		this.sigmoidMin = (double)sigmoidMin;
+		this.sigmoidMax = (double)sigmoidMax;
+		this.weightsMin = (double)weightsMin;
+		this.weightsMax = (double)weightsMax;
 		gui = pGui;
 		console = gui.console;
 		gmlc = gui.getGameLogic();
@@ -91,6 +100,8 @@ public class NNTrainingManager {
     }
     public void theBest(){
     	allVSall();
+    	
+    	//mix it again to give nets that have equal scores a better chance
     	NNPlayer tmp;
     	int oldIndex;
     	int newIndex;
@@ -100,9 +111,6 @@ public class NNTrainingManager {
     		newIndex = (int)Math.round(Math.random()*(nnQuantity-1));
     		nnPlayer[oldIndex] = nnPlayer[newIndex];
     		nnPlayer[newIndex] = tmp;
-    	}
-    	for(NNPlayer p : nnPlayer){
-    		p.fitness = 0;
     	}
     }
     public void allVSall(){
@@ -114,19 +122,20 @@ public class NNTrainingManager {
             	}
             }
             Arrays.parallelSort(nnPlayer, nNPlayerComparator);
-        	//refill poulation and reset fitness (because it is a "new" NN now) 
+        	//refill poulation(because it is a "new" NN now) 
         	for(int i = nnSurviver; i < nnQuantity; i++){
         		nnPlayer[i].net.randomWeights();
         		nnPlayer[i].net.changeAllPercent(changePercentage);
-        		
         	}
-        	//mutate(make next generation) survivors and reset fitness
+        	//mutate(make next generation) survivor
         	for(int i = 0; i < nnSurviver; i++){
         		console.printInfo("BestNet #" + i + " scored: " + nnPlayer[i].fitness);
         		nnPlayer[i].net.childFrom(randomSurvivor().net, randomSurvivor().net);
         	}
-        	//mix it again to give nets that have equal scores a better chance
-        	
+        	//reset fitness
+        	for(NNPlayer p : nnPlayer){
+        		p.fitness = 0;
+        	}
         }
     }
     private void netVSnet(int net1, int net2)
@@ -135,15 +144,9 @@ public class NNTrainingManager {
     	gl.linkGUI(gui);
     	nnPlayer[net1].setGL(gl);
     	nnPlayer[net2].setGL(gl);
+    	//net2 plays as red (and starts)
     	gl.startGame(false, "Training", nnPlayer[net2], nnPlayer[net1], 1, 0, false);
-       	if(FigureColor.RED == nnPlayer[net1].getFigureColor()) {
-    		evaluateFitness(nnPlayer[net2], nnPlayer[net1], gl);
-    	}
-    	else {
-    		evaluateFitness(nnPlayer[net1], nnPlayer[net2], gl);
-
-    	}
-    	
+    	evaluateFitness(nnPlayer[net2], nnPlayer[net1], gl);
     }
     public void change(){
         for (int i = 1; i < nnQuantity; i++){
@@ -153,9 +156,7 @@ public class NNTrainingManager {
     public void evaluateFitness(NNPlayer startedNet, NNPlayer secondNet, GameLogic gl) {
     	Situations situation = gl.getFinalSituation();
     	boolean failed = gl.getFailed();
-    	if((gl.getTurnCountRed() + gl.getTurnCountWhite()) > 1){
-    		notFailedCount++;
-    	}   	
+    	if(!failed) notFailedCount += gl.getTurnCount();
     	switch(situation) {
 		case DRAW:
 			startedNet.fitness += 20;
@@ -164,6 +165,7 @@ public class NNTrainingManager {
 		case WHITEWIN:
 			if(failed) {
 				startedNet.fitness += -200;
+				secondNet.fitness += 50;
 			}
 			else{
 				secondNet.fitness += 500;
@@ -172,6 +174,7 @@ public class NNTrainingManager {
 		case REDWIN:
 			if(failed) {
 				secondNet.fitness += -200;
+				startedNet.fitness += 50;
 			}
 			else{
 				startedNet.fitness += 500;
@@ -199,7 +202,7 @@ public class NNTrainingManager {
     	if(!dir.exists()){
 			dir.mkdirs();
     	}
-    	File file = new File("resources/NNSave/" + name);
+    	File file = new File("resources/NNSave/" + name  + "info" + ".nni");
     	try {
 			file.createNewFile();
 		} catch (IOException e) {
@@ -209,45 +212,49 @@ public class NNTrainingManager {
     	PrintWriter writer;
 		try {
 			writer = new PrintWriter(file);
-			//inputs
-			writer.write("{\n");
+			writer.write("\nweightsMax:\n");
+			writer.write(Double.toString(weightsMax));
+			writer.write("\n weightsMin:\n");
+			writer.write(Double.toString(weightsMin));
+			writer.write("\n sigmoidMax:\n");
+			writer.write(Double.toString(sigmoidMax));
+			writer.write("\n sigmoidMin:\n");
+			writer.write(Double.toString(sigmoidMin));
+			writer.write("\n inputNeurons:\n");
+			writer.write(Double.toString(inputNeurons));
+			writer.write("\n outputNeurons:\n");
+			writer.write(Double.toString(outputNeurons));
+			writer.write("\n hiddenNeurons:\n");
+			writer.write(Double.toString(hiddenNeurons));
+			writer.write("\n hiddenLayer:\n");
+			writer.write(Double.toString(hiddenLayer));
+			writer.write("\n afterInputWeigths:\n");
 	    	for(double[] ws : aIW){
-	    		writer.write("{\n");
 	    		for(double w : ws){
-	    			writer.write(Double.toString(w) + ", ");
+	    			writer.write(Double.toString(w) + "\n");	    			
 	    		}
-	    		writer.write("}\n");
 	    	}
-	    	writer.write("}\n");
-	    	//hidden
-	    	writer.write("{\n");
+	    	writer.write("\n hiddenWeights:\n");
 	    	for(double[][] l : hW){
-	    		writer.write("{\n");
 	    		for(double[] ws : l){
-		    		writer.write("{\n");
 		    		for(double w : ws){
-		    			writer.write(Double.toString(w) + ", ");
+		    			writer.write(Double.toString(w) + "\n");
 		    		}
-		    		writer.write("}\n");
 		    	}
-	    	writer.write("}\n");
 	    	}
-	    	writer.write("}\n");
-	    	//outputs
-	    	writer.write("{\n");
+	    	writer.write("\n toOutputWeights:\n");
 	    	for(double[] ws : tOW){
-	    		writer.write("{\n");
 	    		for(double w : ws){
-	    			writer.write(Double.toString(w) + ", ");
+	    			writer.write(Double.toString(w) + "\n");
 	    		}
-	    		writer.write("}\n");
 	    	}
-	    	writer.write("}\n");
 	    	writer.flush();
 	    	writer.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	
+
     }
 }

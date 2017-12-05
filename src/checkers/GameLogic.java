@@ -69,6 +69,7 @@ public class GameLogic {
 		winCountRed = 0;
 		winCountWhite = 0;
 		drawCount = 0;
+		currentRound = 0;
 		
 	}
 	/**
@@ -80,6 +81,7 @@ public class GameLogic {
 		pause = false;
 		//how many game should be played
 		rounds = pRounds;
+		
 		//if both player are one object one Player controls both white and red
 		twoPlayerMode = pPlayerRed == pPlayerWhite;
 		
@@ -133,11 +135,12 @@ public class GameLogic {
 		playerRed.requestMove();
 	}
 	public void makeMove(Move m){
+		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
 		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
-					finishGameTest(Situations.WHITEWIN,true);
+					finishGame(Situations.WHITEWIN,true);
 					return;
 				}
 				else {
@@ -147,7 +150,7 @@ public class GameLogic {
 			}
 			else {
 				if(whiteFailedOnce){
-					finishGameTest(Situations.REDWIN,true);
+					finishGame(Situations.REDWIN,true);
 					return;
 				}
 				else {
@@ -156,16 +159,17 @@ public class GameLogic {
 				}
 			}
 		}
-		else {//move is valid		
+		else {//move is valid
 			//increment turn count
 			incrementTurnCounter();
+			//we need to move before testing the other things
 			field.executeMove(m);
 			//automatic figureToKing check
 			testFigureToKing();
 			//test if game is Finished
 			Situations gamestate = testFinished();
 			if(gamestate != Situations.NOTHING){
-				finishGameTest(gamestate,false);
+				finishGame(gamestate,false);
 			}
 			else {
 				//for game recording
@@ -215,7 +219,7 @@ public class GameLogic {
 	}
 	public void requestDraw(){
 		if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
-			finishGameTest(Situations.DRAW,false);
+			finishGame(Situations.DRAW,false);
 		}
 	}
 	//---
@@ -239,14 +243,15 @@ public class GameLogic {
 		}
 		return Situations.NOTHING;
 	}
-	public void finishGameTest(Situations end, boolean pFailed) {
+	public void finishGame(Situations end, boolean pFailed) {
 		failed = pFailed;
 		endSituation = end;
 		switch(end) {
 		case DRAW:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Draw!");
-			drawCount++;			
+			drawCount++;	
+			currentRound++;
 			break;
 
 		case REDWIN:
@@ -257,6 +262,7 @@ public class GameLogic {
 			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
 			winCountRed++;
+			currentRound++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
@@ -265,16 +271,17 @@ public class GameLogic {
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
 			winCountWhite++;
+			currentRound++;
 			break;
 		case STOP:
 			gui.console.printInfo("GameLogic", "Game was stopped");
 			break;
 		case NOTHING:
 			return;
-		}
-		
-		++currentRound;
+		}		
 		if(currentRound == rounds || end == Situations.STOP) {
+			currentRound = 0;
+			
 			try {
 				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
 			} catch (IOException e) {
@@ -283,10 +290,13 @@ public class GameLogic {
 			}
 			gui.playfieldpanel.updateDisplay();
 			
-			gui.console.printInfo("The AI" + playerWhite.getName() + " (White) won " + winCountWhite + " times.","GameLogic");
-			gui.console.printInfo( "The AI" + playerRed.getName() + " (Red) won " + winCountRed + " times.","GameLogic");
+			gui.console.printInfo("The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.","GameLogic");
+			gui.console.printInfo( "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.","GameLogic");
 			gui.console.printInfo("Draw: " + drawCount + " times.", "GameLogic");
 			
+			winCountWhite = 0;
+			winCountRed = 0;
+			drawCount = 0;
 			gui.setAISpeed(AISpeed.NOTACTIVE);
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);
@@ -497,7 +507,7 @@ public class GameLogic {
 	}
 	public void setPause(boolean b) {
 		pause = b;
-		if(b == false) {			
+		if(!pause) {			
 			moveRequesting();
 		}
 	}
@@ -515,5 +525,8 @@ public class GameLogic {
 	}
 	public int getTurnCountWhite() {
 		return turnCounterWhite;
+	}
+	public int getTurnCount(){
+		return turnCounterRed + turnCounterWhite;
 	}
 }

@@ -7,7 +7,6 @@ import java.util.Date;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
-import generic.List;
 import gui.PlayfieldDisplay;
 
 

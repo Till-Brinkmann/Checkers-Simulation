@@ -22,6 +22,7 @@ public class NewMiniMaxAI implements Player {
 
 	@Override
 	public void requestMove() {
+		@SuppressWarnings("unused")
 		Move finalMove;
 		playfield = gmlc.getPlayfield();
 		generateTree();

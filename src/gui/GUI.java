@@ -188,7 +188,7 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	nnTrainingSettings = new NNTrainingSettings(GUI.this);
+            	nnTrainingSettings = new NNTrainingSettings(GUI.this,console);
             }
         });
         loadgame.addActionListener(new ActionListener()
@@ -331,7 +331,7 @@ public class GUI extends JFrame{
             {
             	stop.setEnabled(false);
             	gmlc.setPause(true);
-            	gmlc.finishGameTest(Situations.STOP,false);
+            	gmlc.finishGame(Situations.STOP,false);
             	playfieldpanel.enableAllButtons(false);
             }
         });
