@@ -339,7 +339,7 @@ public class GameLogic {
 	private void testFigureToKing(){
 		int y1 = 0;
 		int y2 = 7;
-		for(int x = 0; x < field.getSize();x++) {
+		for(int x = 0; x < field.SIZE;x++) {
 			if(field.isOccupied(x, y1)) {
 				if(field.colorOf(x, y1) == FigureColor.WHITE && field.getType(x, y1) == FigureType.NORMAL) {
 					field.changeFigureToKing(x, y1);

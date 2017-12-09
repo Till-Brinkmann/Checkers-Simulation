@@ -26,7 +26,7 @@ public class NNTrainingSettings extends JFrame{
 	/**
 	 * 
 	 */
-	private boolean continueT = false;;
+	private boolean continueT = false;
 	private JButton confirm;
 	private JSpinner epochsS;
 	private JSpinner quantityS;
@@ -42,7 +42,6 @@ public class NNTrainingSettings extends JFrame{
 	private JCheckBox continueTraining;
 	
 	private NNTrainingManager manager;
-	private static final long serialVersionUID = 1L;
 	private GUI gui;
 	private Console console;
 	public NNTrainingSettings(GUI pGui, Console console) {

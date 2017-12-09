@@ -188,8 +188,7 @@ public class Playfield {
 	}
 
 	public void executeMove(Move m){
-		//TODO alles
-		//x and y after move execution
+		//x and y before move execution
 		int x = m.getX();
 		int y = m.getY();
 		if(m.getMoveType() == MoveType.INVALID){
@@ -227,7 +226,6 @@ public class Playfield {
 		}
 		else{
 			movesWithoutJumps = 0;
-			//TODO do jump and multijump stuff
 			for(int s = 0; s < m.getSteps(); s++){
 				switch(m.getMoveDirection(s)){
 				case BL:
@@ -349,13 +347,6 @@ public class Playfield {
 	}
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
-	}
-	public int getSize() {
-		return SIZE;
-	}
-	//for ai:
-	public void makeMoveAI(Move m) {
-		
 	}
 }
 
