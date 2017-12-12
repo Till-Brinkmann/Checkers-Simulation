@@ -6,12 +6,17 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Hashtable;
 import java.util.concurrent.ForkJoinPool;
+import java.util.jar.JarFile;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -19,6 +24,7 @@ import javax.swing.event.ChangeListener;
 
 import checkers.GameLogic;
 import checkers.Player;
+import generic.List;
 import gui.GUI.AISpeed;
 
 
@@ -34,7 +40,7 @@ public class GameSettings extends JFrame{
 	
 	private JPanel backgroundPanel;
 	private ImageIcon gameSettingsIcon;
-	String[] playerNameList;
+	List<Class<?>> availablePlayer;
 	private JCheckBox recordGame;
 	private JButton okButton;
 	private JTextField gameNameField;
@@ -57,8 +63,27 @@ public class GameSettings extends JFrame{
 	public GameSettings(GUI pGui) {		
 		super("Game Settings");
 		gui = pGui;
-		initialize();
+		try {
+			loader = new URLClassLoader(
+					new URL[]{
+							new URL("file:" + new File("resources/AI").getAbsolutePath())
+							}
+					);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		availablePlayer = new List<Class<?>>();
+		createList();
 		createWindow();
+		for(availablePlayer.toFirst();availablePlayer.hasAccess();availablePlayer.next()){
+			player1ComboBox.addItem(availablePlayer.get().getName());
+			player2ComboBox.addItem(availablePlayer.get().getName());
+		}
+		initialize();
+		
+		
+		//for(available)
 	}
 	private void initialize() {
 		setBackground(Color.WHITE);
@@ -69,11 +94,11 @@ public class GameSettings extends JFrame{
 		gameNameField = new JTextField(10);
 		okButton  = new JButton("confirm");
 		okButton.setBackground(Color.WHITE);
-		player1ComboBox = new JComboBox<String>(createList());
+		player1ComboBox = new JComboBox<String>();
 		player1ComboBox.setBackground(Color.WHITE);
 		player1ComboBox.setSelectedItem("player");
 		currentSelectionPlayer1 = player1ComboBox.getSelectedItem().toString();
-		player2ComboBox = new JComboBox<String>(createList());
+		player2ComboBox = new JComboBox<String>();
 		player2ComboBox.setBackground(Color.WHITE);
 		player2ComboBox.setSelectedItem("player");
 		currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
@@ -248,30 +273,33 @@ public class GameSettings extends JFrame{
 		add(backgroundPanel);		
 		setVisible(true);
 	}
-	private String[] createList() {
+	private void createList() {
 		File[] files = new File("resources/AI").listFiles();
 		int listLength = 1;
+		
 		if(files != null) {
 			for(int i = 0; i < files.length; i++) {
 				if(files[i].getName().endsWith(".class")){
 					listLength++;
+					try {
+						ai = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
+						//append only if it is a player
+						if(testForPlayerInterface(ai)){
+							availablePlayer.append(ai);
+						}
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				else if(files[i].getName().endsWith(".jar")){
+					for(Path p : FileSystems.getFileSystem(files[i].toURI()).getRootDirectories()){
+						gui.console.printInfo(p.toString());
+					}
+					
 				}
 			}
 		}
-		playerNameList = new String[listLength];
-		if(files != null) {
-			int i = 0;
-			int j = 0;
-			while(j < listLength-1) {
-				if(files[j].getName().endsWith(".class")){
-					playerNameList[i] = files[j].getName();
-					i++;
-				}
-				j++;
-			}
-		}
-		playerNameList[listLength-1] = "player";
-		return playerNameList;
 	}
 	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
 	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{

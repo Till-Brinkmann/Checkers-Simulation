@@ -216,4 +216,7 @@ public class Console extends JPanel{
 		output.setForeground(color);
 		input.setForeground(color);
 	}
+	public void printError(String error, String from) {
+		print("[ERROR] " + from + ": " + error);
+	}
 }
