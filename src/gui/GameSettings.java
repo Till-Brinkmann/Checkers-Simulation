@@ -14,8 +14,11 @@ import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.swing.*;
@@ -40,7 +43,8 @@ public class GameSettings extends JFrame{
 	
 	private JPanel backgroundPanel;
 	private ImageIcon gameSettingsIcon;
-	List<Class<?>> availablePlayer;
+	//List<Class<?>> availablePlayer;
+	Hashtable<String, Class<?>> availablePlayer;
 	private JCheckBox recordGame;
 	private JButton okButton;
 	private JTextField gameNameField;
@@ -73,17 +77,15 @@ public class GameSettings extends JFrame{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		availablePlayer = new List<Class<?>>();
-		createList();
-		createWindow();
-		for(availablePlayer.toFirst();availablePlayer.hasAccess();availablePlayer.next()){
-			player1ComboBox.addItem(availablePlayer.get().getName());
-			player2ComboBox.addItem(availablePlayer.get().getName());
-		}
+		availablePlayer = new Hashtable<String, Class<?>>();
+		createPlayerTable();
 		initialize();
-		
-		
-		//for(available)
+		createWindow();
+		for(Enumeration<String> keys = availablePlayer.keys(); keys.hasMoreElements();){
+			String key = keys.nextElement();
+			player1ComboBox.addItem(key);
+			player2ComboBox.addItem(key);
+		}
 	}
 	private void initialize() {
 		setBackground(Color.WHITE);
@@ -96,11 +98,13 @@ public class GameSettings extends JFrame{
 		okButton.setBackground(Color.WHITE);
 		player1ComboBox = new JComboBox<String>();
 		player1ComboBox.setBackground(Color.WHITE);
-		player1ComboBox.setSelectedItem("player");
+		player1ComboBox.addItem("Player");
+		player1ComboBox.setSelectedItem("Player");
 		currentSelectionPlayer1 = player1ComboBox.getSelectedItem().toString();
 		player2ComboBox = new JComboBox<String>();
+		player2ComboBox.addItem("Player");
 		player2ComboBox.setBackground(Color.WHITE);
-		player2ComboBox.setSelectedItem("player");
+		player2ComboBox.setSelectedItem("Player");
 		currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
 		
 		roundsSpinner = new JSpinner (new SpinnerNumberModel(1, 1, 1000, 1));
@@ -185,9 +189,8 @@ public class GameSettings extends JFrame{
             	    			red = getPlayer2();
             	    		}
 							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected());
-						} catch (ClassNotFoundException | MalformedURLException | InstantiationException
-								| IllegalAccessException | IllegalArgumentException | InvocationTargetException
-								| NoSuchMethodException | SecurityException e) {
+						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
+								 InvocationTargetException | NoSuchMethodException | SecurityException e) {
 							gui.console.printWarning("gmlc", "failed to load the ai");
 							e.printStackTrace();
 						}
@@ -273,7 +276,7 @@ public class GameSettings extends JFrame{
 		add(backgroundPanel);		
 		setVisible(true);
 	}
-	private void createList() {
+	private void createPlayerTable() {
 		File[] files = new File("resources/AI").listFiles();
 		int listLength = 1;
 		
@@ -285,7 +288,7 @@ public class GameSettings extends JFrame{
 						ai = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
 						//append only if it is a player
 						if(testForPlayerInterface(ai)){
-							availablePlayer.append(ai);
+							availablePlayer.put(ai.getName(), ai);
 						}
 					} catch (ClassNotFoundException e) {
 						// TODO Auto-generated catch block
@@ -293,54 +296,49 @@ public class GameSettings extends JFrame{
 					}
 				}
 				else if(files[i].getName().endsWith(".jar")){
-					for(Path p : FileSystems.getFileSystem(files[i].toURI()).getRootDirectories()){
-						gui.console.printInfo(p.toString());
+					try {
+						//ai = loader.loadClass(new JarFile(files[i]).);
+						for(Enumeration<JarEntry> entries = new JarFile(files[i]).entries();entries.hasMoreElements();){
+							JarEntry entry = entries.nextElement();
+							if(entry.getName().startsWith("player/") && entry.getName().endsWith(".class")){
+								String className = entry.getName().replace('/', '.').substring(0, entry.getName().length()-6);
+								URLClassLoader jarloader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
+								gui.console.printInfo(className);
+								ai = jarloader.loadClass(className);
+								if(testForPlayerInterface(ai)){
+									availablePlayer.put(ai.getName().replace("player.", ""), ai);
+								}
+							}
+						}
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					
 				}
 			}
 		}
 	}
-	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		if(currentSelectionPlayer1.equals("player")) {
+	public Player getPlayer1() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+	InvocationTargetException, NoSuchMethodException, SecurityException{
+		if(currentSelectionPlayer1.equals("Player")) {
 			return gui.playfieldpanel;
 		}
+		ai = availablePlayer.get(player1ComboBox.getSelectedItem().toString());
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		url = new URL("file:" + new File("resources/AI").getAbsolutePath());
-		loader = new URLClassLoader(new URL[]{ url });
-		ai = loader.loadClass(((String) player1ComboBox.getSelectedItem()).substring(0,player1ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
-		if(testForPlayerInterface(ai)) {
-			return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
-		}
-		gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
-		return gui.playfieldpanel; 
+		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
-	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		if(currentSelectionPlayer2.equals("player")) {
+	public Player getPlayer2() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+	InvocationTargetException, NoSuchMethodException, SecurityException{
+		if(currentSelectionPlayer2.equals("Player")) {
 			return gui.playfieldpanel;
 		}
-		
-		if(player1ComboBox.getSelectedItem().equals((String) player2ComboBox.getSelectedItem())) {
-			if(testForPlayerInterface(ai)) {
-				return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
-			}
-			gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
-			return gui.playfieldpanel;
-		} 
+		ai = availablePlayer.get(player2ComboBox.getSelectedItem().toString());
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		url = new URL("file:" + new File("resources/AI").getAbsolutePath());
-		loader = new URLClassLoader(new URL[]{ url });
-		ai = loader.loadClass(((String) player2ComboBox.getSelectedItem()).substring(0,player2ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
-		if(testForPlayerInterface(ai)) {			
-			return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
-		}
-		gui.console.printInfo("Gamesettings", "Because of the missing interface Player 2 switches to standard player");
-		return gui.playfieldpanel;
+		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
+	
 	private boolean testForPlayerInterface(Class<?> ai2) {
 		for(Class<?> c : ai2.getInterfaces()) {
 			if(c.equals(Player.class)) {
@@ -351,6 +349,7 @@ public class GameSettings extends JFrame{
 		gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
 		return false;
 	}
+	
 	public void updateBackground( Color color){
 		backgroundPanel.setBackground(color);
 	}

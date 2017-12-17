@@ -484,7 +484,7 @@ public class GameLogic {
 		return testMove(move, field);
 	}
 	public static List<Move> testForMultiJump(int x, int y, Playfield f) {
-		List<Move> list =Move.getPossibleJumps(f.field[x][y], f);
+		List<Move> list = Move.getPossibleJumps(f.field[x][y], f);
 		if(list.length != 0) {
 			return list;
 		}
@@ -507,8 +507,12 @@ public class GameLogic {
 	}
 	public void setPause(boolean b) {
 		pause = b;
-		if(!pause) {			
-			moveRequesting();
+		if(!pause) {	
+			new Thread(){
+				public void run(){
+					moveRequesting();
+				}
+			}.start();
 		}
 	}
 	
