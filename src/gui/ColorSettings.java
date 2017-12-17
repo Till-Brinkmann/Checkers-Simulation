@@ -9,9 +9,11 @@ import javax.swing.*;
 
 @SuppressWarnings("serial")
 public class ColorSettings extends JFrame{
-
-	private ImageIcon colorSettingsIcon;
-	private JPanel foregroundPanel;
+    //the icon to display at the top left corner of the screen
+    private ImageIcon colorSettingsIcon;
+    //panel that holds labels and rgb slider for the foreground color
+    private JPanel foregroundPanel;
+    
     private JSlider[] foregroundSlider;
     private JLabel labelBg;
     private JPanel backgroundPanel;
@@ -67,7 +69,7 @@ public class ColorSettings extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-
+                //TODO implement!
             }
 
         });
