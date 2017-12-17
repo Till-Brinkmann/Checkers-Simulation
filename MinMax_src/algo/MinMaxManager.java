@@ -20,6 +20,7 @@ public class MinMaxManager {
 	
 	public MinMaxManager(MinMaxMTPlayer player, int maxDepth, FigureColor playerColor, FigureColor enemyColor) {
 		pool = new ForkJoinPool();
+		this.player = player;
 		this.maxDepth = maxDepth;
 		this.playerColor = playerColor;
 		this.enemyColor = enemyColor;
@@ -39,8 +40,9 @@ public class MinMaxManager {
 	public MinMaxMTPlayer getPlayer(){
 		return player;
 	}
-
+	
 	public void logError(String msg) {
+		System.out.println(msg);
 		player.csl.printError(msg, player.getName());
 	}
 }

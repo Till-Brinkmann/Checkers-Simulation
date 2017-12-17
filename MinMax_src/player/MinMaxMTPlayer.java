@@ -57,12 +57,14 @@ public class MinMaxMTPlayer implements Player{
 		try {
 			for(tasks.toFirst(),moves.toFirst();tasks.hasAccess();tasks.next(),moves.next()){
 				float current;
+				tasks.get().helpQuiesce();
 				current = tasks.get().get().floatValue();
 				if(current > bestValue){
 					bestValue = current;
 					bestMove = moves.get();
 				}
 			}
+			csl.printInfo(new Boolean(manager.getFJPool().isQuiescent()).toString() + " drhgfkljs", "MinMaxPlayer");
 		} catch (InterruptedException | ExecutionException e) {
 			//This should never happen
 			manager.logError("A task.get() got interrupted or execution failed! Fix ya code!");
