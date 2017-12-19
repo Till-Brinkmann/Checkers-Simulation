@@ -42,7 +42,7 @@ public class MinMaxManager {
 	}
 	
 	public void logError(String msg) {
-		System.out.println(msg);
+		//DEBUG: System.out.println(msg);
 		player.csl.printError(msg, player.getName());
 	}
 }

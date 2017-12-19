@@ -1,77 +1,99 @@
 package player;
 
-import java.util.concurrent.ExecutionException;
-
 import algo.MinMaxManager;
+import algo.MinMaxParent;
 import algo.MinMaxTask;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
-import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
 import generic.List;
+import gui.CommandListener;
 import gui.Console;
 
-public class MinMaxMTPlayer implements Player{
+public class MinMaxMTPlayer implements Player, MinMaxParent{
 	
-	public static final int maxDepth = 5;
+	public static final int defaultMaxDepth = 5;
 	
 	private GameLogic gmlc;
 	public Console csl;
 	
 	private MinMaxManager manager;
 	
-	private List<Move> moves;
-	private List<MinMaxTask> tasks;
+	private float bestValue;
+	private Move bestMove;
+	
+	private int aStartedTasks;
+	private int aFinishedTasks;
+	private Object notifyLock;
+	
 	public MinMaxMTPlayer(GameLogic gmlc, Console csl) {
 		this.gmlc = gmlc;
 		this.csl = csl;
+		notifyLock = new Object();
+		csl.addCommandListener(new CommandListener() {
+
+			@Override
+			public boolean processCommand(String command, String[] args) {
+				if(command.equals("set")) {
+					if(args.length == 2 && args[0].equals("MMMaxDepth")) {
+						//creating the new manager is the easiest way to make sure that the maxDepth does not change while a move is calculated
+						//(the current calculation all have references to the old manager)
+						manager = new MinMaxManager(manager.getPlayer(), Integer.parseInt(args[1]), manager.getPlayerColor(), manager.getEnemyColor());
+						csl.printCommandOutput("maxDepth set to " + manager.maxDepth);
+						return true;
+					}
+				}
+				return false;
+			}
+			
+		});
 	}
 
 	@Override
 	public void prepare(FigureColor color) {
-		manager = new MinMaxManager(this, maxDepth, color, color == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED);
+		manager = new MinMaxManager(this, defaultMaxDepth, color, color == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED);
 	}
-	
+	@Override
 	public void requestMove(){
-		tasks = new List<MinMaxTask>();
+		//reset/init variables
+		bestValue = -Float.MAX_VALUE;
+		bestMove = Move.INVALID;
+		aStartedTasks = 0;
+		aFinishedTasks = 0;
 		//start maximizing minMaxTask for every possible move
-		moves = Move.getPossibleMoves(manager.getPlayerColor(), gmlc.getPlayfield());
+		List<Move> moves = Move.getPossibleMoves(manager.getPlayerColor(), gmlc.getPlayfield());
 		for(moves.toFirst(); moves.hasAccess(); moves.next()){
-			tasks.append(
+			manager.getFJPool().execute(
 					new MinMaxTask(
 							manager,
+							this,
 							moves.get(),
 							gmlc.getPlayfield().copy(),
-							1, 
-							//the next task is not maximizing
+							1,
+							//the next task is always not maximizing
 							false
-				));
-			tasks.toLast();
-			manager.getFJPool().execute(tasks.get());
+						));
 		}
-		//choose best move
-		float bestValue = -Float.MAX_VALUE;
-		Move bestMove = new Move(MoveType.INVALID);
-		try {
-			for(tasks.toFirst(),moves.toFirst();tasks.hasAccess();tasks.next(),moves.next()){
-				float current;
-				tasks.get().helpQuiesce();
-				current = tasks.get().get().floatValue();
-				if(current > bestValue){
-					bestValue = current;
-					bestMove = moves.get();
-				}
+		//there is a task started for every move
+		aStartedTasks = moves.length;
+	}
+	@Override
+	public void notifyFinished(MinMaxTask child) {
+		synchronized(notifyLock) {
+			//choose best move
+			if(child.value > bestValue){
+				bestValue = child.value;
+				bestMove = child.move;
 			}
-			csl.printInfo(new Boolean(manager.getFJPool().isQuiescent()).toString() + " drhgfkljs", "MinMaxPlayer");
-		} catch (InterruptedException | ExecutionException e) {
-			//This should never happen
-			manager.logError("A task.get() got interrupted or execution failed! Fix ya code!");
-			e.printStackTrace();
+			aFinishedTasks++;
+			//if all workers finished perform best move
+			if(aFinishedTasks == aStartedTasks) {
+				manager.logError("Best move value: " + bestValue);
+				gmlc.makeMove(bestMove);
+			}
 		}
-		//perform best move
-		gmlc.makeMove(bestMove);
 	}
 
 	@Override
