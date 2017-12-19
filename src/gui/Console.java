@@ -172,7 +172,7 @@ public class Console extends JPanel{
 		//go through all listeners
 		listener.toFirst();
 		while(listener.hasAccess()){
-			if(listener.get().processCommand(in, args)){
+			if(listener.get().processCommand(command, args)){
 				wasProcessed = true;
 			}
 			listener.next();

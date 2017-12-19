@@ -9,15 +9,17 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-/**
-* This is a jframe that holds information about this program and the project behind it.
-*/
+
 public class AboutCS extends JFrame{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	ImageIcon aboutscIcon;
 	JPanel text;
 	JTextArea textarea;
 	public AboutCS() {
-		super("About");
+		super("About Checker Simulation");
 		aboutscIcon = new ImageIcon("resources/Icons/dame.png");
 		setIconImage(aboutscIcon.getImage());
 		createWindow();

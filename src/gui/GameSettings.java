@@ -278,12 +278,10 @@ public class GameSettings extends JFrame{
 	}
 	private void createPlayerTable() {
 		File[] files = new File("resources/AI").listFiles();
-		int listLength = 1;
 		
 		if(files != null) {
 			for(int i = 0; i < files.length; i++) {
 				if(files[i].getName().endsWith(".class")){
-					listLength++;
 					try {
 						ai = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
 						//append only if it is a player
@@ -297,14 +295,15 @@ public class GameSettings extends JFrame{
 				}
 				else if(files[i].getName().endsWith(".jar")){
 					try {
-						//ai = loader.loadClass(new JarFile(files[i]).);
 						for(Enumeration<JarEntry> entries = new JarFile(files[i]).entries();entries.hasMoreElements();){
 							JarEntry entry = entries.nextElement();
 							if(entry.getName().startsWith("player/") && entry.getName().endsWith(".class")){
 								String className = entry.getName().replace('/', '.').substring(0, entry.getName().length()-6);
-								URLClassLoader jarloader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
-								gui.console.printInfo(className);
-								ai = jarloader.loadClass(className);
+								//Debug: gui.console.printInfo(className);
+								//TODO this could be improved by searching for JarFiles before the main classloader
+								//is initalized and adding them as sources
+								URLClassLoader jarClassLoader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
+								ai = jarClassLoader.loadClass(className);
 								if(testForPlayerInterface(ai)){
 									availablePlayer.put(ai.getName().replace("player.", ""), ai);
 								}

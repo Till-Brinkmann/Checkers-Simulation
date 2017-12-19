@@ -23,6 +23,11 @@ public class Move {
 		BR, // Backward/Right
 		BL, // Backward/Left
 	};
+	/**
+	 * static invalid move for convenience
+	 */
+	public static final Move INVALID = new Move(MoveType.INVALID);
+	
 	private MoveType type;
 	private MoveDirection[] directions;
 	private int steps;
