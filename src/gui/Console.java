@@ -181,7 +181,11 @@ public class Console extends JPanel{
 			printCommandOutput("The command could not be processed by any module.", "Maybe you wrote it wrong.");
 		}
 	}
-	public void print(String arg){
+	/**
+	 * 
+	 * @param arg
+	 */
+	public synchronized void print(String arg){
 		output.append(arg + "\n");
 		lines++;
 		if(lines >= maxLines){
@@ -212,11 +216,15 @@ public class Console extends JPanel{
 	public void updateBackground(Color color){
 		setBackground(color);
 	}
+	public void printError(String error, String from) {
+		print("[ERROR] " + from + ": " + error);
+	}
+	public void printError(String error){
+		printError(error, "Unknown");
+	}
+	
 	public void updateForeground(Color color){
 		output.setForeground(color);
 		input.setForeground(color);
-	}
-	public void printError(String error, String from) {
-		print("[ERROR] " + from + ": " + error);
 	}
 }
