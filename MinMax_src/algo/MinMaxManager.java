@@ -17,6 +17,9 @@ public class MinMaxManager {
 	 * maximun depth the recursion is allowed to go
 	 */
 	public final int maxDepth;
+
+	private int figureCountWhite;
+	private int figureCountRed;
 	
 	public MinMaxManager(MinMaxMTPlayer player, int maxDepth, FigureColor playerColor, FigureColor enemyColor) {
 		pool = new ForkJoinPool();
@@ -44,5 +47,19 @@ public class MinMaxManager {
 	public void logError(String msg) {
 		//DEBUG: System.out.println(msg);
 		player.csl.printError(msg, player.getName());
+	}
+	
+	public void updateFigureCounts() {
+		figureCountWhite = player.getPlayfield().getFigureQuantity(FigureColor.WHITE);
+		figureCountRed = player.getPlayfield().getFigureQuantity(FigureColor.RED);
+	}
+	public int getFigureQuantity(FigureColor color) {
+		switch(color){
+		case WHITE:
+			return figureCountWhite;
+		case RED:
+			return figureCountRed;
+		}
+		return 0;
 	}
 }

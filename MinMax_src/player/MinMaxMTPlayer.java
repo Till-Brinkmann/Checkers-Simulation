@@ -33,13 +33,12 @@ public class MinMaxMTPlayer implements Player, MinMaxParent{
 		this.csl = csl;
 		notifyLock = new Object();
 		csl.addCommandListener(new CommandListener() {
-
 			@Override
 			public boolean processCommand(String command, String[] args) {
 				if(command.equals("set")) {
 					if(args.length == 2 && args[0].equals("MMMaxDepth")) {
-						//creating the new manager is the easiest way to make sure that the maxDepth does not change while a move is calculated
-						//(the current calculation all have references to the old manager)
+						//creating a new manager is the easiest way to make sure that the maxDepth does not change while a move is calculated
+						//(the current Tasks all have references to the old manager)
 						manager = new MinMaxManager(manager.getPlayer(), Integer.parseInt(args[1]), manager.getPlayerColor(), manager.getEnemyColor());
 						csl.printCommandOutput("maxDepth set to " + manager.maxDepth);
 						return true;
@@ -47,7 +46,6 @@ public class MinMaxMTPlayer implements Player, MinMaxParent{
 				}
 				return false;
 			}
-			
 		});
 	}
 
@@ -64,10 +62,13 @@ public class MinMaxMTPlayer implements Player, MinMaxParent{
 		aFinishedTasks = 0;
 		//start maximizing minMaxTask for every possible move
 		List<Move> moves = Move.getPossibleMoves(manager.getPlayerColor(), gmlc.getPlayfield());
+		//in case the manager changes while the tasks are started
+		MinMaxManager tmpman = manager;
+		tmpman.updateFigureCounts();
 		for(moves.toFirst(); moves.hasAccess(); moves.next()){
 			manager.getFJPool().execute(
 					new MinMaxTask(
-							manager,
+							tmpman,
 							this,
 							moves.get(),
 							gmlc.getPlayfield().copy(),
@@ -79,6 +80,15 @@ public class MinMaxMTPlayer implements Player, MinMaxParent{
 		//there is a task started for every move
 		aStartedTasks = moves.length;
 	}
+	@Override
+	public boolean acceptDraw() {
+		return false;
+	}
+	@Override
+	public String getName() {
+		return "MiniMax algorithm based Checkers player";
+	}
+	
 	@Override
 	public void notifyFinished(MinMaxTask child) {
 		synchronized(notifyLock) {
@@ -95,19 +105,8 @@ public class MinMaxMTPlayer implements Player, MinMaxParent{
 			}
 		}
 	}
-
-	@Override
-	public boolean acceptDraw() {
-		return false;
-	}
 	
-	@Override
-	public String getName() {
-		return "MiniMax algorithm based Checkers player";
-	}
-
-	public Playfield getPlayfield() {
+	public Playfield getPlayfield(){
 		return gmlc.getPlayfield();
 	}
-
 }

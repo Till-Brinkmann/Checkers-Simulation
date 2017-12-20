@@ -100,10 +100,10 @@ public class MinMaxTask extends RecursiveAction implements MinMaxParent{
 	 * and #ownFigures of current depth and the same with #enemyFigures
 	 */
 	private float evaluateMove() {
-		return (manager.getPlayer().getPlayfield().getFigureQuantity(manager.getEnemyColor())-
+		return (manager.getFigureQuantity(manager.getEnemyColor())-
 				pf.getFigureQuantity(manager.getEnemyColor()))+
 				(pf.getFigureQuantity(manager.getPlayerColor())-
-				manager.getPlayer().getPlayfield().getFigureQuantity(manager.getPlayerColor()));
+				manager.getFigureQuantity(manager.getPlayerColor()));
 	}
 	
 }
