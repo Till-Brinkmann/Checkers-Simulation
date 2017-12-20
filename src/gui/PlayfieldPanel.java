@@ -58,7 +58,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 //		});
 		drawDecision = new CommandListener(){
 			@Override
-			public boolean processCommand(String command){
+			public boolean processCommand(String command, String[] args){
 				switch(command){
 				case "yes":
 				case "y":
@@ -335,7 +335,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		enableAllButtons(true);
 		for(int x = 0; x < playfield.SIZE; x++){
 			for(int y = 0; y < playfield.SIZE; y++){
-				if(playfield.isOccupied(x, y) && playfield.field[x][y].color != figurecolor)
+				if(playfield.isOccupied(x, y) && playfield.field[x][y].getFigureColor() != figurecolor)
 				buttons[x][y].setEnabled(false);
 			}
 		}

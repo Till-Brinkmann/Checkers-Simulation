@@ -6,10 +6,14 @@ public class NN
     private double[][] toOutputWeights;
     private double sigmin;
     private double sigmax;
-    public NN(int inputNeurons, int outputNeurons,  int hiddenNeurons, int hiddenlayer, double min, double max)
+    private double weightMin;
+    private double weightMax;
+    public NN(int inputNeurons, int outputNeurons,  int hiddenNeurons, int hiddenlayer, double sigmin, double sigmax, double weightMin, double weightMax)
     {
-        sigmin = min;
-        sigmax = max;
+        this.sigmin = sigmin;
+        this.sigmax = sigmax;
+        this.weightMin = weightMin;
+        this.weightMax = weightMax;
         afterInputWeights = new double[hiddenNeurons][inputNeurons];
         hiddenWeights = new double[hiddenlayer-1][hiddenNeurons][hiddenNeurons];
         toOutputWeights = new double[outputNeurons][hiddenNeurons];
@@ -47,41 +51,41 @@ public class NN
         return toOutputWeights;
     }
     
-    public void randomWeights(double min, double max){
+    public void randomWeights(){
         for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
-                afterInputWeights[i][x] = Math.random()*(max-min)+min;
+                afterInputWeights[i][x] = Math.random()*(weightMax-weightMin)+weightMin;
             }
         }
         for (int i = 0; i < hiddenWeights.length; i++){
             for (int x = 0; x < hiddenWeights[0].length; x++){
                 for (int y = 0; y < hiddenWeights[0][0].length; y++){
-                    hiddenWeights[i][x][y] = Math.random()*(max-min)+min;
+                    hiddenWeights[i][x][y] = Math.random()*(weightMax-weightMin)+weightMin;
                 }
             }
         }
         for (int i = 0; i < toOutputWeights.length; i++){
             for (int x = 0; x < toOutputWeights[0].length; x++){
-                toOutputWeights[i][x] = Math.random()*(max-min)+min;
+                toOutputWeights[i][x] = Math.random()*(weightMax-weightMin)+weightMin;
             }
         }
     }
     public void changeAllPercent(double quality){ //in percent
         for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
-                afterInputWeights[i][x] *= 1 + (Math.random() - 0.5) * 2 * quality / 100;
+                afterInputWeights[i][x] *= Math.random() < 0.9 ? changeFunction(quality/100) : -changeFunction(quality/100);
             }
         }
         for (int i = 0; i < hiddenWeights.length; i++){
             for (int x = 0; x < hiddenWeights[0].length; x++){
                 for (int y = 0; y < hiddenWeights[0][0].length; y++){
-                    hiddenWeights[i][x][y] *= 1 + (Math.random() - 0.5) * 2 * quality / 100;
+                    hiddenWeights[i][x][y] *= Math.random() < 0.9 ? changeFunction(quality/100) : -changeFunction(quality/100);
                 }
             }
         }
         for (int i = 0; i < toOutputWeights.length; i++){
             for (int x = 0; x < toOutputWeights[0].length; x++){
-                toOutputWeights[i][x] *= 1 + (Math.random() - 0.5) * 2 * quality / 100;
+                toOutputWeights[i][x] *= Math.random() < 0.9 ? changeFunction(quality/100) : -changeFunction(quality/100);
             }
         }
     }
@@ -89,22 +93,51 @@ public class NN
     public void changeAllReal(double quality){ //real
         for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
-                afterInputWeights[i][x] += (Math.random() - 0.5) * 2 * quality / 100;
+                afterInputWeights[i][x] += Math.random() < 0.9 ? (Math.random() - 0.5) * quality / 100 : -((Math.random() - 0.5) * quality / 100);
             }
         }
         for (int i = 0; i < hiddenWeights.length; i++){
             for (int x = 0; x < hiddenWeights[0].length; x++){
                 for (int y = 0; y < hiddenWeights[0][0].length; y++){
-                    hiddenWeights[i][x][y] += (Math.random() - 0.5) * 2 * quality / 100;
+                    hiddenWeights[i][x][y] += Math.random() < 0.9 ? (Math.random() - 0.5) * quality / 100 : -((Math.random() - 0.5) * quality / 100);
                 }
             }
         }
         for (int i = 0; i < toOutputWeights.length; i++){
             for (int x = 0; x < toOutputWeights[0].length; x++){
-                toOutputWeights[i][x] += (Math.random() - 0.5) * 2 * quality / 100;
+                toOutputWeights[i][x] += Math.random() < 0.9 ? (Math.random() - 0.5) * quality / 100 : -((Math.random() - 0.5) * quality / 100);
             }
         }
-    }   
+    }
+    /**
+     * takes random weights and the weights of each parent averaged to generate new weights for the nn.
+     * @param n1 first parent
+     * @param n2 second parent
+     */
+    public void childFrom(NN n1, NN n2){
+    	for (int i = 0; i < afterInputWeights.length; i++){
+            for (int x = 0; x < afterInputWeights[0].length; x++){
+                afterInputWeights[i][x] = ((Math.random()*(weightMax-weightMin)+weightMin)+n1.afterInputWeights[i][x]+n2.afterInputWeights[i][x])/3;
+            }
+        }
+        for (int i = 0; i < hiddenWeights.length; i++){
+            for (int x = 0; x < hiddenWeights[0].length; x++){
+                for (int y = 0; y < hiddenWeights[0][0].length; y++){
+                    hiddenWeights[i][x][y] = ((Math.random()*(weightMax-weightMin)+weightMin)+n1.hiddenWeights[i][x][y]+n2.hiddenWeights[i][x][y])/3;
+                }
+            }
+        }
+        for (int i = 0; i < toOutputWeights.length; i++){
+            for (int x = 0; x < toOutputWeights[0].length; x++){
+                toOutputWeights[i][x] = ((Math.random()*(weightMax-weightMin)+weightMin)+n1.toOutputWeights[i][x]+n2.toOutputWeights[i][x])/3;
+            }
+        }
+    }
+    
+    public double changeFunction(double scale){
+    	return ((1.6*Math.random()-0.8)*(1.6*Math.random()-0.8)*(1.6*Math.random()-0.8))*scale+1;
+    }
+    
     public double[] run(double[] inputVector){
         double[] hiddenVector = new double[afterInputWeights.length];
         double[] outputVector = new double[toOutputWeights.length];

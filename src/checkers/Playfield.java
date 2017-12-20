@@ -7,7 +7,6 @@ import java.util.Date;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
-import generic.List;
 import gui.PlayfieldDisplay;
 
 
@@ -188,9 +187,8 @@ public class Playfield {
 		field[x][y].setFigureType(FigureType.KING);
 	}
 
-	public void executeMove(Move m, boolean displayActivated){
-		//TODO alles
-		//x and y after move execution
+	public void executeMove(Move m){
+		//x and y before move execution
 		int x = m.getX();
 		int y = m.getY();
 		if(m.getMoveType() == MoveType.INVALID){
@@ -228,7 +226,6 @@ public class Playfield {
 		}
 		else{
 			movesWithoutJumps = 0;
-			//TODO do jump and multijump stuff
 			for(int s = 0; s < m.getSteps(); s++){
 				switch(m.getMoveDirection(s)){
 				case BL:
@@ -274,9 +271,7 @@ public class Playfield {
 				}
 			}
 		}
-		if(displayActivated) {
-			if(display != null) display.updateDisplay();
-		}
+		if(display != null) display.updateDisplay();
 	}
 
 	public int getFigureQuantity(FigureColor color){
@@ -294,7 +289,7 @@ public class Playfield {
 		int quantity = 0;
 		for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
-            	if(isOccupied(x,y) && field[x][y].color == figurecolor && field[x][y].type == figuretype){
+            	if(isOccupied(x,y) && field[x][y].getFigureColor() == figurecolor && field[x][y].getFigureType() == figuretype){
             		quantity++;
             	}
             }
@@ -319,7 +314,7 @@ public class Playfield {
 		Figure[] figures = new Figure[getFigureQuantity(figurecolor)];
 		for(int y = 0;y < SIZE; y++){
             for(int x = 0;x < SIZE; x++){
-            	if(isOccupied(x,y) && field[x][y].color == figurecolor){
+            	if(isOccupied(x,y) && field[x][y].getFigureColor() == figurecolor){
             		figures[counter] = field[x][y];
             		counter++;
             	}
@@ -353,12 +348,28 @@ public class Playfield {
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
 	}
-	public int getSize() {
-		return SIZE;
-	}
-	//for ai:
-	public void makeMoveAI(Move m) {
-		
+
+	public boolean testPlayability() {
+		int whiteFigures = 0;
+		int redFigures = 0;
+		for(int y = 0;y < SIZE; y++) {
+			for(int x = 0;x < SIZE; x++) {
+				if(isOccupied(x,y)) {
+					if(field[x][y].getFigureColor() == FigureColor.RED) {
+						redFigures++;
+					}
+					else {
+						whiteFigures++;
+					}
+				}
+			}
+		}
+		if(whiteFigures > 0 && redFigures > 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }
 
