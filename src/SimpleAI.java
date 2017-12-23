@@ -113,20 +113,7 @@ public class SimpleAI implements Player {
 		}
 	}
 	private List<Move> moveOutsorting(Playfield newPlayfield,FigureColor figureColor) {
-
 		List<Move> moveList = Move.getPossibleMoves(figureColor,newPlayfield);
-		moveList.toFirst();
-		while(moveList.hasAccess()) {			
-			moveList.get().setScore(moveEvaluation(moveList.get(),newPlayfield));
-			moveList.next();
-		}
-		if(moveList.isEmpty()) {
-			return null;
-		}
-		
-		return moveSelection(moveList);		
-	}	
-	private List<Move> moveSelection(List<Move> moveList){
 		List<Move> finalList = new List<Move>();		
 		//criteria for Selection unclear. Either a limited amount of moves per Recursion or an overall score limit
 		//I would personally go for the move OBERGRENZE! (5 Moves)
@@ -138,36 +125,37 @@ public class SimpleAI implements Player {
 		while(finalList.length != 6) {		
 			moveList.toFirst();
 			while(moveList.hasAccess()) {
-				currentScore = moveList.get().getScore();
+				currentScore = moveEvaluation(moveList.get(), newPlayfield);
 				if(currentScore > bestScore) {
 					bestScore = currentScore;
 				}
 				moveList.next();
 			}
 			moveList.toFirst();
-			while(moveList.get().getScore() != bestScore) {
+			while(moveEvaluation(moveList.get(), newPlayfield) != bestScore) {
 				moveList.next();
 			}
 			finalList.append(moveList.get());
 			moveList.remove();
 			bestScore = 0;
 		}
-		return finalList;		
+		return finalList;			
 	}
+	
 	private int moveEvaluation(Move m, Playfield newPlayfield) {
 		int quality = 0;
-		int x = m.getX();
 		int y = m.getY();
-//		FigureColor color = newPlayfield.field[x][y].getFigureColor();
-//		FigureType type = newPlayfield.field[x][y].getFigureType();
+		//int y = m.getY();
+		//FigureColor color = newPlayfield.field[x][y].getFigureColor();
+		//FigureType type = newPlayfield.field[x][y].getFigureType();
 		if(m.getMoveType() == MoveType.JUMP) {
 			quality=+2;
 		}
 		if(m.getMoveType() == MoveType.MULTIJUMP) {
 			quality=+6;
 		}
-		if(x == 1 || x == 6) {
-			quality=+10;
+		if(y == 1 || y == 6) {
+			quality=+5;
 		}
 		return quality;
 	}
@@ -175,19 +163,13 @@ public class SimpleAI implements Player {
 	public String getName() {
 		return name;
 	}
-
 	@Override
 	public boolean acceptDraw() {
-		// TODO Auto-generated method stub
 		return false;
 	}
+	
 	private FigureColor reverseFigureColor(FigureColor fc) {
-		if(fc == FigureColor.RED) {
-			return FigureColor.WHITE;
-		}
-		else {
-			return FigureColor.RED;
-		}
+		return fc == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED;
 	}
 
 }

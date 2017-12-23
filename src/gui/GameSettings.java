@@ -62,6 +62,7 @@ public class GameSettings extends JFrame{
 	private String gameName;
 	private GUI gui;
 	private int slowness;
+	private JCheckBox useCurrentPf;
 	//TODO remove after other solution is tested
 	//private Thread gmlcThread;
 	public GameSettings(GUI pGui) {		
@@ -126,7 +127,14 @@ public class GameSettings extends JFrame{
 		displayCheckBox.setBackground(Color.WHITE);
 		displayCheckBox.setEnabled(false);
 		
-		
+		useCurrentPf = new JCheckBox("using current playfield",false);
+		useCurrentPf.setBackground(Color.WHITE);
+		if(gui.getGameLogic().getPlayfield().testPlayability()) {
+			useCurrentPf.setEnabled(true);
+		}
+		else {
+			useCurrentPf.setEnabled(false);
+		}
 		slownessForSlowMode.addChangeListener(new ChangeListener()
         {
         	public void stateChanged(ChangeEvent evt){
@@ -148,6 +156,10 @@ public class GameSettings extends JFrame{
             {
             	setAlwaysOnTop(false);
             	setVisible(false);
+            	if(gui.getGameLogic().getInProgress()) {
+            		gui.console.printWarning("A game is currently running. It has to be paused or stopped in order to create a new game.","Gamesettings");
+            		return;
+            	}
             	gameName = gameNameField.getText();
             	if(gameName.equals("") && recordGameIsEnabled){
             	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));
@@ -188,7 +200,7 @@ public class GameSettings extends JFrame{
             	    			white = getPlayer1();
             	    			red = getPlayer2();
             	    		}
-							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected());
+							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
 						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
 								 InvocationTargetException | NoSuchMethodException | SecurityException e) {
 							gui.console.printWarning("gmlc", "failed to load the ai");
@@ -257,6 +269,7 @@ public class GameSettings extends JFrame{
 		playerSelection.add(player1ComboBox);
 		playerSelection.add(player2ComboBox);
 		playerSelection.add(displayCheckBox);
+		playerSelection.add(useCurrentPf);
 		
 		JPanel slownessPanel = new JPanel();
 		slownessPanel.setPreferredSize(new Dimension(300,6));
@@ -278,10 +291,12 @@ public class GameSettings extends JFrame{
 	}
 	private void createPlayerTable() {
 		File[] files = new File("resources/AI").listFiles();
+		int listLength = 1;
 		
 		if(files != null) {
 			for(int i = 0; i < files.length; i++) {
 				if(files[i].getName().endsWith(".class")){
+					listLength++;
 					try {
 						ai = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
 						//append only if it is a player
@@ -295,15 +310,14 @@ public class GameSettings extends JFrame{
 				}
 				else if(files[i].getName().endsWith(".jar")){
 					try {
+						//ai = loader.loadClass(new JarFile(files[i]).);
 						for(Enumeration<JarEntry> entries = new JarFile(files[i]).entries();entries.hasMoreElements();){
 							JarEntry entry = entries.nextElement();
 							if(entry.getName().startsWith("player/") && entry.getName().endsWith(".class")){
 								String className = entry.getName().replace('/', '.').substring(0, entry.getName().length()-6);
-								//Debug: gui.console.printInfo(className);
-								//TODO this could be improved by searching for JarFiles before the main classloader
-								//is initalized and adding them as sources
-								URLClassLoader jarClassLoader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
-								ai = jarClassLoader.loadClass(className);
+								URLClassLoader jarloader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
+								gui.console.printInfo(className);
+								ai = jarloader.loadClass(className);
 								if(testForPlayerInterface(ai)){
 									availablePlayer.put(ai.getName().replace("player.", ""), ai);
 								}

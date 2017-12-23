@@ -1,6 +1,4 @@
 package checkers;
-
-import java.io.File;
 import java.io.IOException;
 
 import checkers.Figure.FigureColor;
@@ -19,13 +17,12 @@ import gui.GUI.AISpeed;
  * <p>
  * Moreover, the GameLogic is running on a different thread in order to avoid collision with the PlayfieldPanel.
  * @author Till
- *
+ * @author Marco
  */
 public class GameLogic {
 	public enum Situations{WHITEWIN, REDWIN, DRAW,NOTHING, STOP};
-	/**
-	 * the default playfield to use
-	 */
+
+	//the default playfield to use
 	private Playfield field;
 	private boolean recordGameIsEnabled;
 	private String gameName;
@@ -42,6 +39,8 @@ public class GameLogic {
 	String namePlayerWhite;
 	String namePlayerRed;
 	
+	private boolean gameInProgress;
+	
 	private boolean twoPlayerMode = false;
 	private FigureColor inTurn;
 	private GUI gui;
@@ -55,6 +54,8 @@ public class GameLogic {
 	//For NN!
 	private Situations endSituation;
 	private boolean failed;
+	
+	
 	
 	public GameLogic(){
 		this(new Playfield());
@@ -70,14 +71,22 @@ public class GameLogic {
 		winCountWhite = 0;
 		drawCount = 0;
 		currentRound = 0;
+		gameInProgress = false;
 		
 	}
 	/**
-	 * The Constructor resets all counters to 0 and passes a new Playfield.
+	 * This method is essential for running a game and it is therefore called if a game about to begin. Currently this happens in GameSettings and NNTrainingsMangager.
+	 * First, it sets all the parameters and then it calls the createStartPosition method in playfield. After that it calls requestMove form the red player, because
+	 * the red player always makes the first move. This triggers an continuous loop between requestMove and makeMove util the game is finished.
 	 * <p>
-	 * @param playfield  default playfield
+	 * @param pRecordGameIsEnabled       This boolean defines a new directory with the GameName is created, in which all relevant game informations are saved. 
+	 * @param pRounds					 An integer variable which represents the number of games in one run.
+	 * @param pSlowness					 An integer variable which stands for the pauses between each move, so that the pace of the game changes
+	 * @param pDisplayActivated          This boolean defines whether the playfieldPanel displays the game or not
+	 * @param pUseCurrentPf 
 	 */
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated){
+	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated, boolean useCurrentPf){
+		gameInProgress = true;
 		pause = false;
 		//how many game should be played
 		rounds = pRounds;
@@ -104,14 +113,14 @@ public class GameLogic {
 		redFailedOnce = true;
 		whiteFailedOnce = true;
 
-		//testet ob empty weil ja schon ein psf geloaded werden konnte
-		if(field.isEmpty()) {
+		//test if an new playfield has to be created
+		if(!useCurrentPf) {
 			try {			
 				field.createStartPosition();
 			} catch (IOException e) {
 				gui.console.printWarning(
-					"Could not load startposition. Please check if your playfieldsaves are at the right position",
-					"Gamelogic:startGame");
+					"Gamelogic:startGame",
+					"Could not load startposition. Please check if your playfieldsaves are at the right position");
 				return;
 			}
 		}
@@ -121,8 +130,8 @@ public class GameLogic {
 			playerWhite.prepare(FigureColor.WHITE);
 		}
 		//red always starts
-		gui.console.printInfo("gmlc", "Therefore " + namePlayerRed + "starts first");
-		gui.console.printInfo("gmlc","Playing "+ (rounds-currentRound) + " more Rounds before reset");
+		gui.console.printInfo("GameLogic", "Therefore " + namePlayerRed + "starts first");
+		gui.console.printInfo("GameLogic","Playing "+ (rounds-currentRound) + " more Rounds before reset");
 		inTurn = FigureColor.RED;
 		if(!playerRed.equals(gui.playfieldpanel)) {
 			try {
@@ -134,8 +143,19 @@ public class GameLogic {
 		}
 		playerRed.requestMove();
 	}
+	/**
+	 * First, the method tests, if the Move transferred as a parameter is valid. After that is executes all nessecary steps for one particular
+	 * turn.
+	 * <p>
+	 *  Also it is important to know that this method is creating a continous loop with requestMove in a Player. In detail
+	 *  makeMove(actually it is moveRequesting. Is an outsourced part of makeMove) is calling requestMove in a Player and reqestMove is 
+	 *  calling makeMove again. 
+	 * <p>
+	 * @param m         The Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
+	 */
 	public void makeMove(Move m){
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
+		if(m == null) gui.console.printError("Move is null!", "GMLC");
 		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
@@ -183,14 +203,13 @@ public class GameLogic {
 			}
 		}
 	}
-	private void incrementTurnCounter() {
-		if(inTurn == FigureColor.RED) {
-			turnCounterRed++;
-		}
-		else {
-			turnCounterWhite++;
-		}
-	}
+	/**
+	 * MoveRequesting has the task to decide which Player does the next move through the variable inTurn  and then
+	 * calling the requestMove Method in ther right Player. 
+	 * <p>
+	 * It is a outsourced method from makeMove and is therefore only called by makeMove. This step ensured an more 
+	 * uncluttered overview over the code.
+	 */
 	private void moveRequesting() {
 		switch(inTurn){
 			case RED:
@@ -217,12 +236,31 @@ public class GameLogic {
 				break;
 		}
 	}
+	/**
+	 * This method increments one of the global variables turnCounterRed and turnCounterWhite after a turn by a specific FigureColor 
+	 * was finished.  
+	 */
+	private void incrementTurnCounter() {
+		if(inTurn == FigureColor.RED) {
+			turnCounterRed++;
+		}
+		else {
+			turnCounterWhite++;
+		}
+	}
+	/**
+	 * This method checks if both players want to accept a draw by calling the method acceptDraw in both player, which returns a boolean.
+	 */
 	public void requestDraw(){
 		if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
 			finishGame(Situations.DRAW,false);
 		}
 	}
-	//---
+	/**
+	 * It test if a game has to be finished by certain criterias and then returns the correct situation.
+	 * <p>
+	 * @return     An enumeration for the passible game situations 
+	 */
 	private Situations testFinished(){
 		//red has to make the next move. So if Red has just moved it does not need to move in the next round
 		if(inTurn == FigureColor.WHITE && Move.getPossibleMoves(FigureColor.RED, field).length == 0) {
@@ -243,6 +281,13 @@ public class GameLogic {
 		}
 		return Situations.NOTHING;
 	}
+	/**
+	 * FinishGame is only called if a game is certainly going to be finished. It mainly prints all the necessary information on the console.
+	 * Furthermore, it starts a new game if there are more rounds in one run and resets all veriables.
+	 * <p>
+	 * @param end                A variable from the enumeration situation.
+	 * @param pFailed            A boolean which is showing if one of the two players lost by doing a wrong move
+	 */
 	public void finishGame(Situations end, boolean pFailed) {
 		failed = pFailed;
 		endSituation = end;
@@ -281,19 +326,20 @@ public class GameLogic {
 		}		
 		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
-			
-			try {
-				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			try {
+//				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			gui.playfieldpanel.updateDisplay();
 			
-			gui.console.printInfo("The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.","GameLogic");
-			gui.console.printInfo( "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.","GameLogic");
-			gui.console.printInfo("Draw: " + drawCount + " times.", "GameLogic");
+			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
+			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
+			gui.console.printInfo("GameLogic", "Draw: " + drawCount + " times.");
 			
+			//reseting variables
+			gameInProgress = false;
 			winCountWhite = 0;
 			winCountRed = 0;
 			drawCount = 0;
@@ -301,8 +347,6 @@ public class GameLogic {
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);
 			gui.setEnableStop(false);
-			//currentRound = 0;
-			//TODO "hard" reset 
 			// TODO maybe statistic for ki playing against each other and creating a file with all information
 		}
 		else {
@@ -311,31 +355,44 @@ public class GameLogic {
 				new Thread(){
 					public void run(){
 						try {
-							startGame(recordGameIsEnabled, gameName, playerWhite, playerRed, rounds, slowness, displayActivated);
+							startGame(recordGameIsEnabled, gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
 						} catch (IllegalArgumentException | SecurityException e) {
-							gui.console.printWarning("gmlc", "failed to load the ai");
+							gui.console.printWarning("GameLogic", "failed to load the ai");
 							e.printStackTrace();
 						}
 					}
 				}.start();
 				//startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
 			} catch (IOException e) {
-				gui.console.printWarning("failed to load the pfs file startPositionForSize8","GameLogic");
+				gui.console.printWarning("GameLogic","failed to load the pfs file startPositionForSize8");
 				e.printStackTrace();
 			}			
 		}		
 	}
+	/**
+	 * This method only returns a boolean, if there are two real players and therefore no AI.
+	 * <p>
+	 * @return boolean     A boolean which is true if there are two real players. 
+	 */
 	public boolean getTwoPlayerMode(){
 		return twoPlayerMode;
 	}
+	/**
+	 * This method is called after every the run turn and trasferred all information to the playfield which creates a .pfs file with all
+	 * information.
+	 */
 	private void infosGameRecording() {
 		try {
 			field.saveGameSituation(gameName, inTurn, (turnCounterRed + turnCounterWhite), playerRed.getName(), playerWhite.getName());
 		} catch (IOException e) {
-			gui.console.printWarning("playfield could not be saved. IOException: " + e);
+			gui.console.printWarning("GameLogic","playfield could not be saved. IOException: " + e);
 			e.printStackTrace();
 		}
 	}
+	/**
+	 * Tests if a figure reached the other side of the playfield. If this is the case, then a method in Playfield is called that changes
+	 * the figure into aking
+	 */
 	private void testFigureToKing(){
 		int y1 = 0;
 		int y2 = 7;
@@ -353,10 +410,12 @@ public class GameLogic {
 		}
 	}
 	/**
-	 * tests if the given move is possible on the given playfield
-	 * @param move
-	 * @param field
-	 * @return false if move is not possible, true if it is
+	 * It tests if the given move is possible on the given playfield. It is static, because it can be accessed even if there is no 
+	 * Instance of the gamelogic.
+	 * <p>
+	 * @param move                 The Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
+	 * @param field				   Field is an Object which represents the playfield.
+	 * @return boolean             True, if the move is valid. False, if the move is wrong.
 	 */
 	public static boolean testMove(Move m, Playfield f){
 		int x = m.getX();
@@ -367,7 +426,7 @@ public class GameLogic {
 		FigureColor color = f.colorOf(x, y);
 		FigureType type = f.getType(x, y);
 		//TODO wenn es kein Jump ist aber jumps möglich sind return false
-		if(m.getMoveType() == MoveType.STEP && Move.getPossibleJumps(f.field[x][y], f).length != 0){
+		if(m.getMoveType() == MoveType.STEP && Move.jumpIsPossible(f.field[x][y].getFigureColor(), f)){
 			return false;
 		}
 		switch(m.getMoveType()){
@@ -425,7 +484,7 @@ public class GameLogic {
 					if (!(x - 2 >= 0 && y - 2 >= 0 &&//two fields space,
 						f.isOccupied(x-1, y-1) &&//a figure on the next field...
 					   	f.colorOf(x-1, y-1) != color &&//... that is of a different color,
-					   	!f.isOccupied(x-2, y-2))//no figure on the field to land on
+					   	(!f.isOccupied(x-2, y-2) || (m.getX() == x-2 && m.getY() == y-2)))//no figure on the field to land on (except itself)
 					){
 						return false;
 					}
@@ -439,7 +498,7 @@ public class GameLogic {
 					if (!(x + 2 < f.SIZE && y - 2 >= 0 &&
 						f.isOccupied(x+1, y-1) &&
 						f.colorOf(x+1, y-1) != color &&
-						!f.isOccupied(x+2, y-2))
+						(!f.isOccupied(x+2, y-2) || (m.getX() == x+2 && m.getY() == y-2)))
 					){
 						return false;
 					}
@@ -453,7 +512,7 @@ public class GameLogic {
 					if (!(x - 2 >= 0 && y + 2 < f.SIZE &&
 						f.isOccupied(x-1, y+1) &&
 						f.colorOf(x-1, y+1) != color &&
-						!f.isOccupied(x-2, y+2))
+						(!f.isOccupied(x-2, y+2) || (m.getX() == x-2 && m.getY() == y+2)))
 					){
 						return false;
 					}
@@ -467,7 +526,7 @@ public class GameLogic {
 					if (!(x + 2 < f.SIZE && y + 2 < f.SIZE &&
 						f.isOccupied(x+1, y+1) &&
 						f.colorOf(x+1, y+1) != color &&
-						!f.isOccupied(x+2, y+2))
+						(!f.isOccupied(x+2, y+2) || (m.getX() == x+2 && m.getY() == y+2)))
 					){
 						return false;
 					}
@@ -480,11 +539,26 @@ public class GameLogic {
 		}
 		return true;
 	}
+	/**
+	 * This method is the not static version of testMove. It calls the static method testMove with the current global playfield 
+	 * in the GameLogic.
+	 * <p>
+	 * @param move           the Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
+	 * @return boolean       True, if the move is valid. False, if the move is wrong.
+	 */
 	public boolean testMove(Move move){
 		return testMove(move, field);
 	}
-	public static List<Move> testForMultiJump(int x, int y, Playfield f) {
-		List<Move> list = Move.getPossibleJumps(f.field[x][y], f);
+	/**
+	 * This method tests, if there are multijumps among all possible jumps for a certain playfield available and then separates them into a new List.
+	 * <p>
+	 * @param x                 an integer variable which is representing a point on the vertical axis of the playfield.
+	 * @param y	 	            an integer variable which is representing a point on the horizontal axis of the playfield.	
+	 * @param field             Field is an Object which represents the playfield.
+	 * @return List or null     This new List contains only all the possible multijumps on a specific playfield situation for only one player. 
+	 */
+	public static List<Move> testForMultiJump(int x, int y, Playfield field) {
+		List<Move> list = Move.getPossibleJumps(field.field[x][y], field);
 		if(list.length != 0) {
 			return list;
 		}
@@ -493,44 +567,115 @@ public class GameLogic {
 		return null;
 		}
 	}
+	/**
+	 * This method is the not static version of testFoMultijump. It uses the current global playfield in the Gamelogic. 
+	 * <p>
+	 * @param x                 an integer variable which is representing a point on the vertical axis of the playfield.
+	 * @param y	 	            an integer variable which is representing a point on the horizontal axis of the playfield.	
+	 * @return List or null     This new List contains only all the possible multijumps on a specific playfield situation for only one player. 
+	 */
 	public List<Move> testForMultiJump(int x, int y){
 		return testForMultiJump(x,y, field);
 	}
+	/**
+	 * It only return the current global playfield.
+	 * 
+	 * @return field
+	 */
 	public Playfield getPlayfield(){
 		return field;
 	}
+	/**
+	 * The GameLogic needs the current grafical interface in order to output something on the console. Here the parameter is set as the
+	 * current gui. 
+	 * <p>
+	 * @param gui      the graphical interface which is responsible for creating the window and displaing the right playfield and console
+	 */
 	public void linkGUI(GUI gui) {
 		this.gui = gui;
 	}
+	/**
+	 * This method set the time of the pauses between the moves in miliseconds.
+	 * <p>
+	 * @param pSlowness      an Integar which saves the time between the individual moves.
+	 */
 	public void setSlowness(int pSlowness) {
 		slowness = pSlowness;
 	}
+	/**	
+	 * This method is responsible for pausing and continuing the current run. If the game is running an this called then the global boolean
+	 * variable pause is set to true, so in the next turn the loop between makeMove and moveRequest in player will be interrupted. 
+	 * <p>
+	 * If the game is already paused the method moveRequesting is called. It has to be called in a new thread, because therefore the gui 
+	 * can be used independetly.
+	 * <p>
+	 * @param b       the boolean variable is true if the game will be paused. If the game is already pause, it is false.
+	 */
 	public void setPause(boolean b) {
 		pause = b;
+		gameInProgress = false;
 		if(!pause) {	
 			new Thread(){
 				public void run(){
+					gameInProgress = true;
 					moveRequesting();
 				}
 			}.start();
 		}
 	}
-	
+	/**
+	 * This method returns a global variable which represents the final situation of a game. It is especially needed when neuronal networks are 
+	 * going to be evaluated or to save the game information.     
+	 * <p>
+	 * @return endSituation     a variable from the enumeration Situations.
+	 */
 	public Situations getFinalSituation() {
 		return endSituation;
 		
 	}
+	/**
+	 * This method  It is especially needed when neuronal networks are 
+	 * going to be evaluated or to save the game information.     
+	 * <p>
+	 * @return failed      A boolean which shows if a game was finished by a wrong Move made by a Player.
+	 */
 	public boolean getFailed() {
 		return failed;
 	}
-	
+	/**
+	 * Returns the global varible turnCounterRed which represents the total number of the red player turns. This is needed for the game
+	 * information.
+	 * <p>
+	 * @return turnCounterRed     An integer which counts the turns the red player made.
+	 */
 	public int getTurnCountRed() {
 		return turnCounterRed;
 	}
+	/**
+	 * Returns the global varible turnCounterWhite which represents the total number of the white player turns. This is needed for the game
+	 * information.
+	 * <p>
+	 * @return turnCountWhite      An integer which counts the turns the white player made.
+	 */
 	public int getTurnCountWhite() {
 		return turnCounterWhite;
 	}
+	/**
+	 * Returns the summ of both players turns. This is needed for the game
+	 * information.
+	 * <p>
+	 * @return int      An integer which stands for all turns mad in one run. 
+	 */
 	public int getTurnCount(){
 		return turnCounterRed + turnCounterWhite;
+	}
+	/**
+	 * Return a boolean which shows if the game is currently in progress.
+	 * <p>
+	 * @return  boolean   True if the game is running. False if is paused or stopped.
+	 */
+	public boolean getInProgress() {
+		return gameInProgress;
+		
 	}
 }

@@ -226,7 +226,7 @@ public class Playfield {
 		}
 		else{
 			movesWithoutJumps = 0;
-			for(int s = 0; s < m.getSteps(); s++){
+			for(int s = 0, steps = m.getSteps(); s < steps; s++){
 				switch(m.getMoveDirection(s)){
 				case BL:
 					field[x-2][y-2] = field[x][y];
@@ -347,6 +347,29 @@ public class Playfield {
 	}
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
+	}
+
+	public boolean testPlayability() {
+		int whiteFigures = 0;
+		int redFigures = 0;
+		for(int y = 0;y < SIZE; y++) {
+			for(int x = 0;x < SIZE; x++) {
+				if(isOccupied(x,y)) {
+					if(field[x][y].getFigureColor() == FigureColor.RED) {
+						redFigures++;
+					}
+					else {
+						whiteFigures++;
+					}
+				}
+			}
+		}
+		if(whiteFigures > 0 && redFigures > 0) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 }
 

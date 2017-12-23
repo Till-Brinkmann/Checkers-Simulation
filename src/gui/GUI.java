@@ -8,6 +8,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -32,7 +34,6 @@ public class GUI extends JFrame{
 	 * to improve codestructure/readability
 	 */
 	public ShowMoves showMovesWindow;
-	public Guide guideWindow;
 	public AboutCS aboutcsWindow;
 	public ColorSettings colorsettings;
 	public GameSettings gamesettings;
@@ -62,7 +63,9 @@ public class GUI extends JFrame{
 		gmlc.linkGUI(this);
 		initialize();
 		createWindow();
-
+		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored. Have fun!","GUI");
+		console.commandInfos();
+		
 	}
 	public GUI(){
 		this(new GameLogic());
@@ -77,14 +80,12 @@ public class GUI extends JFrame{
 	public void linkGameLogic(GameLogic gamelogic) {
 		gmlc = gamelogic;
 	}
-	private void initialize(){
-
+	private void initialize(){	
 		console = new Console();
 		playfieldpanel = new PlayfieldPanel(gmlc ,console);
 		colorsettings = new ColorSettings(this, Color.BLACK, Color.LIGHT_GRAY);
 		soundsettings = new SoundSettings(this);
 		aboutcsWindow = new AboutCS(); 
-		guideWindow = new Guide();
 		showMovesWindow = new ShowMoves();
 	}
 	private void createWindow(){
@@ -199,6 +200,7 @@ public class GUI extends JFrame{
             	filter = new FileNameExtensionFilter("pfs","txt");
             	filechooser.setDialogTitle("load playfield file");
             	int rueckgabeWert = filechooser.showOpenDialog(null);
+            	filechooser.setCurrentDirectory(new File("resources/PlayfieldSaves"));
             	filechooser.addChoosableFileFilter(filter);
             	//File muss erst ausgewählt werden! Testfile:
             	if(rueckgabeWert == JFileChooser.APPROVE_OPTION){
@@ -340,7 +342,12 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	guideWindow.setVisible(true);
+            	try {
+					Desktop.getDesktop().browse(new URI("https://github.com/Gametypi/Checkers-Simulation"));
+				} catch (IOException | URISyntaxException e) {
+					console.printError("URL to our Github page was not found", "GUI");
+					e.printStackTrace();
+				}
             }
         });
         aboutcs.addActionListener(new ActionListener()

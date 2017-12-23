@@ -203,8 +203,8 @@ public class NNPlayer1 implements Player{
 	}
 	
 	private Move moveDecision(double[] outputVector) {
-		Move bestMove = new Move(MoveType.INVALID);
-		Move move = new Move(MoveType.INVALID);
+		Move bestMove = Move.INVALID;
+		Move move = Move.INVALID;
 		//find out the field it wants to move to
 		double max = Integer.MIN_VALUE;
         int choiceField = 0;
