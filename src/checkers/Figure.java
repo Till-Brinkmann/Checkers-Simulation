@@ -6,6 +6,8 @@ package checkers;
  * <p>
  * All methods are public, because they have to be accessible 
  * from Playfield, GameLogic, PlayfieldPanel and Move.
+ * @author Till
+ * @author Marco
  */
 
 public class Figure {
@@ -37,7 +39,7 @@ public class Figure {
 	/**
 	 * Essential method to identify whether this the Figure Object is white or Red
 	 * <p>
-	 * @return color  a global predefined constant variable from the enumeration FigureColor.
+	 * @return color  a global predefined variable from the enumeration FigureColor.
 	 */
 	public FigureColor getFigureColor(){
 		return color;
@@ -45,7 +47,7 @@ public class Figure {
 	/**
 	 * Essential method to identify whether this the Figure Object is a Man or a King
 	 * <p>
-	 * @return type  a global predefined constant variable from the enumeration FigureType.
+	 * @return type  a global predefined variable from the enumeration FigureType.
 	 */
 	public FigureType getFigureType(){
 		return type;
@@ -54,7 +56,7 @@ public class Figure {
 	 * This method alters the Figure's type.
 	 * This is needed, because when a man reaches the other side of the playfield his type has to change into a king. 
 	 * <p>
-	 * @param type  a global predefined constant variable from the enumeration FigureType.
+	 * @param type  a global predefined variable from the enumeration FigureType.
 	 */
 	public void setFigureType(FigureType type){
 		this.type = type;

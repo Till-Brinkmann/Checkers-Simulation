@@ -6,12 +6,20 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -19,6 +27,7 @@ import javax.swing.event.ChangeListener;
 
 import checkers.GameLogic;
 import checkers.Player;
+import generic.List;
 import gui.GUI.AISpeed;
 
 
@@ -34,7 +43,8 @@ public class GameSettings extends JFrame{
 	
 	private JPanel backgroundPanel;
 	private ImageIcon gameSettingsIcon;
-	String[] playerNameList;
+	//List<Class<?>> availablePlayer;
+	Hashtable<String, Class<?>> availablePlayer;
 	private JCheckBox recordGame;
 	private JButton okButton;
 	private JTextField gameNameField;
@@ -52,13 +62,31 @@ public class GameSettings extends JFrame{
 	private String gameName;
 	private GUI gui;
 	private int slowness;
+	private JCheckBox useCurrentPf;
 	//TODO remove after other solution is tested
 	//private Thread gmlcThread;
 	public GameSettings(GUI pGui) {		
 		super("Game Settings");
 		gui = pGui;
+		try {
+			loader = new URLClassLoader(
+					new URL[]{
+							new URL("file:" + new File("resources/AI").getAbsolutePath())
+							}
+					);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		availablePlayer = new Hashtable<String, Class<?>>();
+		createPlayerTable();
 		initialize();
 		createWindow();
+		for(Enumeration<String> keys = availablePlayer.keys(); keys.hasMoreElements();){
+			String key = keys.nextElement();
+			player1ComboBox.addItem(key);
+			player2ComboBox.addItem(key);
+		}
 	}
 	private void initialize() {
 		setBackground(Color.WHITE);
@@ -69,13 +97,15 @@ public class GameSettings extends JFrame{
 		gameNameField = new JTextField(10);
 		okButton  = new JButton("confirm");
 		okButton.setBackground(Color.WHITE);
-		player1ComboBox = new JComboBox<String>(createList());
+		player1ComboBox = new JComboBox<String>();
 		player1ComboBox.setBackground(Color.WHITE);
-		player1ComboBox.setSelectedItem("player");
+		player1ComboBox.addItem("Player");
+		player1ComboBox.setSelectedItem("Player");
 		currentSelectionPlayer1 = player1ComboBox.getSelectedItem().toString();
-		player2ComboBox = new JComboBox<String>(createList());
+		player2ComboBox = new JComboBox<String>();
+		player2ComboBox.addItem("Player");
 		player2ComboBox.setBackground(Color.WHITE);
-		player2ComboBox.setSelectedItem("player");
+		player2ComboBox.setSelectedItem("Player");
 		currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
 		
 		roundsSpinner = new JSpinner (new SpinnerNumberModel(1, 1, 1000, 1));
@@ -97,7 +127,14 @@ public class GameSettings extends JFrame{
 		displayCheckBox.setBackground(Color.WHITE);
 		displayCheckBox.setEnabled(false);
 		
-		
+		useCurrentPf = new JCheckBox("using current playfield",false);
+		useCurrentPf.setBackground(Color.WHITE);
+		if(gui.getGameLogic().getPlayfield().testPlayability()) {
+			useCurrentPf.setEnabled(true);
+		}
+		else {
+			useCurrentPf.setEnabled(false);
+		}
 		slownessForSlowMode.addChangeListener(new ChangeListener()
         {
         	public void stateChanged(ChangeEvent evt){
@@ -119,6 +156,10 @@ public class GameSettings extends JFrame{
             {
             	setAlwaysOnTop(false);
             	setVisible(false);
+            	if(gui.getGameLogic().getInProgress()) {
+            		gui.console.printWarning("A game is currently running. It has to be paused or stopped in order to create a new game.","Gamesettings");
+            		return;
+            	}
             	gameName = gameNameField.getText();
             	if(gameName.equals("") && recordGameIsEnabled){
             	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));
@@ -159,10 +200,9 @@ public class GameSettings extends JFrame{
             	    			white = getPlayer1();
             	    			red = getPlayer2();
             	    		}
-							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected());
-						} catch (ClassNotFoundException | MalformedURLException | InstantiationException
-								| IllegalAccessException | IllegalArgumentException | InvocationTargetException
-								| NoSuchMethodException | SecurityException e) {
+							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
+						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
+								 InvocationTargetException | NoSuchMethodException | SecurityException e) {
 							gui.console.printWarning("gmlc", "failed to load the ai");
 							e.printStackTrace();
 						}
@@ -229,6 +269,7 @@ public class GameSettings extends JFrame{
 		playerSelection.add(player1ComboBox);
 		playerSelection.add(player2ComboBox);
 		playerSelection.add(displayCheckBox);
+		playerSelection.add(useCurrentPf);
 		
 		JPanel slownessPanel = new JPanel();
 		slownessPanel.setPreferredSize(new Dimension(300,6));
@@ -248,71 +289,69 @@ public class GameSettings extends JFrame{
 		add(backgroundPanel);		
 		setVisible(true);
 	}
-	private String[] createList() {
+	private void createPlayerTable() {
 		File[] files = new File("resources/AI").listFiles();
 		int listLength = 1;
+		
 		if(files != null) {
 			for(int i = 0; i < files.length; i++) {
 				if(files[i].getName().endsWith(".class")){
 					listLength++;
+					try {
+						ai = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
+						//append only if it is a player
+						if(testForPlayerInterface(ai)){
+							availablePlayer.put(ai.getName(), ai);
+						}
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				else if(files[i].getName().endsWith(".jar")){
+					try {
+						//ai = loader.loadClass(new JarFile(files[i]).);
+						for(Enumeration<JarEntry> entries = new JarFile(files[i]).entries();entries.hasMoreElements();){
+							JarEntry entry = entries.nextElement();
+							if(entry.getName().startsWith("player/") && entry.getName().endsWith(".class")){
+								String className = entry.getName().replace('/', '.').substring(0, entry.getName().length()-6);
+								URLClassLoader jarloader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
+								gui.console.printInfo(className);
+								ai = jarloader.loadClass(className);
+								if(testForPlayerInterface(ai)){
+									availablePlayer.put(ai.getName().replace("player.", ""), ai);
+								}
+							}
+						}
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
-		playerNameList = new String[listLength];
-		if(files != null) {
-			int i = 0;
-			int j = 0;
-			while(j < listLength-1) {
-				if(files[j].getName().endsWith(".class")){
-					playerNameList[i] = files[j].getName();
-					i++;
-				}
-				j++;
-			}
-		}
-		playerNameList[listLength-1] = "player";
-		return playerNameList;
 	}
-	public Player getPlayer1() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		if(currentSelectionPlayer1.equals("player")) {
+	public Player getPlayer1() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+	InvocationTargetException, NoSuchMethodException, SecurityException{
+		if(currentSelectionPlayer1.equals("Player")) {
 			return gui.playfieldpanel;
 		}
+		ai = availablePlayer.get(player1ComboBox.getSelectedItem().toString());
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		url = new URL("file:" + new File("resources/AI").getAbsolutePath());
-		loader = new URLClassLoader(new URL[]{ url });
-		ai = loader.loadClass(((String) player1ComboBox.getSelectedItem()).substring(0,player1ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
-		if(testForPlayerInterface(ai)) {
-			return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
-		}
-		gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
-		return gui.playfieldpanel; 
+		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
-	public Player getPlayer2() throws ClassNotFoundException, MalformedURLException, InstantiationException, IllegalAccessException,
-	IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-		if(currentSelectionPlayer2.equals("player")) {
+	public Player getPlayer2() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+	InvocationTargetException, NoSuchMethodException, SecurityException{
+		if(currentSelectionPlayer2.equals("Player")) {
 			return gui.playfieldpanel;
 		}
-		
-		if(player1ComboBox.getSelectedItem().equals((String) player2ComboBox.getSelectedItem())) {
-			if(testForPlayerInterface(ai)) {
-				return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
-			}
-			gui.console.printInfo("Gamesettings", "Because of the missing interface 'Player', Player 1 switches to standard player");
-			return gui.playfieldpanel;
-		} 
+		ai = availablePlayer.get(player2ComboBox.getSelectedItem().toString());
 		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		url = new URL("file:" + new File("resources/AI").getAbsolutePath());
-		loader = new URLClassLoader(new URL[]{ url });
-		ai = loader.loadClass(((String) player2ComboBox.getSelectedItem()).substring(0,player2ComboBox.getSelectedItem().toString().length()-6));
 		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
-		if(testForPlayerInterface(ai)) {			
-			return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
-		}
-		gui.console.printInfo("Gamesettings", "Because of the missing interface Player 2 switches to standard player");
-		return gui.playfieldpanel;
+		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
+	
 	private boolean testForPlayerInterface(Class<?> ai2) {
 		for(Class<?> c : ai2.getInterfaces()) {
 			if(c.equals(Player.class)) {
@@ -323,6 +362,7 @@ public class GameSettings extends JFrame{
 		gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
 		return false;
 	}
+	
 	public void updateBackground( Color color){
 		backgroundPanel.setBackground(color);
 	}

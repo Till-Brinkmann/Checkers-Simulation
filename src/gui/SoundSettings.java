@@ -15,7 +15,7 @@ import javax.sound.sampled.*;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-public class SoundSettings extends JFrame
+public class SoundSettings extends JFrame implements PlayfieldSound
 {
 	/**
 	 * 
@@ -64,7 +64,9 @@ public class SoundSettings extends JFrame
     public SoundSettings(GUI pGui,String... files) 
     {
     	super("GameSettings");
+    	
     	gui = pGui;
+    	gui.playfieldpanel.playfield.setPlayfieldSound(this);
     	playerBackIcon = new ImageIcon("resources/Icons/playerBackIcon.png");
     	playerStopIcon = new ImageIcon("resources/Icons/playerStopIcon.png");
     	playerPlayIcon = new ImageIcon("resources/Icons/playerPlayIcon.png");
@@ -459,7 +461,7 @@ public class SoundSettings extends JFrame
     	soundFiles[3] = new File("resources/Sounds/toDameSound.wav");
 
     }
-    public void selectSound(String fileName){
+    public void playSound(String fileName){
         switch(fileName){
             case "winSound.wav":
                 if(winSoundActive == false){

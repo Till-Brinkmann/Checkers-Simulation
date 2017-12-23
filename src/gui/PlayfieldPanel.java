@@ -23,7 +23,7 @@ import generic.List;
 public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
 	public ImageIcon king;
-	private Playfield playfield;
+	public Playfield playfield;
 	private JButton[][] buttons;
 	GameLogic gamelogic;
 	Console console;
