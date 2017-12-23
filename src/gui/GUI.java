@@ -64,7 +64,7 @@ public class GUI extends JFrame{
 		initialize();
 		createWindow();
 		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored. Have fun!","GUI");
-		console.commandInfos();
+		console.printInfo("All commands under /availableCommands","GUI");
 		
 	}
 	public GUI(){
