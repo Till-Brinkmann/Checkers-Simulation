@@ -101,9 +101,8 @@ public class NNPlayer implements Player {
 	}
 	
 	private Move moveDecision(double[] outputVector) {
-		Move bestMove = new Move(MoveType.INVALID);
-		Move move = new Move(MoveType.INVALID);
-		//find out the field it wants to move to
+		Move bestMove = Move.INVALID;
+		Move move = Move.INVALID;
 		double max = Integer.MIN_VALUE;
         int choiceField = 0;
         for(int i = 0, i2 = 0; i < 32; i++) {

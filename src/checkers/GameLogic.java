@@ -155,6 +155,7 @@ public class GameLogic {
 	 */
 	public void makeMove(Move m){
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
+		if(m == null) gui.console.printError("Move is null!", "GMLC");
 		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
@@ -325,12 +326,6 @@ public class GameLogic {
 		}		
 		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
-//			try {
-//				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
 			gui.playfieldpanel.updateDisplay();
 			
 			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
@@ -425,7 +420,7 @@ public class GameLogic {
 		FigureColor color = f.colorOf(x, y);
 		FigureType type = f.getType(x, y);
 		//TODO wenn es kein Jump ist aber jumps möglich sind return false
-		if(m.getMoveType() == MoveType.STEP && Move.getPossibleJumps(f.field[x][y], f).length != 0){
+		if(m.getMoveType() == MoveType.STEP && Move.jumpIsPossible(f.field[x][y].getFigureColor(), f)){
 			return false;
 		}
 		switch(m.getMoveType()){
@@ -483,7 +478,7 @@ public class GameLogic {
 					if (!(x - 2 >= 0 && y - 2 >= 0 &&//two fields space,
 						f.isOccupied(x-1, y-1) &&//a figure on the next field...
 					   	f.colorOf(x-1, y-1) != color &&//... that is of a different color,
-					   	!f.isOccupied(x-2, y-2))//no figure on the field to land on
+					   	(!f.isOccupied(x-2, y-2) || (m.getX() == x-2 && m.getY() == y-2)))//no figure on the field to land on (except itself)
 					){
 						return false;
 					}
@@ -497,7 +492,7 @@ public class GameLogic {
 					if (!(x + 2 < f.SIZE && y - 2 >= 0 &&
 						f.isOccupied(x+1, y-1) &&
 						f.colorOf(x+1, y-1) != color &&
-						!f.isOccupied(x+2, y-2))
+						(!f.isOccupied(x+2, y-2) || (m.getX() == x+2 && m.getY() == y-2)))
 					){
 						return false;
 					}
@@ -511,7 +506,7 @@ public class GameLogic {
 					if (!(x - 2 >= 0 && y + 2 < f.SIZE &&
 						f.isOccupied(x-1, y+1) &&
 						f.colorOf(x-1, y+1) != color &&
-						!f.isOccupied(x-2, y+2))
+						(!f.isOccupied(x-2, y+2) || (m.getX() == x-2 && m.getY() == y+2)))
 					){
 						return false;
 					}
@@ -525,7 +520,7 @@ public class GameLogic {
 					if (!(x + 2 < f.SIZE && y + 2 < f.SIZE &&
 						f.isOccupied(x+1, y+1) &&
 						f.colorOf(x+1, y+1) != color &&
-						!f.isOccupied(x+2, y+2))
+						(!f.isOccupied(x+2, y+2) || (m.getX() == x+2 && m.getY() == y+2)))
 					){
 						return false;
 					}

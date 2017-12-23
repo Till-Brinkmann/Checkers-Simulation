@@ -200,6 +200,7 @@ public class GUI extends JFrame{
             	filter = new FileNameExtensionFilter("pfs","txt");
             	filechooser.setDialogTitle("load playfield file");
             	int rueckgabeWert = filechooser.showOpenDialog(null);
+            	filechooser.setCurrentDirectory(new File("resources/PlayfieldSaves"));
             	filechooser.addChoosableFileFilter(filter);
             	//File muss erst ausgewählt werden! Testfile:
             	if(rueckgabeWert == JFileChooser.APPROVE_OPTION){
@@ -353,7 +354,7 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	soundsettings.selectSound("moveSound");
+            	soundsettings.playSound("moveSound");
             	aboutcsWindow.setVisible(true);
             }
         });

@@ -23,7 +23,7 @@ import generic.List;
 public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
 	public ImageIcon king;
-	private Playfield playfield;
+	public Playfield playfield;
 	private JButton[][] buttons;
 	GameLogic gamelogic;
 	Console console;
@@ -178,14 +178,12 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		switch(clickSituation) {
 		case ZERO:
 			if(playfield.isOccupied(x, y)){
-				if(jumpIsPossible()){
+				//TODO x and y here are probably unsafe
+				if(Move.jumpIsPossible(playfield.field[x][y].getFigureColor(), playfield)){
 					//if a jump is possible only figures that can jump can be clicked
-					jumpFigures.toFirst();
-					while(jumpFigures.hasAccess()){
-						if(playfield.field[x][y] == jumpFigures.get()){
-							selectFigure(x, y);
-						}
-						jumpFigures.next();
+					//TODO update jumpFigures
+					if(Move.getPossibleJumps(playfield.field[x][y], playfield).length != 0) {
+						selectFigure(x, y);
 					}
 				}
 				else {
@@ -205,7 +203,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				coords[1][0] = x;
 				coords[1][1] = y;
 				Move m = Move.createMoveFromCoords(coords);
-				if(m.isInvalid() || !gamelogic.testMove(m) || (jumpIsPossible() && m.getMoveType() == MoveType.STEP)){
+				if(m.isInvalid() || !gamelogic.testMove(m) || (Move.jumpIsPossible(playfield.field[m.getX()][m.getY()].getFigureColor(), playfield) && m.getMoveType() == MoveType.STEP)){
 					//TODO cancel move
 					console.printWarning("Invalid move", "playfieldPnael");
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
@@ -302,19 +300,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		coords[0][1] = y;
 		clickSituation = Click.FIRST;
 		buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
-	}
-
-	private boolean jumpIsPossible() {
-		//TODO gibt fehlerhafte werte zurück
-		boolean canJump = false;
-		jumpFigures = new List<Figure>();
-		for(Figure f : playfield.getFiguresFor(figurecolor)){
-			if(Move.getPossibleJumps(f, playfield).length > 0){
-				canJump = true;
-				jumpFigures.append(f);
-			}
-		}
-		return canJump;
 	}
 
 	public void enableAllButtons(boolean enabled) {

@@ -8,13 +8,26 @@ import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import gui.PlayfieldDisplay;
+import gui.PlayfieldSound;
 
-
+/**
+ * This class represents a playfield of variable size. It contains all methods that are needed in order to manage the playfield from 
+ * other classes, especially the gamelogic. Therefore all methods have to be accessed from other classes and need the access modifier
+ * "public".
+ * <p>
+ * We realized this playfield by creating a Figure array with a distinct size. The size is describes the length one the x and y axis
+ * (Its is always a square) and not the amount of fields.
+ * <p>
+ * @author Till
+ * @author Marco
+ *
+ */
 public class Playfield {
 
 	public final int SIZE;
 	public Figure[][] field;
 	PlayfieldDisplay display;
+	PlayfieldSound sound;
 	Instant instant;
 	boolean recordGame;
 	FileReader reader;
@@ -23,26 +36,41 @@ public class Playfield {
 
 	int movesWithoutJumps = 0;
 
+	/**
+	 * This default constructor creates a playfield with the initial size of eight and then calls the subconstructor to set up this 
+	 * playfield further.
+	 */
 	public Playfield() {
 		this(8);
 	}
-
 	/**
 	 * can be used by any superclass to customize basic required parameters
-	 * @param size
+	 * @param size An integer that describes the length of the playfield on the x and y axis.
 	 */
 	public Playfield(int size){
 		SIZE = size;
-		createNewPlayfield();
+		field = new Figure[SIZE][SIZE];
 	}
-	public void createNewPlayfield(){
-	    field = new Figure[SIZE][SIZE];
-	}
+	
+	/**
+	 * Loads a start situation from the resources. It automatically searches for the right start situation for the right size. If it is
+	 * not found, then it throws an exeption.
+	 * <p>
+	 * @throws IOException Thrown when the file containing the start situation does not exist or is not available at the moment.
+	 * A specific detailed message with the error that accured in this method.
+	 */
 	public void createStartPosition() throws IOException{
-   		//loadGameSituation(new File("Checkers Simulation 2.0/resources/playfieldSaves/startPositionForSize8.pfs"));
 		loadGameSituation(new File("resources/playfieldSaves/startPositionForSize8.pfs"));
 	}
-
+	/**
+	 * This method tries to load a specific game situation from a .pfs file. This file type saves all information that is needed to
+	 * reconstruct this game sitation. 
+	 * <p>
+	 * The file parameter needs to be a .pfs file with the correct size in order to be loaded and displayed on the playfield
+	 * <p>
+	 * @param file             A file that respresents the path to a playfield save file.
+	 * @throws IOException Thrown when the file is currently not available. A specific detailed meassage with the error that accured in this method.
+	 */
 	public void loadGameSituation(File file) throws IOException{
 		reader = new FileReader(file);
 		bufferedReader = new BufferedReader(reader);
@@ -104,6 +132,7 @@ public class Playfield {
 		player2Name = pPlayer2Name;
 		saveGameSituation();
 	}
+	
 	public void saveGameSituation() throws IOException{
 		long currentTime = new Date().getTime();
 		String fileName = String.valueOf(currentTime);
@@ -175,18 +204,45 @@ public class Playfield {
 		writer.flush();
 		writer.close();
 	}
+	/**
+	 * enables 
+	 * @param selected
+	 */
 	public void enableGameRecording(boolean selected){
 		recordGame = selected;
 	}
-
+	/**
+	 * Sets the object that is responsible for displaying the contents of this playfield
+	 * <p>
+	 * @param d The object that wants to display the playfield.
+	 * <p>
+	 * @see gui.PlayfieldDisplay
+	 * @see gui.PlayfieldPanel
+	 */
 	public void setPlayfieldDisplay(PlayfieldDisplay d){
 		display = d;
 	}
-
-	public void changeFigureToKing(int x, int y){
-		field[x][y].setFigureType(FigureType.KING);
+	/**
+	 * 
+	 * @param s
+	 */
+	public void setPlayfieldSound(PlayfieldSound s) {
+		sound = s;
 	}
-
+	/**
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public void changeFigureToKing(int x, int y){
+		if(sound != null)sound.playSound("toDameSound.wav");
+		field[x][y].setFigureType(FigureType.KING);
+		if(display != null) display.updateDisplay();
+	}
+	/**
+	 * 
+	 * @param m
+	 */
 	public void executeMove(Move m){
 		//x and y before move execution
 		int x = m.getX();
@@ -196,6 +252,7 @@ public class Playfield {
 			return;
 		}
 		else if(m.getMoveType() == MoveType.STEP ){
+			if(sound != null)sound.playSound("moveSound.wav");
 			movesWithoutJumps++;
 			switch(m.getMoveDirection()){
 			case BL:
@@ -226,7 +283,8 @@ public class Playfield {
 		}
 		else{
 			movesWithoutJumps = 0;
-			for(int s = 0; s < m.getSteps(); s++){
+			for(int s = 0, steps = m.getSteps(); s < steps; s++){
+				if(sound != null)sound.playSound("beatSound.wav");
 				switch(m.getMoveDirection(s)){
 				case BL:
 					field[x-2][y-2] = field[x][y];
@@ -273,7 +331,11 @@ public class Playfield {
 		}
 		if(display != null) display.updateDisplay();
 	}
-
+	/**
+	 * 
+	 * @param color
+	 * @return
+	 */
 	public int getFigureQuantity(FigureColor color){
 		int quantity = 0;
 		for(int y = 0;y < SIZE; y++){
@@ -285,6 +347,12 @@ public class Playfield {
 		}
 		return quantity;
 	}
+	/**
+	 * 
+	 * @param figurecolor
+	 * @param figuretype
+	 * @return
+	 */
 	public int getFigureTypeQuantity(FigureColor figurecolor, FigureType figuretype) {
 		int quantity = 0;
 		for(int y = 0;y < SIZE; y++){
@@ -296,9 +364,19 @@ public class Playfield {
 		}
 		return quantity;
 	}
+	/**
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public boolean isOccupied(int x, int y){
 		return (field[x][y] != null);
 	}
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean isEmpty(){
 		for(int x = 0; x < 8; x++) {
 			for(int y = 0; y < 8; y++) {
@@ -309,6 +387,11 @@ public class Playfield {
 		}
 		return true;
 	}
+	/**
+	 * 
+	 * @param figurecolor
+	 * @return
+	 */
 	public Figure[] getFiguresFor(FigureColor figurecolor) {
 		int counter = 0;
 		Figure[] figures = new Figure[getFigureQuantity(figurecolor)];
@@ -322,7 +405,10 @@ public class Playfield {
 		}
 		return figures;
 	}
-
+	/**
+	 * 
+	 * @return
+	 */
 	public Playfield copy() {
 		Playfield copy = new Playfield(SIZE);
 		for(int y = 0;y < SIZE; y++){
@@ -337,18 +423,38 @@ public class Playfield {
 		}
 		return copy;
 	}
-
+	/**
+	 * 
+	 */
 	public FigureColor colorOf(int x, int y) {
 		return field[x][y].getFigureColor();
 	}
-
+	/**
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
 	public FigureType getType(int x, int y) {
 		return field[x][y].getFigureType();
 	}
+	/**
+	 * 
+	 * @return
+	 */
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
 	}
-
+	/**
+	 * 
+	 */
+	public void playWinSound() {
+		if(sound != null)sound.playSound("winSound.wav");
+	}
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean testPlayability() {
 		int whiteFigures = 0;
 		int redFigures = 0;
