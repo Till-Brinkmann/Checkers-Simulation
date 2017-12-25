@@ -1,7 +1,11 @@
 package player;
 
-import algo.MinMaxManager;
-import algo.MinMaxTask;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
+import algo.MiniMaxManager;
+import algo.MiniMaxTask;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
@@ -18,7 +22,7 @@ public class MiniMaxPlayer implements Player{
 	public GameLogic gmlc;
 	public Console csl;
 	
-	private MinMaxManager manager;
+	private MiniMaxManager manager;
 	
 	private float bestValue;
 	private Move bestMove;
@@ -33,7 +37,7 @@ public class MiniMaxPlayer implements Player{
 					if(args.length == 2 && args[0].equals("MMMaxDepth")) {
 						//creating a new manager is the easiest way to make sure that the maxDepth does not change while a move is calculated
 						//(the current Tasks all have references to the old manager)
-						manager = new MinMaxManager(manager.player, Integer.parseInt(args[1]), manager.playerColor, manager.enemyColor);
+						manager = new MiniMaxManager(manager.player, Integer.parseInt(args[1]), manager.playerColor, manager.enemyColor);
 						csl.printCommandOutput("maxDepth set to " + manager.maxDepth);
 						return true;
 					}
@@ -45,7 +49,7 @@ public class MiniMaxPlayer implements Player{
 
 	@Override
 	public void prepare(FigureColor color) {
-		manager = new MinMaxManager(this, defaultMaxDepth, color, color == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED);
+		manager = new MiniMaxManager(this, defaultMaxDepth, color, color == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED);
 	}
 	@Override
 	public void requestMove(){
@@ -54,11 +58,12 @@ public class MiniMaxPlayer implements Player{
 		//start maximizing minMaxTask for every possible move
 		List<Move> moves = Move.getPossibleMoves(manager.playerColor, gmlc.getPlayfield());
 		//in case the manager changes while the tasks are started
-		MinMaxManager tmpman = manager;
+		MiniMaxManager tmpman = manager;
 		tmpman.updateFigureCounts();
 		float v;
 		for(moves.toFirst(); moves.hasAccess(); moves.next()){
-				v = new MinMaxTask(
+			if(0< 6) {
+				v = new MiniMaxTask(
 							tmpman,
 							moves.get(),
 							gmlc.getPlayfield().copy(),
@@ -66,9 +71,10 @@ public class MiniMaxPlayer implements Player{
 							//the next task is always not maximizing
 							false
 						).compute();
-			if(v > bestValue){
-				bestValue = v;
-				bestMove = moves.get();
+				if(v > bestValue){
+					bestValue = v;
+					bestMove = moves.get();
+				}
 			}
 		}
 		if(moves.length == 0){
@@ -84,7 +90,18 @@ public class MiniMaxPlayer implements Player{
 	public String getName() {
 		return "MiniMax algorithm based Checkers player";
 	}
-	
+	@Override
+	public void saveInformation(String pathName) {
+		File file = new File(pathName + "/MiniMax Information.txt");
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
 	public Playfield getPlayfield(){
 		return gmlc.getPlayfield();
 	}
