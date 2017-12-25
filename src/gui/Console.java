@@ -33,7 +33,7 @@ public class Console extends JPanel{
 	private int maxLines = 180;
 	private int lines;
 
-	private int fontSize = 14;
+	private int fontSize = 13;
 	private String fontStyle = "BOLD";
 	private String fontName = "Arial";
 	private List<String> fontList;

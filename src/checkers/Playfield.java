@@ -123,9 +123,13 @@ public class Playfield {
 	 * @param m
 	 */
 	public void executeMove(Move m){
+		//coords array for displaying the move
+		int[][] coords= new int[m.getSteps()+1][2];
 		//x and y before move execution
 		int x = m.getX();
 		int y = m.getY();
+		coords[0][1] = x;
+		coords[0][1] = y;
 		if(m.getMoveType() == MoveType.INVALID){
 			//can not execute an invalid move
 			return;

@@ -1,12 +1,14 @@
 package nn;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import gui.Console;
+import utilities.FileUtilities;
 import checkers.GameLogic;
 import checkers.Move;
 import checkers.Move.MoveDirection;
@@ -182,8 +184,22 @@ public class NNPlayer implements Player {
 		return "standard NN";
 	}
 	@Override
-	public void saveInformation(String pathName) {
-		File file = new File(pathName + "/NNPlayer Information.txt");
+	public void saveInformation(String directory) {
+		File file;
+		String fileName = "NNPlayer Information.txt";
+		if(FileUtilities.searchForEqualFiles(directory, fileName)){
+			file = new File(directory + "/" + "(1)" + fileName);
+		}
+		else {
+			file = new File(directory + "/" + fileName) ;
+		}
+
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		PrintWriter writer ;
 		try {
 			writer = new PrintWriter(file);

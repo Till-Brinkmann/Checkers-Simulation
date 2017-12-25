@@ -1,12 +1,15 @@
 package checkers;
+import java.awt.Dimension;
 import java.io.IOException;
 import java.util.Date;
+
+import javax.swing.JScrollPane;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import checkers.Player;
-import evaluation.Manager;
+import evaluation.EvaluationManager;
 import generic.List;
 import gui.GUI;
 import gui.GUI.AISpeed;
@@ -26,7 +29,6 @@ public class GameLogic {
 
 	//the default playfield to use
 	private Playfield field;
-	private boolean recordGameIsEnabled;
 	private String gameName;
 	private int turnCounterRed;
 	private int turnCounterWhite;
@@ -59,7 +61,7 @@ public class GameLogic {
 	private Situations endSituation;
 	private boolean failed;
 	
-	private Manager evaluationManager;
+	private EvaluationManager evaluationManager;
 	private Date date;
 	public GameLogic(){
 		this(new Playfield());
@@ -89,7 +91,9 @@ public class GameLogic {
 	 * @param pDisplayActivated          This boolean defines whether the playfieldPanel displays the game or not
 	 * @param pUseCurrentPf 
 	 */
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated, boolean useCurrentPf){
+	public void startGame(String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated, boolean useCurrentPf){
+		//reset moveWindow
+		gui.movesWindow.resetTextArea();
 		gameInProgress = true;
 		pause = false;
 		//how many game should be played
@@ -116,8 +120,7 @@ public class GameLogic {
 		}
 		gameName = pGameName;
 		
-		recordGameIsEnabled = pRecordGameIsEnabled;
-		if(recordGameIsEnabled) {
+		if(evaluationManager != null) {
 			evaluationManager.setPlayfield(field);
 			evaluationManager.createRound(currentRound);
 		}
@@ -156,7 +159,7 @@ public class GameLogic {
 				e.printStackTrace();
 			}
 		}
-		timeBeforeMove = System.currentTimeMillis();
+		timeBeforeMove = System.nanoTime();
 		playerRed.requestMove();
 	}
 	/**
@@ -171,12 +174,12 @@ public class GameLogic {
 	 */
 	public void makeMove(Move m){
 		//time save
-		if(recordGameIsEnabled) {
+		if(evaluationManager != null) {
 			if(inTurn == FigureColor.RED) {
-				evaluationManager.getRound(currentRound).setMoveTime((System.currentTimeMillis()-timeBeforeMove),playerRed);
+				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);
 			}
 			else {
-				evaluationManager.getRound(currentRound).setMoveTime((System.currentTimeMillis()-timeBeforeMove),playerWhite);
+				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerWhite);
 			}
 		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
@@ -190,7 +193,7 @@ public class GameLogic {
 				}
 				else {
 					redFailedOnce = true;
-					timeBeforeMove = System.currentTimeMillis();
+					timeBeforeMove = System.nanoTime();
 					playerRed.requestMove();
 					
 				}
@@ -202,12 +205,14 @@ public class GameLogic {
 				}
 				else {
 					whiteFailedOnce = true;
-					timeBeforeMove = System.currentTimeMillis();
+					timeBeforeMove = System.nanoTime();
 					playerWhite.requestMove();
 				}
 			}
 		}
 		else {//move is valid
+			//update moveWindow
+			gui.movesWindow.addMove(m);
 			//increment turn count
 			incrementTurnCounter();
 			//we need to move before testing the other things
@@ -221,7 +226,7 @@ public class GameLogic {
 			}
 			else {
 				//for game recording
-				if(recordGameIsEnabled) {
+				if(evaluationManager != null) {
 					evaluationManager.getRound(currentRound).saveGameSituation(this);
 				}
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
@@ -249,7 +254,7 @@ public class GameLogic {
 						e.printStackTrace();
 					}
 				}
-				timeBeforeMove = System.currentTimeMillis();
+				timeBeforeMove = System.nanoTime();
 				playerRed.requestMove();
 				break;
 			case WHITE:
@@ -261,7 +266,7 @@ public class GameLogic {
 						e.printStackTrace();
 					}
 				}
-				timeBeforeMove = System.currentTimeMillis();
+				timeBeforeMove = System.nanoTime();
 				playerWhite.requestMove();
 				break;
 		}
@@ -354,7 +359,7 @@ public class GameLogic {
 		case NOTHING:
 			return;
 		}		
-		if(recordGameIsEnabled) {
+		if(evaluationManager != null) {
 			evaluationManager.getRound(currentRound-1).evaluateGame(this);
 		}
 		if(currentRound == rounds || end == Situations.STOP) {
@@ -376,9 +381,7 @@ public class GameLogic {
 			gui.setEnableStop(false);
 			gui.setDisplayEnabled(true);
 			gui.setEnableDisplayEnabled(false);
-			if(recordGameIsEnabled) {
-				evaluationManager.runEvaluation();
-			}
+			if(evaluationManager != null) {	evaluationManager.runEvaluation();}
 		}
 		else {
 			try {
@@ -386,7 +389,7 @@ public class GameLogic {
 				new Thread(){
 					public void run(){
 						try {
-							startGame(recordGameIsEnabled, gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
+							startGame(gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
 						} catch (IllegalArgumentException | SecurityException e) {
 							gui.console.printWarning("GameLogic", "failed to load the ai");
 							e.printStackTrace();
@@ -696,7 +699,7 @@ public class GameLogic {
 	public boolean getInProgress() {
 		return gameInProgress;	
 	}
-	public void setManager(Manager manager) {
+	public void setManager(EvaluationManager manager) {
 		evaluationManager = manager;
 	}
 	public Player getPlayerRed() {

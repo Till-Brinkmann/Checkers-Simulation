@@ -145,7 +145,7 @@ public class NNTrainingManager {
     	nnPlayer[net1].setGL(gl);
     	nnPlayer[net2].setGL(gl);
     	//net2 plays as red (and starts)
-    	gl.startGame(false, "Training", nnPlayer[net2], nnPlayer[net1], 1, 0, false, false);
+    	gl.startGame("Training", nnPlayer[net2], nnPlayer[net1], 1, 0, false, false);
     	evaluateFitness(nnPlayer[net2], nnPlayer[net1], gl);
     }
     public void change(){

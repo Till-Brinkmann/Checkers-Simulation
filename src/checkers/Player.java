@@ -17,5 +17,5 @@ public interface Player {
 	public void requestMove();
 	public String getName();
 	public boolean acceptDraw();
-	public void saveInformation(String path);
+	public void saveInformation(String directory);
 }

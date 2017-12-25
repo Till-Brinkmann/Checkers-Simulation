@@ -102,51 +102,32 @@ public class FileUtilities {
 
             	}
             }
-            writer.flush();
-            writer.close();
         }
+        writer.flush();
+        writer.close();
     }
-//	public static void saveGameSitationForEvaluation(Playfield field, Round round) throws FileNotFoundException{
-//        	PrintWriter writer = new PrintWriter(new File(round.getRoundsPathString() + "/" + (round.getRound()+1) + ".pfs"));
-//        	try {
-//				saveGameSituation(field,round.getRoundsPathString(),"" + (round.getRound()+1), writer);
-//			} catch (IOException e) {
-//				
-//			}
-//        	writer.write("\n");
-//        	writer.write("\ngame name:\n" + round.getManager().getRunName());
-//        	writer.write("\n");
-//        	writer.write("\nWho is playing?\n" + round.getPlayer1().getName() + " vs. " + round.getPlayer2().getName());
-//        	writer.write("\n");
-//        	writer.write("Turns: " + (round.getPlayer1turns()+round.getPlayer2turns()) + "\n");
-//        	if(round.getInturn() == FigureColor.WHITE) {
-//        		writer.write("\nIn turn: White\n");
-//        	}
-//        	else {
-//        		writer.write("\nIn turn: Red\n");
-//        	}
-//        	writer.write("\nFigureQuantities:\n");
-//        	writer.write("\nWhitePieces: "+ String.valueOf(field.getFigureQuantity(FigureColor.WHITE)) + "\n");
-//        	writer.write("of it: " + field.getFigureTypeQuantity(FigureColor.WHITE,FigureType.NORMAL) + "Normal Figures and " + field.getFigureTypeQuantity(FigureColor.WHITE,FigureType.KING) + "Kings\n");
-//        	writer.write("\nRedPieces: "+ String.valueOf(field.getFigureQuantity(FigureColor.RED)) + "\n");
-//        	writer.write("of it: " + field.getFigureTypeQuantity(FigureColor.RED,FigureType.NORMAL) + "Normal Figures and " + field.getFigureTypeQuantity(FigureColor.RED,FigureType.KING) + "Kings\n");
-//       
-//		writer.flush();
-//		writer.close();
-//	}
 	public static void createTimesFile(double[] minTime, double[]maxTime, double[] avgTime, double[] overallTime,String player1Name,String player2Name, String filePath) {
 		try {
 			PrintWriter writer = new PrintWriter(new File(filePath + "/moveTimes.txt"));
 			writer.write("Player move times:\n\n");
 			writer.write(player1Name + ":\n");
-			writer.write("Min:" + minTime[0] + "ms  Max: " + maxTime[0] + "ms  Avg: " + avgTime[0] + "ms  Overall: " + overallTime[0] + "ms\n");
+			writer.write("Min:" + minTime[0] + "ns  Max: " + maxTime[0] + "ns  Avg: " + avgTime[0] + "ns  Overall: " + overallTime[0] + "ns\n");
 			writer.write(player2Name + ":\n");
-			writer.write("Min:" + minTime[1] + "ms  Max: " + maxTime[1] + "ms  Avg: " + avgTime[1] + "ms  Overall: " + overallTime[1] + "ms\n");
+			writer.write("Min:" + minTime[1] + "ns  Max: " + maxTime[1] + "ns  Avg: " + avgTime[1] + "ns  Overall: " + overallTime[1] + "ns\n");
 			writer.flush();
 			writer.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+	public static boolean searchForEqualFiles(String directory, String fileName) {
+		File files[] = new File(directory).listFiles();
+		for(int i = 0;i < files[i].length(); i++) {
+			 if(files[i].getName().equals(fileName)) {
+				 return true;
+			 }
+		}
+		return false;
 	}
 
 		

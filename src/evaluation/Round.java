@@ -13,12 +13,11 @@ import generic.List;
 import utilities.FileUtilities;
 
 public class Round {
-	Manager manager;
+	EvaluationManager manager;
 	
 	private Player player1;
 	private Player player2;
 	
-	private int multiJumps[] = new int[2];
 	private double[] moveTimeAvg = new double[2];
 	private double[] moveTimeMin = new double[2];
 	private double[] moveTimeMax = new double[2];
@@ -36,7 +35,7 @@ public class Round {
 	private Playfield field;
 	
 	
-	public Round(int currentRound, File path, Player player1, Player player2, Playfield field, Manager manager) {
+	public Round(int currentRound, File path, Player player1, Player player2, Playfield field, EvaluationManager manager) {
 		this.field = field;
 		this.player1 = player1;
 		this.player2 = player2;
@@ -44,8 +43,7 @@ public class Round {
 		player1turns = 0;
 		player2turns = 0;
 		round = currentRound;
-		roundsPathString = path + "/Round " + (round+1);
-		roundsPath = new File(path + "/Round " + (round+1));
+		roundsPath = new File(path.getAbsolutePath() + "/Round " + (round+1));
 		roundsPath.mkdirs();
 	}
 	public void setMoveTime(long l,Player player) {
@@ -100,22 +98,14 @@ public class Round {
 		moveTimeMax[1] = maxTime;
 	}
 	public void saveGameSituation(GameLogic gmlc) {
-		//if(gmlc.getPlayerRed().getIsFirst()) {
-			player1turns = gmlc.getTurnCountRed();
-			player2turns = gmlc.getTurnCountWhite();
-		////else {
-			player1turns = gmlc.getTurnCountWhite();
-			player2turns = gmlc.getTurnCountRed();
-		//}
-		inTurn = gmlc.getInTurn();
 		try {
-			FileUtilities.saveGameSituation(gmlc.getPlayfield(),roundsPathString,"Turn" + (player1turns + player2turns) + ":");
+			FileUtilities.saveGameSituation(gmlc.getPlayfield(),roundsPath.getAbsolutePath(),"Turn" + (gmlc.getTurnCount()));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}
-	public Manager getManager() {
+	public EvaluationManager getManager() {
 		return manager;
 	}
 	public Player getPlayer1() {

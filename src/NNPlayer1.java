@@ -4,6 +4,7 @@ import checkers.Move.MoveType;
 import generic.List;
 import gui.Console;
 import nn.NN;
+import utilities.FileUtilities;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -288,8 +289,22 @@ public class NNPlayer1 implements Player{
 		return false;
 	}
 	@Override
-	public void saveInformation(String pathName) {
-		File file = new File(pathName + "/NNPlayer2 Information.txt");
+	public void saveInformation(String directory) {
+		File file;
+		String fileName = "NNPlayer1 Information.txt";
+		if(FileUtilities.searchForEqualFiles(directory, fileName)){
+			file = new File(directory + "/" + "(1)" + fileName);
+		}
+		else {
+			file = new File(directory + "/" + fileName) ;
+		}
+
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		PrintWriter writer ;
 		try {
 			writer = new PrintWriter(file);

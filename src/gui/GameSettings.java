@@ -28,7 +28,7 @@ import javax.swing.event.ChangeListener;
 import checkers.GameLogic;
 import checkers.Player;
 import checkers.Playfield;
-import evaluation.Manager;
+import evaluation.EvaluationManager;
 import generic.List;
 import gui.GUI.AISpeed;
 
@@ -215,8 +215,10 @@ public class GameSettings extends JFrame{
             	    			white = getPlayer1();
             	    			red = getPlayer2();
             	    		}
-            	    		gui.getGameLogic().setManager(new Manager((int)roundsSpinner.getValue(),gameName , red, white));
-							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
+            	    		if(recordGameIsEnabled) {
+            	    			gui.getGameLogic().setManager(new EvaluationManager((int)roundsSpinner.getValue(),gameName , red, white));
+            	    		}
+            	    		gui.getGameLogic().startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
 						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
 								 InvocationTargetException | NoSuchMethodException | SecurityException e) {
 							gui.console.printWarning("gmlc", "failed to load the ai");
@@ -332,7 +334,6 @@ public class GameSettings extends JFrame{
 							if(entry.getName().startsWith("player/") && entry.getName().endsWith(".class")){
 								String className = entry.getName().replace('/', '.').substring(0, entry.getName().length()-6);
 								URLClassLoader jarloader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
-								gui.console.printInfo(className);
 								ai = jarloader.loadClass(className);
 								if(testForPlayerInterface(ai)){
 									availablePlayer.put(ai.getName().replace("player.", ""), ai);
@@ -353,8 +354,7 @@ public class GameSettings extends JFrame{
 			return gui.playfieldpanel;
 		}
 		ai = availablePlayer.get(player1ComboBox.getSelectedItem().toString());
-		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
+		gui.console.printInfo("Class" + ai.getName() + " was loaded successfully", "GameSettings");
 		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
 	public Player getPlayer2() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
@@ -363,19 +363,18 @@ public class GameSettings extends JFrame{
 			return gui.playfieldpanel;
 		}
 		ai = availablePlayer.get(player2ComboBox.getSelectedItem().toString());
-		System.out.println("file:" + new File("resources/AI").getAbsolutePath());
-		gui.console.printInfo("GameSettings","Class" + ai.getName() + " was loaded successfully");
+		gui.console.printInfo("Class" + ai.getName() + " was loaded successfully", "GameSettings");
 		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
 	
 	private boolean testForPlayerInterface(Class<?> ai2) {
 		for(Class<?> c : ai2.getInterfaces()) {
 			if(c.equals(Player.class)) {
-				gui.console.printInfo("GameSettings","Interface player was found in " + ai2.getName());
+				gui.console.printInfo("Interface player was found in " + ai2.getName(), "GameSettings");
 				return true;
 			}
 		}
-		gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
+		//gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
 		return false;
 	}
 	

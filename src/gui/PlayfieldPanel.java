@@ -267,12 +267,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 					}	
 					
 				}
-				if(m.getMoveType() == MoveType.JUMP) {
-				console.printInfo("Jump: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ")","playfieldPanel");
-				}
-				if(m.getMoveType() == MoveType.STEP) {
-				console.printInfo("Step: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ")","playfieldPanel");
-				}
 				resetAndExecute(m,0);
 				
 			}
