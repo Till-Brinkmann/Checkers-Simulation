@@ -2,6 +2,9 @@ package gui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 
 import javax.swing.*;
 
@@ -123,7 +126,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
             	}
             }
         }
-
 	}
 	/**
 	 * @return an array of all the buttons the field exists of
@@ -173,19 +175,24 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			setButtonIcon(x, y, null);
 		}
 	}
-
+	public void clearField() {
+		  for (int y = 0; y < playfield.SIZE; y++) {
+	            for(int x = 0; x < playfield.SIZE; x++){
+	    			setButtonColor(x, y, Color.lightGray);
+	    			setButtonIcon(x, y, null);
+	            }
+	        }
+	}
 	private void saveCoordinates(int x, int y) {
 		switch(clickSituation) {
 		case ZERO:
 			if(playfield.isOccupied(x, y)){
-				if(jumpIsPossible()){
+				//TODO x and y here are probably unsafe
+				if(Move.jumpIsPossible(playfield.field[x][y].getFigureColor(), playfield)){
 					//if a jump is possible only figures that can jump can be clicked
-					jumpFigures.toFirst();
-					while(jumpFigures.hasAccess()){
-						if(playfield.field[x][y] == jumpFigures.get()){
-							selectFigure(x, y);
-						}
-						jumpFigures.next();
+					//TODO update jumpFigures
+					if(Move.getPossibleJumps(playfield.field[x][y], playfield).length != 0) {
+						selectFigure(x, y);
 					}
 				}
 				else {
@@ -205,7 +212,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				coords[1][0] = x;
 				coords[1][1] = y;
 				Move m = Move.createMoveFromCoords(coords);
-				if(m.isInvalid() || !gamelogic.testMove(m) || (jumpIsPossible() && m.getMoveType() == MoveType.STEP)){
+				if(m.isInvalid() || !gamelogic.testMove(m) || (Move.jumpIsPossible(playfield.field[m.getX()][m.getY()].getFigureColor(), playfield) && m.getMoveType() == MoveType.STEP)){
 					//TODO cancel move
 					console.printWarning("Invalid move", "playfieldPnael");
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
@@ -304,19 +311,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
 	}
 
-	private boolean jumpIsPossible() {
-		//TODO gibt fehlerhafte werte zurück
-		boolean canJump = false;
-		jumpFigures = new List<Figure>();
-		for(Figure f : playfield.getFiguresFor(figurecolor)){
-			if(Move.getPossibleJumps(f, playfield).length > 0){
-				canJump = true;
-				jumpFigures.append(f);
-			}
-		}
-		return canJump;
-	}
-
 	public void enableAllButtons(boolean enabled) {
 		for(int x = 0; x < playfield.SIZE; x++){
 			for(int y = 0; y < playfield.SIZE; y++){
@@ -343,6 +337,18 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	@Override
 	public String getName(){
 		return "Human player (PlayfieldPanel)";
+	}
+	@Override
+	public void saveInformation(String pathName) {
+		File file = new File(pathName + "/Playfieldpanel(real Player) Information.txt");
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information the playfieldpanel");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 	/**
 	 * has to be synchronized because otherwise it is not able to wait.

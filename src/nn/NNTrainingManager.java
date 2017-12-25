@@ -71,7 +71,7 @@ public class NNTrainingManager {
 		//just a playfield with the startposition to make copies for all games
 		thePlayfield = new Playfield();
 		try{
-			thePlayfield.createStartPosition();
+			thePlayfield.createStartPosition(thePlayfield);
 		}
 		catch(IOException e){
 			console.printWarning("Unable to load THE Playfield", "NNMan");

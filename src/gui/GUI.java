@@ -23,8 +23,11 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+
 import checkers.GameLogic;
+import checkers.Playfield;
 import checkers.GameLogic.Situations;
+import utilities.FileUtilities;
 @SuppressWarnings("serial")
 public class GUI extends JFrame{
 
@@ -54,6 +57,8 @@ public class GUI extends JFrame{
 	JRadioButtonMenuItem slow;
 	JRadioButtonMenuItem medium;
 	JRadioButtonMenuItem fast;
+	
+	JCheckBoxMenuItem displayEnabled;
 	public enum AISpeed{SLOW, MEDIUM, FAST, NOTACTIVE}
 	public AISpeed aiSpeed;
 	public GUI(GameLogic gamelogic){
@@ -64,7 +69,7 @@ public class GUI extends JFrame{
 		initialize();
 		createWindow();
 		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored. Have fun!","GUI");
-		console.printInfo("All commands under /availableCommands","GUI");
+		console.commandInfos();
 		
 	}
 	public GUI(){
@@ -105,11 +110,11 @@ public class GUI extends JFrame{
         JMenuBar menubar = new JMenuBar();
         menubar.setBackground(Color.WHITE);
         JMenu game = new JMenu("Game");
-        JMenuItem newgame = new JMenuItem("new game");
+        JMenuItem newgame = new JMenuItem("new run");
         newgame.setBackground(Color.WHITE);
-        JMenuItem loadgame = new JMenuItem("load game");
+        JMenuItem loadgame = new JMenuItem("load situation");
         loadgame.setBackground(Color.WHITE);
-        JMenuItem savegame = new JMenuItem("save Game");
+        JMenuItem savegame = new JMenuItem("save situation");
         savegame.setBackground(Color.WHITE);
         JMenuItem nnTraining = new JMenuItem("NN Training");
         nnTraining.setBackground(Color.WHITE);
@@ -127,7 +132,12 @@ public class GUI extends JFrame{
         JCheckBoxMenuItem showmoves = new JCheckBoxMenuItem("show moves");
         showmoves.setBackground(Color.WHITE);
         JCheckBoxMenuItem showfieldnumbers = new JCheckBoxMenuItem("show field numbers");
-        showfieldnumbers.setBackground(Color.WHITE);        
+        showfieldnumbers.setBackground(Color.WHITE);   
+        //has to be accessabled
+        displayEnabled = new JCheckBoxMenuItem("display field");
+        displayEnabled.setBackground(Color.WHITE);
+        displayEnabled.setSelected(true);
+        displayEnabled.setEnabled(false);
         JMenu speed = new JMenu("AI Speed");
         slow = new JRadioButtonMenuItem("Slow",false);
         slow.setBackground(Color.WHITE);
@@ -148,6 +158,7 @@ public class GUI extends JFrame{
         preferences.add(sound);
         preferences.add(showmoves);
         preferences.add(showfieldnumbers);
+        preferences.add(displayEnabled);
         menubar.add(preferences);
         
         JMenu run = new JMenu("Run");
@@ -200,13 +211,13 @@ public class GUI extends JFrame{
             	filter = new FileNameExtensionFilter("pfs","txt");
             	filechooser.setDialogTitle("load playfield file");
             	int rueckgabeWert = filechooser.showOpenDialog(null);
+            	filechooser.setCurrentDirectory(new File("resources/PlayfieldSaves"));
             	filechooser.addChoosableFileFilter(filter);
             	//File muss erst ausgewählt werden! Testfile:
             	if(rueckgabeWert == JFileChooser.APPROVE_OPTION){
             		File file = filechooser.getSelectedFile();
 		        	try {
-					    gmlc.getPlayfield().loadGameSituation(file);
-						console.printInfo("Playfield " + file.getName() + " loaded!");
+		        		playfieldpanel.playfield.setGameSituation(file);
 					} catch (IOException e) {
 						console.printWarning(file.getName() + " could not be loaded: " + e, "Load Playfield");
 					
@@ -225,7 +236,7 @@ public class GUI extends JFrame{
             public void actionPerformed(ActionEvent event)
             {
             	try {
-					gmlc.getPlayfield().saveGameSituation();
+					FileUtilities.saveGameSituation(playfieldpanel.playfield, "resources/playfieldSaves", "" +System.currentTimeMillis());
 					console.printInfo("Playfield saved!");
 				} catch (IOException e) {
 					console.printWarning("Playfield saving error: "+ e);
@@ -262,6 +273,21 @@ public class GUI extends JFrame{
             public void actionPerformed(ActionEvent event)
             {
         	playfieldpanel.buttonNumeration(showfieldnumbers.isSelected());
+            }
+
+        });
+        displayEnabled.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	if(displayEnabled.isSelected()) {
+            		playfieldpanel.playfield.setPlayfieldDisplay(playfieldpanel);
+            		
+            		
+            	}else {
+            		playfieldpanel.playfield.setPlayfieldDisplay(null);
+            		playfieldpanel.clearField();
+            	}
             }
 
         });
@@ -353,6 +379,7 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
+            	soundsettings.playSound("moveSound");
             	aboutcsWindow.setVisible(true);
             }
         });
@@ -419,4 +446,15 @@ public class GUI extends JFrame{
 	public void setEnableStop(boolean a) {
 		stop.setEnabled(a);
 	}
+	public void setDisplayEnabled(boolean b) {
+		displayEnabled.setSelected(b);
+		if(b == false) {
+			playfieldpanel.clearField();
+
+		}
+	}
+	public void setEnableDisplayEnabled(boolean b) {
+		displayEnabled.setEnabled(b);
+	}
+	
 }

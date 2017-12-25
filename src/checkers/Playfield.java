@@ -9,13 +9,14 @@ import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import gui.PlayfieldDisplay;
 import gui.PlayfieldSound;
+import utilities.FileUtilities;
 
 /**
- * This class represents a playfield a variable size. It contains all methodsthat are needed in order to manage the playfield from 
+ * This class represents a playfield of variable size. It contains all methods that are needed in order to manage the playfield from 
  * other classes, especially the gamelogic. Therefore all methods have to be accessed from other classes and need the access modifier
  * "public".
  * <p>
- * We realized this playfield by creating an Figure array with a distinct size. The size is describes the length one the x and y axis
+ * We realized this playfield by creating a Figure array with a distinct size. The size is describes the length one the x and y axis
  * (Its is always a square) and not the amount of fields.
  * <p>
  * @author Till
@@ -35,204 +36,73 @@ public class Playfield {
 	PrintWriter writer;
 
 	int movesWithoutJumps = 0;
+	File filePath;
 	/**
-	 * This superclass constructor creates a playfield with the ininitial size of eight and then call the subconstructor to set up this 
+	 * This default constructor creates a playfield with the initial size of eight and then calls the subconstructor to set up this 
 	 * playfield further.
 	 */
 	public Playfield() {
 		this(8);
 	}
-
 	/**
-	 * Can be used by any superclass to customize basic required parameters.
-	 * @param size     An integer that describes the length of the playfield on the x and y axis.     
+	 * can be used by any superclass to customize basic required parameters
+	 * @param size An integer that describes the length of the playfield on the x and y axis.
 	 */
 	public Playfield(int size){
 		SIZE = size;
-		createNewPlayfield();
+		field = new Figure[SIZE][SIZE];
 	}
+	
 	/**
-	 * A new field array is created with the global constant SIZE.
-	 */
-	public void createNewPlayfield(){
-	    field = new Figure[SIZE][SIZE];
-	}
-	/**
-	 * Loades a start situation from the resources. It automtically searches for the right start stiuation for the right size. If it is
-	 * not found, then it throws a exeption.
+	 * Loads a start situation from the resources. It automatically searches for the right start situation for the right size. If it is
+	 * not found, then it throws an exeption.
 	 * <p>
-	 * @throws IOException     A specific detailed meassage with the error that accured in this method.
+	 * @throws IOException Thrown when the file containing the start situation does not exist or is not available at the moment.
+	 * A specific detailed message with the error that accured in this method.
 	 */
-	public void createStartPosition() throws IOException{
-			loadGameSituation(new File("resources/playfieldSaves/startPositionForSize" + SIZE + ".pfs"));
+	public void createStartPosition(Playfield playfield) throws IOException{
+		field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/startPositionForSize" + SIZE +".pfs"), playfield);
+		if(display != null) display.updateDisplay();
 	}
+	
+	public void clearField(Playfield playfield) throws IOException {
+		 field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"), playfield);
+		 if(display != null) display.updateDisplay();
+	}
+	
 	/**
-	 * This method tries to load a specific game situation with a .pfs. This file type saves all information which are needed to
+	 * This method tries to load a specific game situation from a .pfs file. This file type saves all information that is needed to
 	 * reconstruct this game sitation. 
 	 * <p>
-	 * The file parameter needs to be a .pfs file with the correct size in order to be loaded an displayed on the playfield
+	 * The file parameter needs to be a .pfs file with the correct size in order to be loaded and displayed on the playfield
 	 * <p>
-	 * @param file             A file that respresents the path to a specific file.
-	 * @throws IOException     A specific detailed meassage with the error that accured in this method.
+	 * @param file             A file that respresents the path to a playfield save file.
+	 * @throws IOException Thrown when the file is currently not available. A specific detailed meassage with the error that accured in this method.
 	 */
-	public void loadGameSituation(File file) throws IOException{
-		reader = new FileReader(file);
-		bufferedReader = new BufferedReader(reader);
-
-		String info = bufferedReader.readLine();
-		if(Integer.parseInt(info) != SIZE){
-			//TODO what to do here?
-			throw new IOException("This savefile does not work for this playfield!");
-		}
-		else{
-			info = bufferedReader.readLine();
-			if(info.length() != SIZE*SIZE){
-				throw new IOException("The save file is corrupted!");
-			}
-			int index = 0;
-	        for(int y = 0;y < SIZE; y++){
-	            for(int x = 0;x < SIZE; x++){
-	            	switch(info.charAt(index)){
-	            	case '0':
-	            		field[x][y] = null;
-	            		index++;
-	            		break;
-	                case '1':
-	                	field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.NORMAL);
-	                	index++;
-	                	break;
-		            case '3':
-		            	field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.KING);
-		            	index++;
-	                    break;
-		            case '2':
-		            	field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.NORMAL);
-		            	index++;
-	                    break;
-		            case '4':
-		            	field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.KING);
-		            	index++;
-	                    break;
-	                default:
-
-	                	return;
-	            	}
-	            }
-			}
-	        bufferedReader.close();
-	        if(display != null) display.updateDisplay();
-		}
-	}
-	String gameName;
-	int turnCount;
-	FigureColor inTurn;
-	String player1Name;
-	String player2Name;
-	/**
-	 * 
-	 * <p>
-	 * @param pGameName
-	 * @param pInTurn
-	 * @param pTurnCount
-	 * @param pPlayer1Name
-	 * @param pPlayer2Name
-	 * @throws IOException
-	 */
-	public void saveGameSituation(String pGameName,FigureColor pInTurn, int pTurnCount, String pPlayer1Name, String pPlayer2Name) throws IOException {
-		gameName = pGameName;
-		inTurn = pInTurn;
-		turnCount = pTurnCount;
-		player1Name = pPlayer1Name;
-		player2Name = pPlayer2Name;
-		saveGameSituation();
-	}
-	public void saveGameSituation() throws IOException{
-		long currentTime = new Date().getTime();
-		String fileName = String.valueOf(currentTime);
-		if(recordGame){
-			// TODO es muss nicht jedes mal ein neuer ordner erstellt werden
-			File filePath = new File("resources/" + gameName);
-			filePath.mkdirs();
-			File file = new File("resources/" + gameName + "/" + fileName + ".pfs");
-			file.createNewFile();
-			writer = new PrintWriter(file);
-		}
-		else {
-			File file = new File("resources/playfieldSaves/"+ fileName +".pfs");
-			file.createNewFile();
-			writer = new PrintWriter(file);
-		}
-
-		//write PlayfieldSize
-		writer.write(String.valueOf(SIZE));
-		writer.write("\n");
-		//write playfield
-		//even numbers:White
-		//uneven numbers:Red
-        for(int y = 0;y < SIZE; y++){
-            for(int x = 0;x < SIZE; x++){
-            	if(isOccupied(x,y)){
-            		if(field[x][y].getFigureColor() == FigureColor.RED){
-            			if(field[x][y].getFigureType() == FigureType.NORMAL){
-            				writer.write("1");
-            			}
-            			else{
-            				writer.write("3");
-            			}
-            		}
-            		else{
-            			if(field[x][y].getFigureType() == FigureType.NORMAL){
-            				writer.write("2");
-            			}
-            			else{
-            				writer.write("4");
-            			}
-            		}
-            	}
-            	else{
-            		writer.write("0");
-
-            	}
-            }
-        }
-        if(recordGame) {
-        	writer.write("\n");
-        	writer.write("\ngame name:\n" + gameName);
-        	writer.write("\n");
-        	writer.write("\nWho is playing?\n" + player1Name + " vs. " + player2Name);
-        	writer.write("\n");
-        	writer.write("Turns: " + turnCount + "\n");
-        	if(inTurn == FigureColor.WHITE) {
-        		writer.write("\nIn turn: White\n");
-        	}
-        	else {
-        		writer.write("\nIn turn: Red\n");
-        	}
-        	writer.write("\nFigureQuantities:\n");
-        	writer.write("\nWhitePieces: "+ String.valueOf(getFigureQuantity(FigureColor.WHITE)) + "\n");
-        	writer.write("of it: " + getFigureTypeQuantity(FigureColor.WHITE,FigureType.NORMAL) + "Normal Figures and " + getFigureTypeQuantity(FigureColor.WHITE,FigureType.KING) + "Kings\n");
-        	writer.write("\nRedPieces: "+ String.valueOf(getFigureQuantity(FigureColor.RED)) + "\n");
-        	writer.write("of it: " + getFigureTypeQuantity(FigureColor.RED,FigureType.NORMAL) + "Normal Figures and " + getFigureTypeQuantity(FigureColor.RED,FigureType.KING) + "Kings\n");
-        }
-		writer.flush();
-		writer.close();
+	public void setGameSituation(File file) throws IOException{
+		field = FileUtilities.loadGameSituation(file, this);
+		if(display != null) display.updateDisplay();
 	}
 	/**
-	 * 
+	 * enables 
 	 * @param selected
 	 */
 	public void enableGameRecording(boolean selected){
 		recordGame = selected;
 	}
 	/**
-	 * 
-	 * @param d
+	 * Sets the object that is responsible for displaying the contents of this playfield
+	 * <p>
+	 * @param d The object that wants to display the playfield.
+	 * <p>
+	 * @see gui.PlayfieldDisplay
+	 * @see gui.PlayfieldPanel
 	 */
 	public void setPlayfieldDisplay(PlayfieldDisplay d){
 		display = d;
 	}
 	/**
-	 * 
+	 * Set the object that is responsible for 
 	 * @param s
 	 */
 	public void setPlayfieldSound(PlayfieldSound s) {
@@ -259,7 +129,7 @@ public class Playfield {
 		if(m.getMoveType() == MoveType.INVALID){
 			//can not execute an invalid move
 			return;
-		}		
+		}
 		else if(m.getMoveType() == MoveType.STEP ){
 			if(sound != null)sound.playSound("moveSound.wav");
 			movesWithoutJumps++;
@@ -292,8 +162,7 @@ public class Playfield {
 		}
 		else{
 			movesWithoutJumps = 0;
-			for(int s = 0; s < m.getSteps(); s++){
-				if(sound != null)sound.playSound("moveSound.wav");
+			for(int s = 0, steps = m.getSteps(); s < steps; s++){
 				if(sound != null)sound.playSound("beatSound.wav");
 				switch(m.getMoveDirection(s)){
 				case BL:
@@ -340,7 +209,6 @@ public class Playfield {
 			}
 		}
 		if(display != null) display.updateDisplay();
-		
 	}
 	/**
 	 * 
@@ -436,9 +304,6 @@ public class Playfield {
 	}
 	/**
 	 * 
-	 * @param x
-	 * @param y
-	 * @return
 	 */
 	public FigureColor colorOf(int x, int y) {
 		return field[x][y].getFigureColor();
@@ -454,6 +319,7 @@ public class Playfield {
 	}
 	/**
 	 * 
+	 * @return
 	 */
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
@@ -489,6 +355,15 @@ public class Playfield {
 		else {
 			return false;
 		}
+	}
+	public void createPaths(String gameName) {
+		filePath = new File("resources/RecordedGames/" + gameName);
+		filePath.mkdirs();
+		File filePathToGameSituations = new File("resources/RecordedGames/" + gameName + "/GameSituations");
+		filePathToGameSituations.mkdirs();
+	}
+	public File getFilePath() {
+		return filePath;
 	}
 }
 

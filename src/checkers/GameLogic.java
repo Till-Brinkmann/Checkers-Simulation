@@ -1,10 +1,12 @@
 package checkers;
 import java.io.IOException;
+import java.util.Date;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import checkers.Player;
+import evaluation.Manager;
 import generic.List;
 import gui.GUI;
 import gui.GUI.AISpeed;
@@ -51,12 +53,14 @@ public class GameLogic {
 	private int currentRound = 0;
 	private int rounds;
 	
+	
+	private long timeBeforeMove;
 	//For NN!
 	private Situations endSituation;
 	private boolean failed;
 	
-	
-	
+	private Manager evaluationManager;
+	private Date date;
 	public GameLogic(){
 		this(new Playfield());
 	}
@@ -72,7 +76,7 @@ public class GameLogic {
 		drawCount = 0;
 		currentRound = 0;
 		gameInProgress = false;
-		
+		date = new Date();
 	}
 	/**
 	 * This method is essential for running a game and it is therefore called if a game about to begin. Currently this happens in GameSettings and NNTrainingsMangager.
@@ -89,30 +93,45 @@ public class GameLogic {
 		gameInProgress = true;
 		pause = false;
 		//how many game should be played
-		rounds = pRounds;		
+		rounds = pRounds;
+		
 		//if both player are one object one Player controls both white and red
-		twoPlayerMode = pPlayerRed == pPlayerWhite;	
+		twoPlayerMode = pPlayerRed == pPlayerWhite;
+		
 		namePlayerRed = pPlayerRed.getName();
-		namePlayerWhite = pPlayerWhite.getName();		
+		namePlayerWhite = pPlayerWhite.getName();
+		
 		playerRed = pPlayerRed;
 		playerWhite = pPlayerWhite;
 		//SlowMode
 		slowness = pSlowness;
 		//display
 		displayActivated = pDisplayActivated;
-		//sound
-		recordGameIsEnabled = pRecordGameIsEnabled;
+		if(!displayActivated) {
+			field.setPlayfieldDisplay(null);
+			field.setPlayfieldDisplay(null);
+		}
+		else {
+			field.setPlayfieldDisplay(gui.playfieldpanel);
+		}
 		gameName = pGameName;
+		
+		recordGameIsEnabled = pRecordGameIsEnabled;
+		if(recordGameIsEnabled) {
+			evaluationManager.setPlayfield(field);
+			evaluationManager.createRound(currentRound);
+		}
 		turnCounterRed = 0;
 		turnCounterWhite = 0;
 		//reset variables
 		//TODO das gilt nicht beim richtigen game
 		redFailedOnce = true;
 		whiteFailedOnce = true;
+
 		//test if an new playfield has to be created
 		if(!useCurrentPf) {
 			try {			
-				field.createStartPosition();
+				field.createStartPosition(field);
 			} catch (IOException e) {
 				gui.console.printWarning(
 					"Gamelogic:startGame",
@@ -137,6 +156,7 @@ public class GameLogic {
 				e.printStackTrace();
 			}
 		}
+		timeBeforeMove = System.currentTimeMillis();
 		playerRed.requestMove();
 	}
 	/**
@@ -150,7 +170,17 @@ public class GameLogic {
 	 * @param m         The Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
 	 */
 	public void makeMove(Move m){
+		//time save
+		if(recordGameIsEnabled) {
+			if(inTurn == FigureColor.RED) {
+				evaluationManager.getRound(currentRound).setMoveTime((int)(System.currentTimeMillis()-timeBeforeMove),playerRed);
+			}
+			else {
+				evaluationManager.getRound(currentRound).setMoveTime((int)(date.getTime()-timeBeforeMove),playerWhite);
+			}
+		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
+		if(m == null) gui.console.printError("Move is null!", "GMLC");
 		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
 			gui.console.printWarning("Invalid move!", "Gamelogic");
 			if(inTurn == FigureColor.RED){
@@ -160,7 +190,9 @@ public class GameLogic {
 				}
 				else {
 					redFailedOnce = true;
+					timeBeforeMove = date.getTime();
 					playerRed.requestMove();
+					
 				}
 			}
 			else {
@@ -170,6 +202,7 @@ public class GameLogic {
 				}
 				else {
 					whiteFailedOnce = true;
+					timeBeforeMove = date.getTime();
 					playerWhite.requestMove();
 				}
 			}
@@ -189,7 +222,7 @@ public class GameLogic {
 			else {
 				//for game recording
 				if(recordGameIsEnabled) {
-					infosGameRecording();
+					evaluationManager.getRound(currentRound).saveGameSituation(this);
 				}
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 				if(!pause) {
@@ -216,6 +249,7 @@ public class GameLogic {
 						e.printStackTrace();
 					}
 				}
+				timeBeforeMove = System.currentTimeMillis();
 				playerRed.requestMove();
 				break;
 			case WHITE:
@@ -227,6 +261,7 @@ public class GameLogic {
 						e.printStackTrace();
 					}
 				}
+				timeBeforeMove = System.currentTimeMillis();
 				playerWhite.requestMove();
 				break;
 		}
@@ -263,11 +298,14 @@ public class GameLogic {
 		}
 		if(inTurn == FigureColor.RED && Move.getPossibleMoves(FigureColor.WHITE, field).length == 0) {
 			return Situations.REDWIN;
-		}		
+		}
+		
 		//test for draw Situation
 		if(field.getMovesWithoutJumps() == 30) {
 			requestDraw();
-		}		
+		}
+		
+		
 		if(field.getMovesWithoutJumps() == 60) {
 			return Situations.DRAW;
 		}
@@ -292,7 +330,6 @@ public class GameLogic {
 			break;
 
 		case REDWIN:
-			field.playWinSound();
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			if(failed) {
 				gui.console.printInfo("GameLogic", playerWhite.getName() +"(White) did a wrong move!");
@@ -303,7 +340,6 @@ public class GameLogic {
 			currentRound++;
 			break;
 		case WHITEWIN:
-			field.playWinSound();
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			if(failed) {
 				gui.console.printInfo("GameLogic", playerRed.getName() +"(Red) did a wrong move!");
@@ -318,13 +354,17 @@ public class GameLogic {
 		case NOTHING:
 			return;
 		}		
-		if(currentRound == rounds || end == Situations.STOP) {			
+		if(recordGameIsEnabled) {
+			evaluationManager.getRound(currentRound-1).evaluateGame(this);
+		}
+		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
 			gui.playfieldpanel.updateDisplay();
 			
 			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
 			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
 			gui.console.printInfo("GameLogic", "Draw: " + drawCount + " times.");
+			
 			//reseting variables
 			gameInProgress = false;
 			winCountWhite = 0;
@@ -334,11 +374,15 @@ public class GameLogic {
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);
 			gui.setEnableStop(false);
-			// TODO maybe statistic for ki playing against each other and creating a file with all information
+			gui.setDisplayEnabled(true);
+			gui.setEnableDisplayEnabled(false);
+			if(recordGameIsEnabled) {
+				evaluationManager.runEvaluation();
+			}
 		}
 		else {
 			try {
-				field.createStartPosition();
+				field.createStartPosition(field);
 				new Thread(){
 					public void run(){
 						try {
@@ -363,18 +407,6 @@ public class GameLogic {
 	 */
 	public boolean getTwoPlayerMode(){
 		return twoPlayerMode;
-	}
-	/**
-	 * This method is called after every the run turn and trasferred all information to the playfield which creates a .pfs file with all
-	 * information.
-	 */
-	private void infosGameRecording() {
-		try {
-			field.saveGameSituation(gameName, inTurn, (turnCounterRed + turnCounterWhite), playerRed.getName(), playerWhite.getName());
-		} catch (IOException e) {
-			gui.console.printWarning("GameLogic","playfield could not be saved. IOException: " + e);
-			e.printStackTrace();
-		}
 	}
 	/**
 	 * Tests if a figure reached the other side of the playfield. If this is the case, then a method in Playfield is called that changes
@@ -413,7 +445,7 @@ public class GameLogic {
 		FigureColor color = f.colorOf(x, y);
 		FigureType type = f.getType(x, y);
 		//TODO wenn es kein Jump ist aber jumps möglich sind return false
-		if(m.getMoveType() == MoveType.STEP && Move.getPossibleJumps(f.field[x][y], f).length != 0){
+		if(m.getMoveType() == MoveType.STEP && Move.jumpIsPossible(f.field[x][y].getFigureColor(), f)){
 			return false;
 		}
 		switch(m.getMoveType()){
@@ -471,7 +503,7 @@ public class GameLogic {
 					if (!(x - 2 >= 0 && y - 2 >= 0 &&//two fields space,
 						f.isOccupied(x-1, y-1) &&//a figure on the next field...
 					   	f.colorOf(x-1, y-1) != color &&//... that is of a different color,
-					   	!f.isOccupied(x-2, y-2))//no figure on the field to land on
+					   	(!f.isOccupied(x-2, y-2) || (m.getX() == x-2 && m.getY() == y-2)))//no figure on the field to land on (except itself)
 					){
 						return false;
 					}
@@ -485,7 +517,7 @@ public class GameLogic {
 					if (!(x + 2 < f.SIZE && y - 2 >= 0 &&
 						f.isOccupied(x+1, y-1) &&
 						f.colorOf(x+1, y-1) != color &&
-						!f.isOccupied(x+2, y-2))
+						(!f.isOccupied(x+2, y-2) || (m.getX() == x+2 && m.getY() == y-2)))
 					){
 						return false;
 					}
@@ -499,7 +531,7 @@ public class GameLogic {
 					if (!(x - 2 >= 0 && y + 2 < f.SIZE &&
 						f.isOccupied(x-1, y+1) &&
 						f.colorOf(x-1, y+1) != color &&
-						!f.isOccupied(x-2, y+2))
+						(!f.isOccupied(x-2, y+2) || (m.getX() == x-2 && m.getY() == y+2)))
 					){
 						return false;
 					}
@@ -513,7 +545,7 @@ public class GameLogic {
 					if (!(x + 2 < f.SIZE && y + 2 < f.SIZE &&
 						f.isOccupied(x+1, y+1) &&
 						f.colorOf(x+1, y+1) != color &&
-						!f.isOccupied(x+2, y+2))
+						(!f.isOccupied(x+2, y+2) || (m.getX() == x+2 && m.getY() == y+2)))
 					){
 						return false;
 					}
@@ -662,7 +694,18 @@ public class GameLogic {
 	 * @return  boolean   True if the game is running. False if is paused or stopped.
 	 */
 	public boolean getInProgress() {
-		return gameInProgress;
-		
+		return gameInProgress;	
+	}
+	public void setManager(Manager manager) {
+		evaluationManager = manager;
+	}
+	public Player getPlayerRed() {
+		return playerRed;
+	}
+	public Player getPlayerWhite() {
+		return playerWhite;
+	}
+	public FigureColor getInTurn() {
+		return inTurn;
 	}
 }

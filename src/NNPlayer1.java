@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import checkers.Figure;
 import checkers.GameLogic;
@@ -203,8 +204,8 @@ public class NNPlayer1 implements Player{
 	}
 	
 	private Move moveDecision(double[] outputVector) {
-		Move bestMove = new Move(MoveType.INVALID);
-		Move move = new Move(MoveType.INVALID);
+		Move bestMove = Move.INVALID;
+		Move move = Move.INVALID;
 		//find out the field it wants to move to
 		double max = Integer.MIN_VALUE;
         int choiceField = 0;
@@ -285,6 +286,18 @@ public class NNPlayer1 implements Player{
 	public boolean acceptDraw() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	@Override
+	public void saveInformation(String pathName) {
+		File file = new File(pathName + "/NNPlayer2 Information.txt");
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
 	public FigureColor getFigureColor() {
 		return aiFigureColor;	

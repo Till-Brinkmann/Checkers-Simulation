@@ -27,6 +27,8 @@ import javax.swing.event.ChangeListener;
 
 import checkers.GameLogic;
 import checkers.Player;
+import checkers.Playfield;
+import evaluation.Manager;
 import generic.List;
 import gui.GUI.AISpeed;
 
@@ -185,6 +187,19 @@ public class GameSettings extends JFrame{
 				gui.setEnableResume(false);
 				gui.setEnablePause(true);
 				gui.setEnableStop(true);
+				if(displayCheckBox.isEnabled()) {
+					gui.setEnableDisplayEnabled(true);
+				}
+				else {
+					gui.setEnableDisplayEnabled(false);
+									}
+				if(displayCheckBox.isSelected()) {
+					gui.setDisplayEnabled(true);
+					
+				}
+				else {
+					gui.setDisplayEnabled(false);
+				}
             	//gmlcThread = new Thread(
 				ForkJoinPool.commonPool().execute(new Runnable() {
             	    public void run()
@@ -200,6 +215,7 @@ public class GameSettings extends JFrame{
             	    			white = getPlayer1();
             	    			red = getPlayer2();
             	    		}
+            	    		gui.getGameLogic().setManager(new Manager((int)roundsSpinner.getValue(),gameName , red, white));
 							gui.getGameLogic().startGame(recordGameIsEnabled, gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
 						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
 								 InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -216,7 +232,7 @@ public class GameSettings extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				currentSelectionPlayer1 = player1ComboBox.getSelectedItem().toString();
-				if(!currentSelectionPlayer1.equals("player") && !currentSelectionPlayer2.equals("player")) {
+				if(!currentSelectionPlayer1.equals("Player") && !currentSelectionPlayer2.equals("Player")) {
 					displayCheckBox.setEnabled(true);
 				}
 				else {
@@ -230,7 +246,7 @@ public class GameSettings extends JFrame{
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
-				if(!currentSelectionPlayer1.equals("player") && !currentSelectionPlayer2.equals("player")) {
+				if(!currentSelectionPlayer1.equals("Player") && !currentSelectionPlayer2.equals("Player")) {
 					displayCheckBox.setEnabled(true);
 				}
 				else {
@@ -252,7 +268,7 @@ public class GameSettings extends JFrame{
 		gameNamePanel.setBackground(Color.WHITE);
 		gameNamePanel.setLayout(new FlowLayout());
 		gameNamePanel.setPreferredSize(new Dimension(300,4));
-		gameNamePanel.add(new JLabel("Game Name:"));
+		gameNamePanel.add(new JLabel("Run Name:"));
 		gameNamePanel.add(gameNameField);
 		
 		JPanel recordGamePanel = new JPanel();

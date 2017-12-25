@@ -1,4 +1,7 @@
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Random;
 
 import checkers.Figure.FigureColor;
@@ -47,6 +50,20 @@ public class RandomAI implements Player {
 	@Override
 	public boolean acceptDraw() {
 		return false;
+	}
+	@Override
+	public void saveInformation(String pathName) {
+		File file = new File(pathName + "/RandomAI Information.txt");
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+			writer.flush();
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 
 }

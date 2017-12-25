@@ -3,6 +3,9 @@ import checkers.Figure.FigureType;
 import generic.List;
 import gui.Console;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 
 import checkers.GameLogic;
 import checkers.Move;
@@ -140,6 +143,18 @@ public class fullMiniMaxAI implements Player {
 	public boolean acceptDraw() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	@Override
+	public void saveInformation(String pathName) {
+		File file = new File(pathName + "/FullMinMaxAI Information.txt");
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 	private FigureColor reverseFigureColor(FigureColor fc) {
 		if(fc == FigureColor.RED) {

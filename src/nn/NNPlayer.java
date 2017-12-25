@@ -1,4 +1,8 @@
 package nn;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+
 import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
@@ -101,9 +105,8 @@ public class NNPlayer implements Player {
 	}
 	
 	private Move moveDecision(double[] outputVector) {
-		Move bestMove = new Move(MoveType.INVALID);
-		Move move = new Move(MoveType.INVALID);
-		//find out the field it wants to move to
+		Move bestMove = Move.INVALID;
+		Move move = Move.INVALID;
 		double max = Integer.MIN_VALUE;
         int choiceField = 0;
         for(int i = 0, i2 = 0; i < 32; i++) {
@@ -178,7 +181,18 @@ public class NNPlayer implements Player {
 		// TODO Auto-generated method stub
 		return "standard NN";
 	}
-
+	@Override
+	public void saveInformation(String pathName) {
+		File file = new File(pathName + "/NNPlayer Information.txt");
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
 	@Override
 	public boolean acceptDraw() {
 		// TODO Auto-generated method stub
@@ -187,4 +201,5 @@ public class NNPlayer implements Player {
 	public FigureColor getFigureColor() {
 		return aiFigureColor;	
 	}
+
 }
