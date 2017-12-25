@@ -2,10 +2,11 @@ package player;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 
-import algo.MinMaxABManager;
-import algo.MinMaxABTask;
+import algo.MiniMaxABManager;
+import algo.MiniMaxABTask;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
@@ -14,6 +15,7 @@ import checkers.Playfield;
 import generic.List;
 import gui.CommandListener;
 import gui.Console;
+import utilities.FileUtilities;
 
 public class MiniMaxABPlayer implements Player{
 	
@@ -22,7 +24,7 @@ public class MiniMaxABPlayer implements Player{
 	public GameLogic gmlc;
 	public Console csl;
 	
-	private MinMaxABManager manager;
+	private MiniMaxABManager manager;
 	
 	private float alpha;
 	private float beta;
@@ -39,17 +41,17 @@ public class MiniMaxABPlayer implements Player{
 					if(args.length == 2 && args[0].equals("MMMaxDepth")) {
 						//creating a new manager is the easiest way to make sure that the maxDepth does not change while a move is calculated
 						//(the current Tasks all have references to the old manager)
-						manager = new MinMaxABManager(manager.player, Integer.parseInt(args[1]), manager.playerColor, manager.enemyColor, manager.random);
+						manager = new MiniMaxABManager(manager.player, Integer.parseInt(args[1]), manager.playerColor, manager.enemyColor, manager.random);
 						csl.printCommandOutput("maxDepth set to " + manager.maxDepth);
 						return true;
 					}
 					else if(args.length == 2 && args[0].equals("Random")) {
 						if(args[1].equals("true")) {
-							manager = new MinMaxABManager(manager.player, manager.maxDepth,manager.playerColor, manager.enemyColor,true);
+							manager = new MiniMaxABManager(manager.player, manager.maxDepth,manager.playerColor, manager.enemyColor,true);
 							csl.printCommandOutput("random was set to true");
 						}
 						if(args[1].equals("false")) {
-							manager = new MinMaxABManager(manager.player, manager.maxDepth,manager.playerColor, manager.enemyColor,false);
+							manager = new MiniMaxABManager(manager.player, manager.maxDepth,manager.playerColor, manager.enemyColor,false);
 							csl.printCommandOutput("random was set to false");
 						}
 					}
@@ -64,7 +66,7 @@ public class MiniMaxABPlayer implements Player{
 
 	@Override
 	public void prepare(FigureColor color) {
-		manager = new MinMaxABManager(this, defaultMaxDepth, color, color == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED, defaultRandom);
+		manager = new MiniMaxABManager(this, defaultMaxDepth, color, color == FigureColor.RED ? FigureColor.WHITE : FigureColor.RED, defaultRandom);
 	}
 	@Override
 	public void requestMove(){
@@ -75,11 +77,11 @@ public class MiniMaxABPlayer implements Player{
 		//start maximizing minMaxTask for every possible move
 		List<Move> moves = Move.getPossibleMoves(manager.playerColor, gmlc.getPlayfield());
 		//in case the manager changes while the tasks are started
-		MinMaxABManager tmpman = manager;
+		MiniMaxABManager tmpman = manager;
 		tmpman.updateFigureCounts();
 		float v;
 		for(moves.toFirst(); moves.hasAccess(); moves.next()){
-				v = new MinMaxABTask(
+				v = new MiniMaxABTask(
 							tmpman,
 							moves.get(),
 							gmlc.getPlayfield().copy(),
@@ -108,15 +110,29 @@ public class MiniMaxABPlayer implements Player{
 		return "MiniMax algorithm with alpha-beta pruning based Checkers player";
 	}
 	@Override
-	public void saveInformation(String pathName) {
-		File file = new File(pathName + "/MiniMaxAB Information.txt") ;
+	public void saveInformation(String directory) {
+		File file;
+		String fileName = "MiniMaxAB Information.txt";
+		if(FileUtilities.searchForEqualFiles(directory, fileName)){
+			file = new File(directory + "/" + "(1)" + fileName);
+		}
+		else {
+			file = new File(directory + "/" + fileName) ;
+		}
+
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		PrintWriter writer;
 		try {
 			writer = new PrintWriter(file);
 			writer.write("Performed alpha cuts:\n");
 			writer.write(manager.getAlphaCuts() + "\n");			
 			writer.write("Performed beta-cuts:\n");
-			writer.write(manager.getAlphaCuts() + "\n");
+			writer.write(manager.getBetaCuts() + "\n");
 			writer.flush();
 			writer.close();
 		} catch (FileNotFoundException e) {
