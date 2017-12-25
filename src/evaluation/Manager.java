@@ -33,7 +33,7 @@ public class Manager {
 		return round[currentRound];
 	}
 	public void runEvaluation() {
-		
+		//TODO
 	}
 	public void setPlayfield(Playfield field) {
 		this.field = field;

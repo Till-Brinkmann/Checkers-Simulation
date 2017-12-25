@@ -134,7 +134,7 @@ public class FileUtilities {
 //		writer.flush();
 //		writer.close();
 //	}
-	public static void createTimesFile(float[] minTime, float[]maxTime, float[] avgTime, float[] overallTime,String player1Name,String player2Name, String filePath) {
+	public static void createTimesFile(double[] minTime, double[]maxTime, double[] avgTime, double[] overallTime,String player1Name,String player2Name, String filePath) {
 		try {
 			PrintWriter writer = new PrintWriter(new File(filePath + "/moveTimes.txt"));
 			writer.write("Player move times:\n\n");

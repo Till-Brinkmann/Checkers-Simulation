@@ -19,18 +19,18 @@ public class Round {
 	private Player player2;
 	
 	private int multiJumps[] = new int[2];
-	private float[] moveTimeAvg = new float[2];
-	private float[] moveTimeMin = new float[2];
-	private float[] moveTimeMax = new float[2];
-	private float[] moveTimeOverall = new float[2];
+	private double[] moveTimeAvg = new double[2];
+	private double[] moveTimeMin = new double[2];
+	private double[] moveTimeMax = new double[2];
+	private double[] moveTimeOverall = new double[2];
 	private int round;
 	private int player1turns;
 	private int player2turns;
 	private FigureColor inTurn;
 	private Situations endSituation;
 	private boolean failed;
-	List<Integer> moveTimePlayer1 = new List<Integer>();
-	List<Integer> moveTimePlayer2 = new List<Integer>();
+	List<Long> moveTimePlayer1 = new List<Long>();
+	List<Long> moveTimePlayer2 = new List<Long>();
 	private String roundsPathString;
 	private File roundsPath;
 	private Playfield field;
@@ -48,12 +48,12 @@ public class Round {
 		roundsPath = new File(path + "/Round " + (round+1));
 		roundsPath.mkdirs();
 	}
-	public void setMoveTime(int time,Player player) {
+	public void setMoveTime(long l,Player player) {
 		if(player == player1) {
-			moveTimePlayer1.append(time);
+			moveTimePlayer1.append(l);
 		}
 		else {
-			moveTimePlayer2.append(time);
+			moveTimePlayer2.append(l);
 		}
 	}
 	public void evaluateGame(GameLogic gmlc) {
@@ -62,15 +62,15 @@ public class Round {
 		player1turns = gmlc.getTurnCountRed();
 		player2turns = gmlc.getTurnCountWhite();
 		setTimes();
-		FileUtilities.createTimesFile(moveTimeMin,moveTimeMax, moveTimeAvg, moveTimeOverall, player1.getName(), player2.getName(), manager.path.getAbsolutePath());
-		player1.saveInformation(manager.path.getAbsolutePath());
-		player2.saveInformation(manager.path.getAbsolutePath());
+		FileUtilities.createTimesFile(moveTimeMin,moveTimeMax, moveTimeAvg, moveTimeOverall, player1.getName(), player2.getName(), roundsPath.getAbsolutePath());
+		player1.saveInformation(roundsPath.getAbsolutePath());
+		player2.saveInformation(roundsPath.getAbsolutePath());
 	}
 	public void setTimes(){
 		float minTime = +Float.MAX_VALUE;
 		float maxTime = -Float.MIN_VALUE;
 		for(moveTimePlayer1.toFirst() ; moveTimePlayer1.hasAccess(); moveTimePlayer1.next()) {
-			int tmp = moveTimePlayer1.get();
+			long tmp = moveTimePlayer1.get();
 			if(minTime > tmp) {
 				minTime = tmp;
 			}
@@ -86,7 +86,7 @@ public class Round {
 		minTime = +Float.MAX_VALUE;
 		maxTime = -Float.MIN_VALUE;
 		for(moveTimePlayer2.toFirst() ; moveTimePlayer2.hasAccess(); moveTimePlayer2.next()) {
-			int tmp = moveTimePlayer2.get();
+			long tmp = moveTimePlayer2.get();
 			if(minTime > tmp) {
 				minTime = tmp;
 			}

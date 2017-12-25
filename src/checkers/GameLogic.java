@@ -173,10 +173,10 @@ public class GameLogic {
 		//time save
 		if(recordGameIsEnabled) {
 			if(inTurn == FigureColor.RED) {
-				evaluationManager.getRound(currentRound).setMoveTime((int)(System.currentTimeMillis()-timeBeforeMove),playerRed);
+				evaluationManager.getRound(currentRound).setMoveTime((System.currentTimeMillis()-timeBeforeMove),playerRed);
 			}
 			else {
-				evaluationManager.getRound(currentRound).setMoveTime((int)(date.getTime()-timeBeforeMove),playerWhite);
+				evaluationManager.getRound(currentRound).setMoveTime((System.currentTimeMillis()-timeBeforeMove),playerWhite);
 			}
 		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
@@ -190,7 +190,7 @@ public class GameLogic {
 				}
 				else {
 					redFailedOnce = true;
-					timeBeforeMove = date.getTime();
+					timeBeforeMove = System.currentTimeMillis();
 					playerRed.requestMove();
 					
 				}
@@ -202,7 +202,7 @@ public class GameLogic {
 				}
 				else {
 					whiteFailedOnce = true;
-					timeBeforeMove = date.getTime();
+					timeBeforeMove = System.currentTimeMillis();
 					playerWhite.requestMove();
 				}
 			}
