@@ -7,6 +7,7 @@ import java.io.IOException;
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.GameLogic.Situations;
+import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
 import generic.List;
@@ -17,6 +18,9 @@ public class Round {
 	
 	private Player player1;
 	private Player player2;
+	private Player startedFirst;
+	private Player winner;
+	private Player looser;
 	
 	private double[] moveTimeAvg = new double[2];
 	private double[] moveTimeMin = new double[2];
@@ -25,7 +29,6 @@ public class Round {
 	private int round;
 	private int player1turns;
 	private int player2turns;
-	private FigureColor inTurn;
 	private Situations endSituation;
 	private boolean failed;
 	List<Long> moveTimePlayer1 = new List<Long>();
@@ -33,7 +36,13 @@ public class Round {
 	private String roundsPathString;
 	private File roundsPath;
 	private Playfield field;
+
+	private int figureCounterPlayer1;
+
+	private int figureCounterPlayer2;
 	
+	private int player1Moves[];
+	private int player2Moves[];
 	
 	public Round(int currentRound, File path, Player player1, Player player2, Playfield field, EvaluationManager manager) {
 		this.field = field;
@@ -42,7 +51,13 @@ public class Round {
 		this.manager = manager;
 		player1turns = 0;
 		player2turns = 0;
+		winner = null;
+		looser = null;
 		round = currentRound;
+		
+		player1Moves = new int[3];
+		player2Moves = new int[3];
+		
 		roundsPath = new File(path.getAbsolutePath() + "/Round " + (round+1));
 		roundsPath.mkdirs();
 	}
@@ -54,11 +69,91 @@ public class Round {
 			moveTimePlayer2.append(l);
 		}
 	}
+	public void addToMoves(MoveType moveType, FigureColor inTurn, GameLogic gmlc) {
+		if(inTurn == FigureColor.RED) {						
+				if(player1 == gmlc.getPlayerRed()) {
+					switch(moveType) {
+					case STEP:
+						player1Moves[0]++;
+						break;		
+					case JUMP:
+						player1Moves[1]++;
+						break;
+					case MULTIJUMP:
+						player1Moves[2]++;
+						break;					
+					}
+				}
+				else {
+					switch(moveType) {
+					case STEP:
+						player2Moves[0]++;
+						break;		
+					case JUMP:
+						player2Moves[1]++;
+						break;
+					case MULTIJUMP:
+						player2Moves[2]++;
+						break;					
+					}
+				}
+		}
+		else {
+			if(player1 == gmlc.getPlayerWhite()) {
+				switch(moveType) {
+				case STEP:
+					player1Moves[0]++;
+					break;		
+				case JUMP:
+					player1Moves[1]++;
+					break;
+				case MULTIJUMP:
+					player1Moves[2]++;
+					break;					
+				}
+			}
+			else {
+				switch(moveType) {
+				case STEP:
+					player2Moves[0]++;
+					break;		
+				case JUMP:
+					player2Moves[1]++;
+					break;
+				case MULTIJUMP:
+					player2Moves[2]++;
+					break;					
+				}
+			}
+		}
+		
+	}
 	public void evaluateGame(GameLogic gmlc) {
 		endSituation = gmlc.getFinalSituation();
+		if(endSituation == Situations.REDWIN) {
+			winner = gmlc.getPlayerRed();
+			looser = gmlc.getPlayerWhite();
+		}
+		if(endSituation == Situations.WHITEWIN) {
+			winner = gmlc.getPlayerRed();
+			looser = gmlc.getPlayerWhite();
+		}
+		startedFirst = gmlc.getPlayerRed();
 		failed = gmlc.getFailed();
+		
+		if(player1 == gmlc.getPlayerRed()) {
+			figureCounterPlayer1 = gmlc.getPlayfield().getFigureQuantity(FigureColor.RED);
+			figureCounterPlayer2 = gmlc.getPlayfield().getFigureQuantity(FigureColor.WHITE);
+		}
+		if(player1 == gmlc.getPlayerWhite()) {
+			figureCounterPlayer1 = gmlc.getPlayfield().getFigureQuantity(FigureColor.WHITE);
+			figureCounterPlayer2 = gmlc.getPlayfield().getFigureQuantity(FigureColor.RED);
+		}
 		player1turns = gmlc.getTurnCountRed();
 		player2turns = gmlc.getTurnCountWhite();
+		
+		
+		FileUtilities.createInformationFile(player1.getName(), player2.getName(),startedFirst.getName(), winner , looser, (player1turns + player2turns), figureCounterPlayer1, figureCounterPlayer2, player1Moves, player2Moves , roundsPath.getAbsolutePath());		
 		setTimes();
 		FileUtilities.createTimesFile(moveTimeMin,moveTimeMax, moveTimeAvg, moveTimeOverall, player1.getName(), player2.getName(), roundsPath.getAbsolutePath());
 		player1.saveInformation(roundsPath.getAbsolutePath());
@@ -126,10 +221,12 @@ public class Round {
 	public int getPlayer2turns() {
 		return player2turns;
 	}
-	public FigureColor getInturn() {
-		return inTurn;
-	}
+
 	public Situations getEndSitation() {
 		return endSituation;
+	}
+	public boolean failed() {
+		return failed;
+		
 	}
 }

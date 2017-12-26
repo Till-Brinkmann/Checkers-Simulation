@@ -175,8 +175,9 @@ public class GameLogic {
 	public void makeMove(Move m){
 		//time save
 		if(evaluationManager != null) {
+			evaluationManager.getRound(currentRound).addToMoves(m.getMoveType(), inTurn, this);
 			if(inTurn == FigureColor.RED) {
-				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);
+				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);				
 			}
 			else {
 				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerWhite);
@@ -699,15 +700,35 @@ public class GameLogic {
 	public boolean getInProgress() {
 		return gameInProgress;	
 	}
+	/**
+	 * Sets an evaluation manager with is responsible for recording a run. It is only set if reocord game is enabled.
+	 * <p>
+	 * @param manager    An object from the class EvaluationManager
+	 */
 	public void setManager(EvaluationManager manager) {
 		evaluationManager = manager;
 	}
+	/**
+	 * Returns the player which is a has the red pieces in the running game.
+	 * <p>
+	 * @return  An Object with the player interface. 
+	 */
 	public Player getPlayerRed() {
 		return playerRed;
 	}
+	/**
+	 * Returns the player which is a has the white pieces in the running game.
+	 * <p>
+	 * @return  An Object with the player interface. 
+	 */
 	public Player getPlayerWhite() {
 		return playerWhite;
 	}
+	/**
+	 * This method returns the color of the figure which is in turn at the moment. 
+	 * <p>
+	 * @return  A variable from the enumeration FigureColor.
+	 */
 	public FigureColor getInTurn() {
 		return inTurn;
 	}
