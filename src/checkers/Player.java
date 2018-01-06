@@ -1,19 +1,15 @@
 package checkers;
 
-import checkers.Figure.FigureColor;
-
-/**
- * this provides an interface to attach everything as a player
- * (e.g.: NNs, AIs, Humans).
- *
- * @author Till
- *
- */
 public interface Player {
-
-	public void prepare(FigureColor color);
-	public void requestMove();
-	public String getName();
-	public boolean acceptDraw();
-
+	/**
+	 * Called on game start to pass the playfield and a figure color to play with.
+	 * @param color The figure color to play as.
+	 * @param field The playfield the game is played on.
+	 */
+	public void prepare(boolean color, NNPlayfield field);
+	/**
+	 * Used to request a move from the player when it is in turn.
+	 * @return Returns the move the player wants to make.
+	 */
+	public NNMove requestMove();
 }
