@@ -1,15 +1,19 @@
 package nn;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
-import gui.Console;
 import checkers.GameLogic;
 import checkers.Move;
-import checkers.Move.MoveDirection;
-import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
 import generic.List;
+import gui.Console;
+import utilities.FileUtilities;
 
 public class NNPlayer implements Player {
 	/*
@@ -177,7 +181,32 @@ public class NNPlayer implements Player {
 		// TODO Auto-generated method stub
 		return "standard NN";
 	}
+	@Override
+	public void saveInformation(String directory) {
+		File file;
+		String fileName = "NNPlayer Information.txt";
+		if(FileUtilities.searchForEqualFiles(directory, fileName)){
+			file = new File(directory + "/" + "(1)" + fileName);
+		}
+		else {
+			file = new File(directory + "/" + fileName) ;
+		}
 
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
 	@Override
 	public boolean acceptDraw() {
 		// TODO Auto-generated method stub
@@ -186,4 +215,5 @@ public class NNPlayer implements Player {
 	public FigureColor getFigureColor() {
 		return aiFigureColor;	
 	}
+
 }

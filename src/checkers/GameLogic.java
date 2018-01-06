@@ -4,10 +4,12 @@ import java.io.IOException;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
-import checkers.Player;
+import evaluation.EvaluationManager;
 import generic.List;
 import gui.GUI;
 import gui.GUI.AISpeed;
+import main.StackExecutor;
+import task.Task;
 
 /**
  * The GameLogic is responsible for the process of one game with the same players. Every game a new GameLogic has to be created.
@@ -15,7 +17,7 @@ import gui.GUI.AISpeed;
  * <p>
  * It also includes the static testing methods, which are responsible for the correct execution of the rules.
  * <p>
- * Moreover, the GameLogic is running on a different thread in order to avoid collision with the PlayfieldPanel.
+ * Moreover, the GameLogic is running on a different thread to avoid putting too much stress on the main Eventqeue.
  * @author Till
  * @author Marco
  */
@@ -24,7 +26,6 @@ public class GameLogic {
 
 	//the default playfield to use
 	private Playfield field;
-	private boolean recordGameIsEnabled;
 	private String gameName;
 	private int turnCounterRed;
 	private int turnCounterWhite;
@@ -44,6 +45,7 @@ public class GameLogic {
 	private boolean twoPlayerMode = false;
 	private FigureColor inTurn;
 	private GUI gui;
+	private StackExecutor moveExecutor;
 	
 	private boolean pause;
 	private boolean displayActivated;
@@ -51,12 +53,13 @@ public class GameLogic {
 	private int currentRound = 0;
 	private int rounds;
 	
+	
+	private long timeBeforeMove;
 	//For NN!
 	private Situations endSituation;
 	private boolean failed;
 	
-	
-	
+	private EvaluationManager evaluationManager;
 	public GameLogic(){
 		this(new Playfield());
 	}
@@ -72,7 +75,7 @@ public class GameLogic {
 		drawCount = 0;
 		currentRound = 0;
 		gameInProgress = false;
-		
+		moveExecutor = new StackExecutor("GameLogic:MoveExecutor");
 	}
 	/**
 	 * This method is essential for running a game and it is therefore called if a game about to begin. Currently this happens in GameSettings and NNTrainingsMangager.
@@ -85,7 +88,9 @@ public class GameLogic {
 	 * @param pDisplayActivated          This boolean defines whether the playfieldPanel displays the game or not
 	 * @param pUseCurrentPf 
 	 */
-	public void startGame( boolean pRecordGameIsEnabled, String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated, boolean useCurrentPf){
+	public void startGame(String pGameName, Player pPlayerRed, Player pPlayerWhite, int pRounds, int pSlowness, boolean pDisplayActivated, boolean useCurrentPf){
+		//reset moveWindow
+		gui.movesWindow.resetTextArea();
 		gameInProgress = true;
 		pause = false;
 		//how many game should be played
@@ -103,20 +108,26 @@ public class GameLogic {
 		slowness = pSlowness;
 		//display
 		displayActivated = pDisplayActivated;
-		
-		recordGameIsEnabled = pRecordGameIsEnabled;
+		if(!displayActivated) {
+			field.setPlayfieldDisplay(null);
+			field.setPlayfieldDisplay(null);
+		}
+		else {
+			field.setPlayfieldDisplay(gui.playfieldpanel);
+		}
 		gameName = pGameName;
+		
+		if(evaluationManager != null) {
+			evaluationManager.setPlayfield(field);
+			evaluationManager.createRound(currentRound);
+		}
 		turnCounterRed = 0;
 		turnCounterWhite = 0;
-		//reset variables
-		//TODO das gilt nicht beim richtigen game
-		redFailedOnce = true;
-		whiteFailedOnce = true;
 
 		//test if an new playfield has to be created
 		if(!useCurrentPf) {
 			try {			
-				field.createStartPosition();
+				field.createStartPosition(field);
 			} catch (IOException e) {
 				gui.console.printWarning(
 					"Gamelogic:startGame",
@@ -141,6 +152,7 @@ public class GameLogic {
 				e.printStackTrace();
 			}
 		}
+		timeBeforeMove = System.nanoTime();
 		playerRed.requestMove();
 	}
 	/**
@@ -154,10 +166,23 @@ public class GameLogic {
 	 * @param m         The Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
 	 */
 	public void makeMove(Move m){
+		//save time
+		if(evaluationManager != null) {
+			if(inTurn == FigureColor.RED) {
+				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);
+			}
+			else {
+				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerWhite);
+			}
+		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
-		if(m == null) gui.console.printError("Move is null!", "GMLC");
-		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
-			gui.console.printWarning("Invalid move!", "Gamelogic");
+		if(m == null || m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
+			if(m == null) {
+				gui.console.printError("Move is null!", "GMLC");
+			}
+			else {
+				gui.console.printWarning("Invalid move!", "Gamelogic");
+			}
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
 					finishGame(Situations.WHITEWIN,true);
@@ -165,7 +190,9 @@ public class GameLogic {
 				}
 				else {
 					redFailedOnce = true;
+					timeBeforeMove = System.nanoTime();
 					playerRed.requestMove();
+					
 				}
 			}
 			else {
@@ -175,11 +202,14 @@ public class GameLogic {
 				}
 				else {
 					whiteFailedOnce = true;
+					timeBeforeMove = System.nanoTime();
 					playerWhite.requestMove();
 				}
 			}
 		}
 		else {//move is valid
+			//update moveWindow
+			gui.movesWindow.addMove(m);
 			//increment turn count
 			incrementTurnCounter();
 			//we need to move before testing the other things
@@ -193,8 +223,8 @@ public class GameLogic {
 			}
 			else {
 				//for game recording
-				if(recordGameIsEnabled) {
-					infosGameRecording();
+				if(evaluationManager != null) {
+					evaluationManager.getRound(currentRound).saveGameSituation(this);
 				}
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 				if(!pause) {
@@ -213,26 +243,42 @@ public class GameLogic {
 	private void moveRequesting() {
 		switch(inTurn){
 			case RED:
-				if(!playerRed.equals(gui.playfieldpanel)) {
-					try {
-						Thread.sleep(slowness);
-					} catch (InterruptedException e) {
-						gui.console.printWarning("");
-						e.printStackTrace();
+				moveExecutor.execute(new Task() {
+
+					@Override
+					public void compute() {
+						if(!playerRed.equals(gui.playfieldpanel)) {
+							try {
+								Thread.sleep(slowness);
+							} catch (InterruptedException e) {
+								gui.console.printWarning("");
+								e.printStackTrace();
+							}
+						}
+						timeBeforeMove = System.nanoTime();
+						playerRed.requestMove();
 					}
-				}
-				playerRed.requestMove();
+					
+				});
 				break;
 			case WHITE:
-				if(!playerRed.equals(gui.playfieldpanel)) {
-					try {
-						Thread.sleep(slowness);
-					} catch (InterruptedException e) {
-						gui.console.printWarning("");
-						e.printStackTrace();
+				moveExecutor.execute(new Task() {
+
+					@Override
+					public void compute() {
+						if(!playerWhite.equals(gui.playfieldpanel)) {
+							try {
+								Thread.sleep(slowness);
+							} catch (InterruptedException e) {
+								gui.console.printWarning("");
+								e.printStackTrace();
+							}
+						}
+						timeBeforeMove = System.nanoTime();
+						playerWhite.requestMove();
 					}
-				}
-				playerWhite.requestMove();
+					
+				});
 				break;
 		}
 	}
@@ -275,8 +321,8 @@ public class GameLogic {
 			requestDraw();
 		}
 		
-		
-		if(field.getMovesWithoutJumps() == 60) {
+		if(field.getMovesWithoutJumps() == 100) {
+			gui.console.printWarning("To many moves without a jump. Forcing draw.", "GameLogic");
 			return Situations.DRAW;
 		}
 		return Situations.NOTHING;
@@ -296,7 +342,6 @@ public class GameLogic {
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Draw!");
 			drawCount++;	
-			currentRound++;
 			break;
 
 		case REDWIN:
@@ -307,7 +352,6 @@ public class GameLogic {
 			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
 			winCountRed++;
-			currentRound++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
@@ -316,7 +360,6 @@ public class GameLogic {
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
 			winCountWhite++;
-			currentRound++;
 			break;
 		case STOP:
 			gui.console.printInfo("GameLogic", "Game was stopped");
@@ -324,21 +367,20 @@ public class GameLogic {
 		case NOTHING:
 			return;
 		}		
+		if(evaluationManager != null) {
+			evaluationManager.getRound(currentRound).evaluateGame(this);
+		}
+		currentRound++;
 		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
-//			try {
-//				field.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"));
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+			//TODO warum eigentlich ?
 			gui.playfieldpanel.updateDisplay();
 			
 			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
 			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
 			gui.console.printInfo("GameLogic", "Draw: " + drawCount + " times.");
 			
-			//reseting variables
+			//reset variables
 			gameInProgress = false;
 			winCountWhite = 0;
 			winCountRed = 0;
@@ -347,15 +389,17 @@ public class GameLogic {
 			gui.setEnableResume(false);
 			gui.setEnablePause(false);
 			gui.setEnableStop(false);
-			// TODO maybe statistic for ki playing against each other and creating a file with all information
+			gui.setDisplayEnabled(true);
+			gui.setEnableDisplayEnabled(false);
+			if(evaluationManager != null) evaluationManager.runEvaluation();
 		}
 		else {
 			try {
-				field.createStartPosition();
+				field.createStartPosition(field);
 				new Thread(){
 					public void run(){
 						try {
-							startGame(recordGameIsEnabled, gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
+							startGame(gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
 						} catch (IllegalArgumentException | SecurityException e) {
 							gui.console.printWarning("GameLogic", "failed to load the ai");
 							e.printStackTrace();
@@ -376,18 +420,6 @@ public class GameLogic {
 	 */
 	public boolean getTwoPlayerMode(){
 		return twoPlayerMode;
-	}
-	/**
-	 * This method is called after every the run turn and trasferred all information to the playfield which creates a .pfs file with all
-	 * information.
-	 */
-	private void infosGameRecording() {
-		try {
-			field.saveGameSituation(gameName, inTurn, (turnCounterRed + turnCounterWhite), playerRed.getName(), playerWhite.getName());
-		} catch (IOException e) {
-			gui.console.printWarning("GameLogic","playfield could not be saved. IOException: " + e);
-			e.printStackTrace();
-		}
 	}
 	/**
 	 * Tests if a figure reached the other side of the playfield. If this is the case, then a method in Playfield is called that changes
@@ -550,34 +582,6 @@ public class GameLogic {
 		return testMove(move, field);
 	}
 	/**
-	 * This method tests, if there are multijumps among all possible jumps for a certain playfield available and then separates them into a new List.
-	 * <p>
-	 * @param x                 an integer variable which is representing a point on the vertical axis of the playfield.
-	 * @param y	 	            an integer variable which is representing a point on the horizontal axis of the playfield.	
-	 * @param field             Field is an Object which represents the playfield.
-	 * @return List or null     This new List contains only all the possible multijumps on a specific playfield situation for only one player. 
-	 */
-	public static List<Move> testForMultiJump(int x, int y, Playfield field) {
-		List<Move> list = Move.getPossibleJumps(field.field[x][y], field);
-		if(list.length != 0) {
-			return list;
-		}
-		else
-		{
-		return null;
-		}
-	}
-	/**
-	 * This method is the not static version of testFoMultijump. It uses the current global playfield in the Gamelogic. 
-	 * <p>
-	 * @param x                 an integer variable which is representing a point on the vertical axis of the playfield.
-	 * @param y	 	            an integer variable which is representing a point on the horizontal axis of the playfield.	
-	 * @return List or null     This new List contains only all the possible multijumps on a specific playfield situation for only one player. 
-	 */
-	public List<Move> testForMultiJump(int x, int y){
-		return testForMultiJump(x,y, field);
-	}
-	/**
 	 * It only return the current global playfield.
 	 * 
 	 * @return field
@@ -586,18 +590,18 @@ public class GameLogic {
 		return field;
 	}
 	/**
-	 * The GameLogic needs the current grafical interface in order to output something on the console. Here the parameter is set as the
+	 * The GameLogic needs the current graphical interface in order to output something on the console. Here the parameter is set as the
 	 * current gui. 
 	 * <p>
-	 * @param gui      the graphical interface which is responsible for creating the window and displaing the right playfield and console
+	 * @param gui The graphical interface which is responsible for creating the window and displaying the right playfield and console
 	 */
 	public void linkGUI(GUI gui) {
 		this.gui = gui;
 	}
 	/**
-	 * This method set the time of the pauses between the moves in miliseconds.
+	 * This method sets the time of the pauses between the moves in miliseconds.
 	 * <p>
-	 * @param pSlowness      an Integar which saves the time between the individual moves.
+	 * @param pSlowness An Integer which saves the time between the individual moves.
 	 */
 	public void setSlowness(int pSlowness) {
 		slowness = pSlowness;
@@ -609,18 +613,14 @@ public class GameLogic {
 	 * If the game is already paused the method moveRequesting is called. It has to be called in a new thread, because therefore the gui 
 	 * can be used independetly.
 	 * <p>
-	 * @param b       the boolean variable is true if the game will be paused. If the game is already pause, it is false.
+	 * @param b The boolean variable is true if the game will be paused. If the game is already pause, it is false.
 	 */
 	public void setPause(boolean b) {
 		pause = b;
 		gameInProgress = false;
 		if(!pause) {	
-			new Thread(){
-				public void run(){
-					gameInProgress = true;
-					moveRequesting();
-				}
-			}.start();
+			gameInProgress = true;
+			moveRequesting();
 		}
 	}
 	/**
@@ -675,7 +675,18 @@ public class GameLogic {
 	 * @return  boolean   True if the game is running. False if is paused or stopped.
 	 */
 	public boolean getInProgress() {
-		return gameInProgress;
-		
+		return gameInProgress;	
+	}
+	public void setManager(EvaluationManager manager) {
+		evaluationManager = manager;
+	}
+	public Player getPlayerRed() {
+		return playerRed;
+	}
+	public Player getPlayerWhite() {
+		return playerWhite;
+	}
+	public FigureColor getInTurn() {
+		return inTurn;
 	}
 }

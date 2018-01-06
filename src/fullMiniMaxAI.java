@@ -2,7 +2,12 @@ import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import generic.List;
 import gui.Console;
+import utilities.FileUtilities;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import checkers.GameLogic;
 import checkers.Move;
@@ -140,6 +145,32 @@ public class fullMiniMaxAI implements Player {
 	public boolean acceptDraw() {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	@Override
+	public void saveInformation(String directory) {
+		File file;
+		String fileName = "NNPlayer Information.txt";
+		if(FileUtilities.searchForEqualFiles(directory, fileName)){
+			file = new File(directory + "/" + "(1)" + fileName);
+		}
+		else {
+			file = new File(directory + "/" + fileName) ;
+		}
+
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 	private FigureColor reverseFigureColor(FigureColor fc) {
 		if(fc == FigureColor.RED) {

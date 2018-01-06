@@ -71,7 +71,7 @@ public class NNTrainingManager {
 		//just a playfield with the startposition to make copies for all games
 		thePlayfield = new Playfield();
 		try{
-			thePlayfield.createStartPosition();
+			thePlayfield.createStartPosition(thePlayfield);
 		}
 		catch(IOException e){
 			console.printWarning("Unable to load THE Playfield", "NNMan");
@@ -122,7 +122,7 @@ public class NNTrainingManager {
             	}
             }
             Arrays.parallelSort(nnPlayer, nNPlayerComparator);
-        	//refill poulation(because it is a "new" NN now) 
+        	//refill poulation(because it is a "new" NN now)
         	for(int i = nnSurviver; i < nnQuantity; i++){
         		nnPlayer[i].net.randomWeights();
         		nnPlayer[i].net.changeAllPercent(changePercentage);
@@ -145,7 +145,7 @@ public class NNTrainingManager {
     	nnPlayer[net1].setGL(gl);
     	nnPlayer[net2].setGL(gl);
     	//net2 plays as red (and starts)
-    	gl.startGame(false, "Training", nnPlayer[net2], nnPlayer[net1], 1, 0, false, false);
+    	gl.startGame("Training", nnPlayer[net2], nnPlayer[net1], 1, 0, false, false);
     	evaluateFitness(nnPlayer[net2], nnPlayer[net1], gl);
     }
     public void change(){

@@ -18,10 +18,6 @@ public class Figure {
 	private FigureColor color;
 	private FigureType type;
 	public int x,y;
-	
-	public Figure(){
-		
-	}
 	/**
 	 * In order to initialize a Figure object, the following parameters are needed:
 	 * <p>

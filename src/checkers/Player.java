@@ -1,5 +1,7 @@
 package checkers;
 
+import java.io.File;
+
 import checkers.Figure.FigureColor;
 
 /**
@@ -15,5 +17,5 @@ public interface Player {
 	public void requestMove();
 	public String getName();
 	public boolean acceptDraw();
-
+	public void saveInformation(String directory);
 }

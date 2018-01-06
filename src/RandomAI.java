@@ -1,4 +1,8 @@
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Random;
 
 import checkers.Figure.FigureColor;
@@ -7,6 +11,7 @@ import checkers.Move;
 import checkers.Player;
 import generic.List;
 import gui.Console;
+import utilities.FileUtilities;
 
 public class RandomAI implements Player {
 	String name;
@@ -47,6 +52,34 @@ public class RandomAI implements Player {
 	@Override
 	public boolean acceptDraw() {
 		return false;
+	}
+	@Override
+	public void saveInformation(String directory) {
+		File file;
+		String fileName = "NNPlayer Information.txt";
+		if(FileUtilities.searchForEqualFiles(directory, fileName)){
+			file = new File(directory + "/" + "(1)" + fileName);
+		}
+		else {
+			file = new File(directory + "/" + fileName) ;
+		}
+
+		try {
+			file.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		PrintWriter writer ;
+		try {
+			writer = new PrintWriter(file);
+			writer.write("No information for this ai");
+			writer.flush();
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	}
 
 }
