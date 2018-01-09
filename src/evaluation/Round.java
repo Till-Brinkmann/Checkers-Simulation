@@ -18,10 +18,10 @@ public class Round {
 	private Player player1;
 	private Player player2;
 	
-	private double[] moveTimeAvg = new double[2];
-	private double[] moveTimeMin = new double[2];
-	private double[] moveTimeMax = new double[2];
-	private double[] moveTimeOverall = new double[2];
+	protected double[] moveTimeAvg = new double[2];
+	protected double[] moveTimeMin = new double[2];
+	protected double[] moveTimeMax = new double[2];
+	protected double[] moveTimeOverall = new double[2];
 	private int round;
 	private int player1turns;
 	private int player2turns;

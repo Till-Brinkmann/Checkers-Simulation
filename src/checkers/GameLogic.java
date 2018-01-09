@@ -46,6 +46,7 @@ public class GameLogic {
 	private FigureColor inTurn;
 	private GUI gui;
 	private StackExecutor moveExecutor;
+	private Task moveRequestingTask;
 	
 	private boolean pause;
 	private boolean displayActivated;
@@ -76,6 +77,14 @@ public class GameLogic {
 		currentRound = 0;
 		gameInProgress = false;
 		moveExecutor = new StackExecutor("GameLogic:MoveExecutor");
+		moveRequestingTask = new Task() {
+
+			@Override
+			public void compute() {
+				moveRequesting();
+			}
+			
+		};
 	}
 	/**
 	 * This method is essential for running a game and it is therefore called if a game about to begin. Currently this happens in GameSettings and NNTrainingsMangager.
@@ -228,7 +237,7 @@ public class GameLogic {
 				}
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 				if(!pause) {
-					moveRequesting();
+					moveExecutor.execute(moveRequestingTask);
 				}
 			}
 		}
@@ -243,42 +252,28 @@ public class GameLogic {
 	private void moveRequesting() {
 		switch(inTurn){
 			case RED:
-				moveExecutor.execute(new Task() {
-
-					@Override
-					public void compute() {
-						if(!playerRed.equals(gui.playfieldpanel)) {
-							try {
-								Thread.sleep(slowness);
-							} catch (InterruptedException e) {
-								gui.console.printWarning("");
-								e.printStackTrace();
-							}
-						}
-						timeBeforeMove = System.nanoTime();
-						playerRed.requestMove();
+				if(!playerRed.equals(gui.playfieldpanel)) {
+					try {
+						Thread.sleep(slowness);
+					} catch (InterruptedException e) {
+						gui.console.printWarning("");
+						e.printStackTrace();
 					}
-					
-				});
+				}
+				timeBeforeMove = System.nanoTime();
+				playerRed.requestMove();
 				break;
 			case WHITE:
-				moveExecutor.execute(new Task() {
-
-					@Override
-					public void compute() {
-						if(!playerWhite.equals(gui.playfieldpanel)) {
-							try {
-								Thread.sleep(slowness);
-							} catch (InterruptedException e) {
-								gui.console.printWarning("");
-								e.printStackTrace();
-							}
-						}
-						timeBeforeMove = System.nanoTime();
-						playerWhite.requestMove();
+				if(!playerWhite.equals(gui.playfieldpanel)) {
+					try {
+						Thread.sleep(slowness);
+					} catch (InterruptedException e) {
+						gui.console.printWarning("");
+						e.printStackTrace();
 					}
-					
-				});
+				}
+				timeBeforeMove = System.nanoTime();
+				playerWhite.requestMove();
 				break;
 		}
 	}
@@ -298,9 +293,7 @@ public class GameLogic {
 	 * This method checks if both players want to accept a draw by calling the method acceptDraw in both player, which returns a boolean.
 	 */
 	public void requestDraw(){
-		if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
-			finishGame(Situations.DRAW,false);
-		}
+		if(playerRed.acceptDraw() && playerWhite.acceptDraw()) finishGame(Situations.DRAW,false);
 	}
 	/**
 	 * It test if a game has to be finished by certain criterias and then returns the correct situation.
@@ -396,17 +389,19 @@ public class GameLogic {
 		else {
 			try {
 				field.createStartPosition(field);
-				new Thread(){
-					public void run(){
+				moveExecutor.execute(new Task() {
+
+					@Override
+					public void compute() {
 						try {
 							startGame(gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
 						} catch (IllegalArgumentException | SecurityException e) {
-							gui.console.printWarning("GameLogic", "failed to load the ai");
+							gui.console.printWarning("GameLogic", "failed to load the AI");
 							e.printStackTrace();
 						}
 					}
-				}.start();
-				//startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
+					
+				});
 			} catch (IOException e) {
 				gui.console.printWarning("GameLogic","failed to load the pfs file startPositionForSize8");
 				e.printStackTrace();
@@ -620,7 +615,7 @@ public class GameLogic {
 		gameInProgress = false;
 		if(!pause) {	
 			gameInProgress = true;
-			moveRequesting();
+			moveExecutor.execute(moveRequestingTask);
 		}
 	}
 	/**

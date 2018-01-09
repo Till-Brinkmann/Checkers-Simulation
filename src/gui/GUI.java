@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -23,12 +21,10 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-
 import checkers.GameLogic;
-import checkers.Playfield;
 import checkers.GameLogic.Situations;
+import network.NetworkManager;
 import utilities.FileUtilities;
-@SuppressWarnings("serial")
 public class GUI extends JFrame{
 
 	private GameLogic gmlc;
@@ -38,6 +34,7 @@ public class GUI extends JFrame{
 	 */
 	public Moves movesWindow;
 	public AboutCS aboutcsWindow;
+	public NetworkManager networkmanager;
 	public ColorSettings colorsettings;
 	public GameSettings gamesettings;
 	public SoundSettings soundsettings;
@@ -62,14 +59,14 @@ public class GUI extends JFrame{
 	public enum AISpeed{SLOW, MEDIUM, FAST, NOTACTIVE}
 	public AISpeed aiSpeed;
 	public GUI(GameLogic gamelogic){
-		super("Checker Simulation");
+		super("Checker Simulation 2.0");
 
 		gmlc = gamelogic;
 		gmlc.linkGUI(this);
 		initialize();
 		createWindow();
 		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored. Have fun!","GUI");
-		console.printInfo("All avaiable commands can be found under /availableCommands", "GUI");
+		console.printInfo("All available commands can be found under /availableCommands", "GUI");
 		
 	}
 	public GUI(){
@@ -87,6 +84,8 @@ public class GUI extends JFrame{
 	}
 	private void initialize(){	
 		console = new Console();
+		networkmanager = new NetworkManager(this, console);
+		console.setNetworkManager(networkmanager);
 		playfieldpanel = new PlayfieldPanel(gmlc ,console);
 		colorsettings = new ColorSettings(this, Color.BLACK, Color.LIGHT_GRAY);
 		soundsettings = new SoundSettings(this);

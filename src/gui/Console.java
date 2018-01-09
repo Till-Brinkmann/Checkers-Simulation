@@ -11,6 +11,7 @@ import javax.swing.text.DefaultCaret;
 
 import generic.DLList;
 import generic.List;
+import network.NetworkManager;
 
 
 /**
@@ -72,6 +73,7 @@ public class Console{
 	/**
 	 * Constructs a console object with default parameters.
 	 */
+	private NetworkManager networkManager;
 	public Console() {
 		panel = new JPanel();
 		previousCommands = new DLList<String>();
@@ -137,18 +139,24 @@ public class Console{
 				printCommand(input.getText());
 
 				processCommand(in);
-
-    			while(!previousCommands.isEmpty() && previousCommands.hasNext()){
-    				previousCommands.next();
-    			}
-    			if(!input.getText().equals("")){
-        			previousCommands.addBefore(input.getText());
-        			input.setText("");
-    			}
 			}
 			//it's something different
 			else {
-				//there could be things here like a chat system for network multiplayer
+				//for the chat system
+				print(">>>[User]" + input.getText());
+				if(networkManager.isConnected()) {
+					networkManager.sendMessage(in);
+				}
+				else {
+					printInfo("There is no connection available. Please try to connect to someone first.");
+				}		
+			}
+			while(!previousCommands.isEmpty() && previousCommands.hasNext()){
+				previousCommands.next();
+			}
+			if(!input.getText().equals("")){
+    			previousCommands.addBefore(input.getText());
+    			input.setText("");
 			}
 			break;
 		case KeyEvent.VK_UP:
@@ -347,6 +355,10 @@ public class Console{
 			input.setFont(new Font(fontName, Font.ITALIC, fontSize));
 			output.setFont(new Font(fontName, Font.ITALIC, fontSize));
 		}
+	}
+	
+	public void setNetworkManager(NetworkManager manager) {
+		networkManager = manager;
 	}
 
 	public void updateForeground(Color color){
