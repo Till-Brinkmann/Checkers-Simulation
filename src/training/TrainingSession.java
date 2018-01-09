@@ -1,11 +1,14 @@
 package training;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 
 import checkers.NNGame;
 import gui.NNGUI;
+import gui.TrainingPanel;
 import json.JSONObject;
 import nn.NNPlayer;
 import opponent.MiniMaxAB;
@@ -39,6 +42,8 @@ public class TrainingSession {
 	
 	public float changePercentage;
 	
+	public long epoch;
+	
 	public final Comparator<NNPlayer> nnPlayerComparator = new Comparator<NNPlayer>(){			
 		@Override
 		public int compare(NNPlayer n1, NNPlayer n2) {
@@ -46,6 +51,8 @@ public class TrainingSession {
 		}
 		
 	};
+	
+	private MiniMaxAB miniMax;
 	
 	public TrainingSession(String name, TrainingMode mode, NNSpecification nnspecs) {
 		this.name = name;
@@ -65,73 +72,81 @@ public class TrainingSession {
 		waitLock = new Object();
 		started = false;
 	}
+//	public TrainingSession(File saveDir) {
+//		//TODO load from disk
+//	}
 	
 	public void train(){
 		started = true;
 		stopTraining = false;
 		stopped = false;
 		NNGUI.console.printInfo("Starting Training", name);
-		switch(mode){
-		case NORMAL:
-			trainNormal();
-			break;
-		case MINMAX:
-			trainWMiniMax();
-			break;
-		case RULES:
-			break;
-		case STRATEGY:
-			break;
+		//do some setup
+		if(mode == TrainingMode.MINMAX) miniMax = new MiniMaxAB();
+		while(!stopTraining) {
+			switch(mode){
+			case NORMAL:
+				trainNormal();
+				break;
+			case MINMAX:
+				trainWMiniMax();
+				break;
+			case RULES:
+				break;
+			case STRATEGY:
+				break;
+			}
+			epoch++;
+			//in case the program or the computer crashes.
+			if(epoch % 100 == 0) {
+				save();
+			}
 		}
 		stopped = true;
 		synchronized(waitLock) {
+			
 			waitLock.notify();
 		}
 	}
 	
 	private void trainNormal(){
-		while(!stopTraining){
-			//do one epoch
-        	//make sure fitness is reset
-        	resetPlayer();
-			//start with playing all vs all
-			for(NNPlayer p : nnPlayer){
-				for(NNPlayer s : nnPlayer){
-					if(p != s) new NNGame(p, s).start();
-				}
+		//do one epoch
+    	//make sure fitness is reset
+    	resetPlayer();
+		//start with playing all vs all
+		for(NNPlayer p : nnPlayer){
+			for(NNPlayer s : nnPlayer){
+				if(p != s) new NNGame(p, s).start();
 			}
-			sortAndCalculateSum();
-        	for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
-        		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
-        		nnPlayer[i].net.changeAll(changePercentage);
-        	}
-        	//mix it again to give nets that have equal scores a better chance
-        	randomizeArray();
-        	//TODO diesen wert auch editierbar machen
-        	//in der gui updaten
-        	changePercentage /= (1 + nnspecs.learnrate);
 		}
+		sortAndCalculateSum();
+    	for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
+    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
+    		nnPlayer[i].net.changeAll(changePercentage);
+    	}
+    	//mix it again to give nets that have equal scores a better chance
+    	randomizeArray();
+    	//TODO diesen wert auch editierbar machen
+    	//in der gui updaten
+    	changePercentage /= (1 + nnspecs.learnrate);
 	}
 	
 	private void trainWMiniMax() {
-		MiniMaxAB miniMax = new MiniMaxAB();
-		while(!stopTraining) {
-			resetPlayer();
-			for(NNPlayer p : nnPlayer) {
-				//starts first
-				new NNGame(p, miniMax)
-				.start();
-				//and as second
-				new NNGame(miniMax, p)
-				.start();
-			}
-			sortAndCalculateSum();
-			for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
-        		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
-        		nnPlayer[i].net.changeAll(changePercentage);
-        	}
-			changePercentage /= (1 + nnspecs.learnrate);
+		resetPlayer();
+		for(NNPlayer p : nnPlayer) {
+			//starts first
+			new NNGame(p, miniMax)
+			.start();
+			//and as second
+			new NNGame(miniMax, p)
+			.start();
 		}
+		sortAndCalculateSum();
+		for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
+    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
+    		nnPlayer[i].net.changeAll(changePercentage);
+    	}
+		changePercentage /= (1 + nnspecs.learnrate);
 	}
 	//----training helper methods start----
 	private NNPlayer weightedRandomSelection(){
@@ -192,15 +207,15 @@ public class TrainingSession {
 	public void awaitStopping() {
 		if(!isRunning()) return;
 		stopTraining = true;
-		synchronized(waitLock) {
-			while(!stopped) {
-				try {
-					waitLock.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		//synchronized(waitLock) {
+			//while(isRunning()) {
+//				try {
+//					waitLock.wait();
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+			//}
+		//}
 		started = false;
 	}
 	/**
@@ -217,9 +232,32 @@ public class TrainingSession {
 		.put("Name", name)
 		.put("Mode", mode.name())
 		.put("NNSpecs", nnspecs.toJSONObject())
-		.put("Current Changepercentage", changePercentage);
+		.put("Current Changepercentage", changePercentage)
+		.put("Epoch", epoch);
 	}
 	
+	public void save() {
+		FileOutputStream writer;
+		File sessionDir;
+		File nnPlayerDir;
+		sessionDir = new File(TrainingPanel.tsDir.getPath() + "/" + name);
+		try {
+			if(!sessionDir.exists()) sessionDir.mkdirs();
+			writer = new FileOutputStream(new File(sessionDir.getPath() + "/Session.json"));
+			writer.write(toJsonObject().toString(2).getBytes("UTF-8"));
+			writer.close();
+			nnPlayerDir = new File(sessionDir.getPath() + "/NNPlayer");
+			if(!nnPlayerDir.exists()) nnPlayerDir.mkdir();
+			for(int i1 = 0; i1 < nnPlayer.length; i1++) {
+				writer = new FileOutputStream(nnPlayerDir.getPath()+ "/" +  i1 + ".json");
+				writer.write(nnPlayer[i1].net.toJSONObject().toString(2).getBytes("UTF-8"));
+			}
+		} catch (IOException e) {
+			NNGUI.console.printError("IO Error while saving session " + name, "TrainingPanel");
+			e.printStackTrace();
+		}
+		
+	}
 	@Override
 	public String toString(){
 		return name;

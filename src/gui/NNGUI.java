@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.Container;
 import java.awt.DisplayMode;
+import java.awt.EventQueue;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -26,8 +27,17 @@ public class NNGUI extends JFrame{
 			public void windowClosed(WindowEvent arg0) {}
 			@Override
 			public void windowClosing(WindowEvent arg0) {
-				tp.saveAll();
-				System.exit(0);
+				console.printInfo("Saving your data. Please wait a moment.");
+				//need to call invokeLater, otherwise you wont see the message above.
+				EventQueue.invokeLater(new Runnable() {
+
+					@Override
+					public void run() {
+						tp.saveAll();
+						System.exit(0);
+					}
+					
+				});
 			}
 			@Override
 			public void windowDeactivated(WindowEvent arg0) {}
@@ -67,7 +77,7 @@ public class NNGUI extends JFrame{
 		c.anchor = GridBagConstraints.NORTHEAST;
 		c.fill = GridBagConstraints.BOTH;
 		c.gridwidth = 4;
-		cp.add(console, c);
+		cp.add(console.panel, c);
 	}
 	
 	private void resize(){

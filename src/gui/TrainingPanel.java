@@ -21,7 +21,7 @@ import training.TrainingSession.TrainingMode;
 
 public class TrainingPanel extends JPanel {
 
-	//List<TrainingSession> sessions;
+	public static final File tsDir = new File("resources/Trainingsessions");
 	
 	JComboBox<TrainingSession> sessions;
 	//TODO do we really need a noEntry message?
@@ -131,32 +131,10 @@ public class TrainingPanel extends JPanel {
 	}
 	
 	public void saveAll() {
-		File tsDir = new File("resources/Trainingsessions");
-		FileOutputStream writer;
-		File sessionDir;
-		File nnPlayerDir;
-		if(!tsDir.exists()) tsDir.mkdirs();
-		System.out.println(tsDir.getAbsolutePath());
 		//TODO sachen löschen
 		for(int i = 0; i < sessions.getItemCount(); i++) {
-			TrainingSession session = sessions.getItemAt(i);
-			session.awaitStopping();
-			try {
-				sessionDir = new File(tsDir.getPath() + "/" + session.name);
-				if(!sessionDir.exists()) sessionDir.mkdir();
-				writer = new FileOutputStream(new File(sessionDir.getPath() + "/Session.json"));
-				writer.write(session.toJsonObject().toString(2).getBytes("UTF-8"));
-				writer.close();
-				nnPlayerDir = new File(sessionDir.getPath() + "/NNPlayer");
-				if(!nnPlayerDir.exists()) nnPlayerDir.mkdir();
-				for(int i1 = 0; i1 < session.nnPlayer.length; i1++) {
-					writer = new FileOutputStream(nnPlayerDir.getPath()+ "/" +  i1 + ".json");
-					writer.write(session.nnPlayer[i1].net.toJSONObject().toString(2).getBytes("UTF-8"));
-				}
-			} catch (IOException e) {
-				NNGUI.console.printError("IO Error while saving session " + session.name, "TrainingPanel");
-				e.printStackTrace();
-			}
+			sessions.getItemAt(i).awaitStopping();
+			sessions.getItemAt(i).save();;
 		}
 	}
 

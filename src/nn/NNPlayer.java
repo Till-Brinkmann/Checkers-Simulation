@@ -66,24 +66,24 @@ public class NNPlayer implements Player{
 			outputVector = net.run(invertedInputVector);
 		}
 		//add fitness based on how near it is to making a valid move
-//		List<NNMove> possibleMoves = NNMove.getPossibleMovesFor(color, field);
-//		for(byte output = 0; output < 32; output++) {
-//			boolean isValidDestination = false;
-//			boolean isValidFigurePosition = false;
-//			for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next()) {
-//				//if the nn has high values on the positions were moves are valid it gets a higher fitness
-//				//high values for positions that are not valid give higher minus points
-//				if(output == possibleMoves.get().to) {
-//					isValidDestination = true;
-//				}
-//				if(output == possibleMoves.get().from) {
-//					isValidFigurePosition = true;
-//				}
-//				if(isValidDestination && isValidFigurePosition) break;
-//			}
-//			fitness += isValidDestination ? outputVector[output] : -outputVector[output];
-//			fitness += isValidFigurePosition ? outputVector[output+32] : -outputVector[output+32];
-//		}
+		List<NNMove> possibleMoves = NNMove.getPossibleMovesFor(color, field);
+		for(byte output = 0; output < 32; output++) {
+			boolean isValidDestination = false;
+			boolean isValidFigurePosition = false;
+			for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next()) {
+				//if the nn has high values on the positions were moves are valid it gets a higher fitness
+				//high values for positions that are not valid give higher minus points
+				if(output == possibleMoves.get().to) {
+					isValidDestination = true;
+				}
+				if(output == possibleMoves.get().from) {
+					isValidFigurePosition = true;
+				}
+				if(isValidDestination && isValidFigurePosition) break;
+			}
+			fitness += isValidDestination ? outputVector[output] : -outputVector[output];
+			fitness += isValidFigurePosition ? outputVector[output+32] : -outputVector[output+32];
+		}
 		
 		NNMove bestMove = NNMove.INVALID;
 		NNMove move = NNMove.INVALID;
