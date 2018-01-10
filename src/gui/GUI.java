@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -23,14 +21,16 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-
 import checkers.GameLogic;
-import checkers.Playfield;
 import checkers.GameLogic.Situations;
+import network.NetworkManager;
 import utilities.FileUtilities;
-@SuppressWarnings("serial")
 public class GUI extends JFrame{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private GameLogic gmlc;
 	/*
 	 * settings that are outsourced to different frames
@@ -38,6 +38,7 @@ public class GUI extends JFrame{
 	 */
 	public Moves movesWindow;
 	public AboutCS aboutcsWindow;
+	public NetworkManager networkmanager;
 	public ColorSettings colorsettings;
 	public GameSettings gamesettings;
 	public SoundSettings soundsettings;
@@ -62,14 +63,14 @@ public class GUI extends JFrame{
 	public enum AISpeed{SLOW, MEDIUM, FAST, NOTACTIVE}
 	public AISpeed aiSpeed;
 	public GUI(GameLogic gamelogic){
-		super("Checker Simulation");
+		super("Checker Simulation 2.0");
 
 		gmlc = gamelogic;
 		gmlc.linkGUI(this);
 		initialize();
 		createWindow();
 		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored. Have fun!","GUI");
-		console.printInfo("All avaiable commands can be found under /availableCommands", "GUI");
+		console.printInfo("All available commands can be found under /availableCommands", "GUI");
 		
 	}
 	public GUI(){
@@ -92,6 +93,8 @@ public class GUI extends JFrame{
 		soundsettings = new SoundSettings(this);
 		aboutcsWindow = new AboutCS(); 
 		movesWindow = new Moves();
+		networkmanager = new NetworkManager(this,console);
+		console.setNetworkManager(networkmanager);
 	}
 	private void createWindow(){
 		setResizable(true);
@@ -101,7 +104,7 @@ public class GUI extends JFrame{
 
 		setJMenuBar(createMenuBar());
 		add(playfieldpanel);
-		add(console);
+		add(console.panel);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pack();
 		setVisible(true);
@@ -192,6 +195,25 @@ public class GUI extends JFrame{
         help.add(aboutcs);
         help.add(rules);
         menubar.add(help);   
+        
+        JMenu network = new JMenu("Network");
+        network.setBackground(Color.WHITE);
+        JMenuItem changeUserName = new JMenuItem("Change username"); 
+        changeUserName.setBackground(Color.WHITE);
+        JMenuItem createServer = new JMenuItem("Create Server");
+        createServer.setBackground(Color.WHITE);
+        JMenuItem connectToServer = new JMenuItem("Connect to a server");
+        connectToServer.setBackground(Color.WHITE);
+        JMenuItem closeConnection = new JMenuItem("Close connection");
+        closeConnection.setBackground(Color.WHITE);
+        JMenuItem sendGameRequest = new JMenuItem("Send a game request");
+        sendGameRequest.setBackground(Color.WHITE);
+        network.add(changeUserName);
+        network.add(createServer);
+        network.add(connectToServer);
+        network.add(closeConnection);
+        network.add(sendGameRequest);
+        menubar.add(network);
         
         newgame.addActionListener(new ActionListener()
         {
@@ -407,6 +429,44 @@ public class GUI extends JFrame{
                 }
             }
         });
+        changeUserName.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                networkmanager.changeUsername();
+            }
+        });
+        createServer.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.createServer(6000);
+            }
+        });
+        connectToServer.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.createClient("localhost", 6666);
+
+            }
+        });
+        closeConnection.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.closeConnection();
+
+
+            }
+        });
+        sendGameRequest.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.sendGameRequest();
+            }
+        });
         return menubar;
 	}
 
@@ -458,11 +518,10 @@ public class GUI extends JFrame{
 	public void setEnableStop(boolean a) {
 		stop.setEnabled(a);
 	}
-	public void setDisplayEnabled(boolean b) {
-		displayEnabled.setSelected(b);
-		if(b == false) {
+	public void setDisplayEnabled(boolean enabled) {
+		displayEnabled.setSelected(enabled);
+		if(!enabled) {
 			playfieldpanel.clearField();
-
 		}
 	}
 	public void setEnableDisplayEnabled(boolean b) {

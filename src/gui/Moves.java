@@ -1,9 +1,7 @@
 package gui;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.TextArea;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;

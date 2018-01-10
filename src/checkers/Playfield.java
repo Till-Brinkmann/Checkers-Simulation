@@ -102,16 +102,20 @@ public class Playfield {
 		display = d;
 	}
 	/**
-	 * Set the object that is responsible for 
-	 * @param s
+	 * Sets the object that is responsible for establishing a connection to the object that has the the task to playsounds. This object has to have the interface 
+	 * DisplaySounds.
+	 * <p>
+	 * @param A object that is responsible for playing sound with the interface DisplaySounds.
 	 */
 	public void setPlayfieldSound(PlayfieldSound s) {
 		sound = s;
 	}
 	/**
-	 * 
-	 * @param x
-	 * @param y
+	 * In this method one figure on the playfield changes from a normal figure to a king fingure by calling the figureType method with the parameter FigureType.KING
+	 * in a certain figure. 
+	 * <p>
+	 * @param x       An integer variable which is representing a point on the vertical axis of the playfield.
+	 * @param y	 	  An integer variable which is representing a point on the horizontal axis of the playfield.	
 	 */
 	public void changeFigureToKing(int x, int y){
 		if(sound != null)sound.playSound("toDameSound.wav");
@@ -119,8 +123,11 @@ public class Playfield {
 		if(display != null) display.updateDisplay();
 	}
 	/**
-	 * 
-	 * @param m
+	 * By calling this method a speficic move will be executed on the playfield. It changes the references on the field array.
+	 * <p>
+	 * The method also tests if the move is valid. If this is not given the method returns without changing the playfield.
+	 * <p>
+	 * @param m A move object that should be executed on the playfield.
 	 */
 	public void executeMove(Move m){
 		//coords array for displaying the move
@@ -231,9 +238,9 @@ public class Playfield {
 		return quantity;
 	}
 	/**
-	 * 
-	 * @param figurecolor
-	 * @param figuretype
+	 * Returns the number of figures on the playfield from one color.
+	 * <p>
+	 * @param color
 	 * @return
 	 */
 	public int getFigureTypeQuantity(FigureColor figurecolor, FigureType figuretype) {

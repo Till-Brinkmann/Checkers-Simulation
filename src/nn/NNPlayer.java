@@ -7,15 +7,13 @@ import java.io.PrintWriter;
 import checkers.Figure;
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
-import gui.Console;
-import utilities.FileUtilities;
 import checkers.GameLogic;
 import checkers.Move;
-import checkers.Move.MoveDirection;
-import checkers.Move.MoveType;
 import checkers.Player;
 import checkers.Playfield;
 import generic.List;
+import gui.Console;
+import utilities.FileUtilities;
 
 public class NNPlayer implements Player {
 	/*

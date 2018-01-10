@@ -1,6 +1,8 @@
 package evaluation;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import checkers.Player;
 import checkers.Playfield;
@@ -33,7 +35,35 @@ public class EvaluationManager {
 		return round[currentRound];
 	}
 	public void runEvaluation() {
-		//TODO
+		File total = new File(pathString + "/Total Time.txt");
+		try {
+			FileWriter writer = new FileWriter(total);
+			double min = 0;
+			double max = 0;
+			double avg = 0;
+			double overall = 0;
+			for(Round r : round) {
+				if(r == null) continue;
+				min += r.moveTimeMin[0] + r.moveTimeMin[1];
+				max += r.moveTimeMax[0] + r.moveTimeMax[1];
+				avg += r.moveTimeAvg[0] + r.moveTimeAvg[1];
+				overall += r.moveTimeOverall[0] + r.moveTimeOverall[1];
+			}
+			int divisor = round.length*2;
+			min /= divisor;
+			max /= divisor;
+			avg /= divisor;
+			overall /= divisor;
+			
+			writer.write("Min: " + min + "\n");
+			writer.write("Max: " + max + "\n");
+			writer.write("Avg: " + avg + "\n");
+			writer.write("Overall: " + overall + "\n");
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	public void setPlayfield(Playfield field) {
 		this.field = field;

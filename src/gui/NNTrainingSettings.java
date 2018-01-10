@@ -2,12 +2,10 @@ package gui;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -18,11 +16,14 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
-import javax.swing.filechooser.FileFilter;
 
 import nn.NNTrainingManager;
 
 public class NNTrainingSettings extends JFrame{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/**
 	 * 
 	 */
@@ -41,7 +42,6 @@ public class NNTrainingSettings extends JFrame{
 	private JSpinner weightsmax;
 	private JCheckBox continueTraining;
 	
-	private NNTrainingManager manager;
 	private GUI gui;
 	private Console console;
 	public NNTrainingSettings(GUI pGui, Console console) {
@@ -124,7 +124,8 @@ public class NNTrainingSettings extends JFrame{
             {
             	new Thread(new Runnable(){
             		public void run(){
-            			manager = new NNTrainingManager(continueT, gui, (int)epochsS.getValue(), (int)quantityS.getValue(), Math.min((int)surviver.getValue(),
+            			@SuppressWarnings("unused")
+						NNTrainingManager manager = new NNTrainingManager(continueT, gui, (int)epochsS.getValue(), (int)quantityS.getValue(), Math.min((int)surviver.getValue(),
             					(int)quantityS.getValue()), (int)inputNeurons.getValue(), (int)outputNeurons.getValue(), (int)hiddenNeurons.getValue(), 
             					(int)hiddenLayer.getValue(), Double.parseDouble(sigmin.getValue().toString()), Double.parseDouble(sigmax.getValue().toString()), 
             					 Double.parseDouble(weightsmin.getValue().toString()), Double.parseDouble(weightsmax.getValue().toString()));

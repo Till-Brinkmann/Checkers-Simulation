@@ -122,7 +122,7 @@ public class NNTrainingManager {
             	}
             }
             Arrays.parallelSort(nnPlayer, nNPlayerComparator);
-        	//refill poulation(because it is a "new" NN now) 
+        	//refill poulation(because it is a "new" NN now)
         	for(int i = nnSurviver; i < nnQuantity; i++){
         		nnPlayer[i].net.randomWeights();
         		nnPlayer[i].net.changeAllPercent(changePercentage);

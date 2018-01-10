@@ -1,18 +1,15 @@
 package checkers;
-import java.awt.Dimension;
 import java.io.IOException;
-import java.util.Date;
-
-import javax.swing.JScrollPane;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
-import checkers.Player;
 import evaluation.EvaluationManager;
-import generic.List;
 import gui.GUI;
 import gui.GUI.AISpeed;
+import main.StackExecutor;
+import network.NetworkPlayer;
+import task.Task;
 
 /**
  * The GameLogic is responsible for the process of one game with the same players. Every game a new GameLogic has to be created.
@@ -20,7 +17,7 @@ import gui.GUI.AISpeed;
  * <p>
  * It also includes the static testing methods, which are responsible for the correct execution of the rules.
  * <p>
- * Moreover, the GameLogic is running on a different thread in order to avoid collision with the PlayfieldPanel.
+ * Moreover, the GameLogic is running on a different thread to avoid putting too much stress on the main Eventqeue.
  * @author Till
  * @author Marco
  */
@@ -48,6 +45,8 @@ public class GameLogic {
 	private boolean twoPlayerMode = false;
 	private FigureColor inTurn;
 	private GUI gui;
+	private StackExecutor moveExecutor;
+	private Task moveRequestingTask;
 	
 	private boolean pause;
 	private boolean displayActivated;
@@ -62,7 +61,6 @@ public class GameLogic {
 	private boolean failed;
 	
 	private EvaluationManager evaluationManager;
-	private Date date;
 	public GameLogic(){
 		this(new Playfield());
 	}
@@ -78,7 +76,15 @@ public class GameLogic {
 		drawCount = 0;
 		currentRound = 0;
 		gameInProgress = false;
-		date = new Date();
+		moveExecutor = new StackExecutor("GameLogic:MoveExecutor");
+		moveRequestingTask = new Task() {
+
+			@Override
+			public void compute() {
+				moveRequesting();
+			}
+			
+		};
 	}
 	/**
 	 * This method is essential for running a game and it is therefore called if a game about to begin. Currently this happens in GameSettings and NNTrainingsMangager.
@@ -126,10 +132,6 @@ public class GameLogic {
 		}
 		turnCounterRed = 0;
 		turnCounterWhite = 0;
-		//reset variables
-		//TODO das gilt nicht beim richtigen game
-		redFailedOnce = true;
-		whiteFailedOnce = true;
 
 		//test if an new playfield has to be created
 		if(!useCurrentPf) {
@@ -173,20 +175,23 @@ public class GameLogic {
 	 * @param m         The Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
 	 */
 	public void makeMove(Move m){
-		//time save
+		//save time
 		if(evaluationManager != null) {
-			evaluationManager.getRound(currentRound).addToMoves(m.getMoveType(), inTurn, this);
 			if(inTurn == FigureColor.RED) {
-				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);				
+				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);
 			}
 			else {
 				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerWhite);
 			}
 		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
-		if(m == null) gui.console.printError("Move is null!", "GMLC");
-		if(m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
-			gui.console.printWarning("Invalid move!", "Gamelogic");
+		if(m == null || m.getMoveType() == MoveType.INVALID || field.field[m.getX()][m.getY()].getFigureColor() != inTurn || !testMove(m)){
+			if(m == null) {
+				gui.console.printError("Move is null!", "GMLC");
+			}
+			else {
+				gui.console.printWarning("Invalid move!", "Gamelogic");
+			}
 			if(inTurn == FigureColor.RED){
 				if(redFailedOnce){
 					finishGame(Situations.WHITEWIN,true);
@@ -232,7 +237,13 @@ public class GameLogic {
 				}
 				inTurn = (inTurn == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 				if(!pause) {
-					moveRequesting();
+					moveExecutor.execute(moveRequestingTask);
+				}
+				//if there is a online game then send the move to the other player
+				if(gui.networkmanager.runningOnlineGame) {
+					if(inTurn == FigureColor.RED && playerRed.getClass().equals(NetworkPlayer.class) || inTurn == FigureColor.WHITE && playerWhite.getClass().equals(NetworkPlayer.class) ) {
+						gui.networkmanager.sendMove(m);
+					}
 				}
 			}
 		}
@@ -259,7 +270,7 @@ public class GameLogic {
 				playerRed.requestMove();
 				break;
 			case WHITE:
-				if(!playerRed.equals(gui.playfieldpanel)) {
+				if(!playerWhite.equals(gui.playfieldpanel)) {
 					try {
 						Thread.sleep(slowness);
 					} catch (InterruptedException e) {
@@ -288,9 +299,7 @@ public class GameLogic {
 	 * This method checks if both players want to accept a draw by calling the method acceptDraw in both player, which returns a boolean.
 	 */
 	public void requestDraw(){
-		if(playerRed.acceptDraw() && playerWhite.acceptDraw()){
-			finishGame(Situations.DRAW,false);
-		}
+		if(playerRed.acceptDraw() && playerWhite.acceptDraw()) finishGame(Situations.DRAW,false);
 	}
 	/**
 	 * It test if a game has to be finished by certain criterias and then returns the correct situation.
@@ -311,8 +320,8 @@ public class GameLogic {
 			requestDraw();
 		}
 		
-		
-		if(field.getMovesWithoutJumps() == 60) {
+		if(field.getMovesWithoutJumps() == 100) {
+			gui.console.printWarning("To many moves without a jump. Forcing draw.", "GameLogic");
 			return Situations.DRAW;
 		}
 		return Situations.NOTHING;
@@ -332,7 +341,6 @@ public class GameLogic {
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Draw!");
 			drawCount++;	
-			currentRound++;
 			break;
 
 		case REDWIN:
@@ -343,7 +351,6 @@ public class GameLogic {
 			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
 			winCountRed++;
-			currentRound++;
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
@@ -352,7 +359,6 @@ public class GameLogic {
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
 			winCountWhite++;
-			currentRound++;
 			break;
 		case STOP:
 			gui.console.printInfo("GameLogic", "Game was stopped");
@@ -361,17 +367,19 @@ public class GameLogic {
 			return;
 		}		
 		if(evaluationManager != null) {
-			evaluationManager.getRound(currentRound-1).evaluateGame(this);
+			evaluationManager.getRound(currentRound).evaluateGame(this);
 		}
+		currentRound++;
 		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
+			//TODO warum eigentlich ?
 			gui.playfieldpanel.updateDisplay();
 			
 			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
 			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
 			gui.console.printInfo("GameLogic", "Draw: " + drawCount + " times.");
 			
-			//reseting variables
+			//reset variables
 			gameInProgress = false;
 			winCountWhite = 0;
 			winCountRed = 0;
@@ -382,22 +390,28 @@ public class GameLogic {
 			gui.setEnableStop(false);
 			gui.setDisplayEnabled(true);
 			gui.setEnableDisplayEnabled(false);
-			if(evaluationManager != null) {	evaluationManager.runEvaluation();}
+			//stop running online game
+			if(gui.networkmanager.runningOnlineGame) {
+				gui.networkmanager.runningOnlineGame = false;
+			}
+			if(evaluationManager != null) evaluationManager.runEvaluation();
 		}
 		else {
 			try {
 				field.createStartPosition(field);
-				new Thread(){
-					public void run(){
+				moveExecutor.execute(new Task() {
+
+					@Override
+					public void compute() {
 						try {
 							startGame(gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
 						} catch (IllegalArgumentException | SecurityException e) {
-							gui.console.printWarning("GameLogic", "failed to load the ai");
+							gui.console.printWarning("GameLogic", "failed to load the AI");
 							e.printStackTrace();
 						}
 					}
-				}.start();
-				//startGame(recordGameIsEnabled, gameName, playerRed, playerWhite, rounds, slowness, displayActivated);
+					
+				});
 			} catch (IOException e) {
 				gui.console.printWarning("GameLogic","failed to load the pfs file startPositionForSize8");
 				e.printStackTrace();
@@ -573,34 +587,6 @@ public class GameLogic {
 		return testMove(move, field);
 	}
 	/**
-	 * This method tests, if there are multijumps among all possible jumps for a certain playfield available and then separates them into a new List.
-	 * <p>
-	 * @param x                 an integer variable which is representing a point on the vertical axis of the playfield.
-	 * @param y	 	            an integer variable which is representing a point on the horizontal axis of the playfield.	
-	 * @param field             Field is an Object which represents the playfield.
-	 * @return List or null     This new List contains only all the possible multijumps on a specific playfield situation for only one player. 
-	 */
-	public static List<Move> testForMultiJump(int x, int y, Playfield field) {
-		List<Move> list = Move.getPossibleJumps(field.field[x][y], field);
-		if(list.length != 0) {
-			return list;
-		}
-		else
-		{
-		return null;
-		}
-	}
-	/**
-	 * This method is the not static version of testFoMultijump. It uses the current global playfield in the Gamelogic. 
-	 * <p>
-	 * @param x                 an integer variable which is representing a point on the vertical axis of the playfield.
-	 * @param y	 	            an integer variable which is representing a point on the horizontal axis of the playfield.	
-	 * @return List or null     This new List contains only all the possible multijumps on a specific playfield situation for only one player. 
-	 */
-	public List<Move> testForMultiJump(int x, int y){
-		return testForMultiJump(x,y, field);
-	}
-	/**
 	 * It only return the current global playfield.
 	 * 
 	 * @return field
@@ -609,18 +595,18 @@ public class GameLogic {
 		return field;
 	}
 	/**
-	 * The GameLogic needs the current grafical interface in order to output something on the console. Here the parameter is set as the
+	 * The GameLogic needs the current graphical interface in order to output something on the console. Here the parameter is set as the
 	 * current gui. 
 	 * <p>
-	 * @param gui      the graphical interface which is responsible for creating the window and displaing the right playfield and console
+	 * @param gui The graphical interface which is responsible for creating the window and displaying the right playfield and console
 	 */
 	public void linkGUI(GUI gui) {
 		this.gui = gui;
 	}
 	/**
-	 * This method set the time of the pauses between the moves in miliseconds.
+	 * This method sets the time of the pauses between the moves in miliseconds.
 	 * <p>
-	 * @param pSlowness      an Integar which saves the time between the individual moves.
+	 * @param pSlowness An Integer which saves the time between the individual moves.
 	 */
 	public void setSlowness(int pSlowness) {
 		slowness = pSlowness;
@@ -632,18 +618,14 @@ public class GameLogic {
 	 * If the game is already paused the method moveRequesting is called. It has to be called in a new thread, because therefore the gui 
 	 * can be used independetly.
 	 * <p>
-	 * @param b       the boolean variable is true if the game will be paused. If the game is already pause, it is false.
+	 * @param b The boolean variable is true if the game will be paused. If the game is already pause, it is false.
 	 */
 	public void setPause(boolean b) {
 		pause = b;
 		gameInProgress = false;
 		if(!pause) {	
-			new Thread(){
-				public void run(){
-					gameInProgress = true;
-					moveRequesting();
-				}
-			}.start();
+			gameInProgress = true;
+			moveExecutor.execute(moveRequestingTask);
 		}
 	}
 	/**
@@ -700,35 +682,15 @@ public class GameLogic {
 	public boolean getInProgress() {
 		return gameInProgress;	
 	}
-	/**
-	 * Sets an evaluation manager with is responsible for recording a run. It is only set if reocord game is enabled.
-	 * <p>
-	 * @param manager    An object from the class EvaluationManager
-	 */
 	public void setManager(EvaluationManager manager) {
 		evaluationManager = manager;
 	}
-	/**
-	 * Returns the player which is a has the red pieces in the running game.
-	 * <p>
-	 * @return  An Object with the player interface. 
-	 */
 	public Player getPlayerRed() {
 		return playerRed;
 	}
-	/**
-	 * Returns the player which is a has the white pieces in the running game.
-	 * <p>
-	 * @return  An Object with the player interface. 
-	 */
 	public Player getPlayerWhite() {
 		return playerWhite;
 	}
-	/**
-	 * This method returns the color of the figure which is in turn at the moment. 
-	 * <p>
-	 * @return  A variable from the enumeration FigureColor.
-	 */
 	public FigureColor getInTurn() {
 		return inTurn;
 	}

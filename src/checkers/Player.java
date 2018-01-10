@@ -17,24 +17,28 @@ public interface Player {
 	 */
 	public void prepare(FigureColor color);
 	/**
-	 * 
+	 * This method is called by the gamelogic and should be the method in which the player is calculating his move. It is required that this method calls makeMove
+	 * in gamelogic with the parameter of the move that the player wants to make.
 	 */
 	public void requestMove();
-	/*
-	 * 
+
+	/**
+	 * Returns the name of the player.
+	 * <p>
+	 * @return  A string of characters that represent the name of the player  
 	 */
 	public String getName();
 	/**
-	 * 
-	 * @return
+	 * This method is called in a player if a draw is requested by the other player. This method allows the player to calculate if a draw is a reasonable choice
+	 * and returns a value with regard to that decision.
+	 * <p>
+	 * @return A boolean the determines if a requested draw will be accepted by the player.
 	 */
 	public boolean acceptDraw();
 	/**
-	 * 
-	 * @param directory
+	 * Here the player can save their information after the game in a file. It should be save in the give directory. 
+	 * <p>
+	 * @param directory A file to a directory. 
 	 */
 	public void saveInformation(String directory);
-	/**
-	 * 
-	 */
 }

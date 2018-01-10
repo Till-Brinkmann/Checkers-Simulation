@@ -40,7 +40,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	//the PlayfieldPanel must support up to two player
 	FigureColor figurecolor;
 	List<Figure> jumpFigures;
-	private boolean hasChosen;
 	private boolean wantsDraw;
 	List<Move> list;
 
@@ -59,28 +58,28 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 //				return false;
 //			}
 //		});
-		drawDecision = new CommandListener(){
-			@Override
-			public boolean processCommand(String command, String[] args){
-				switch(command){
-				case "yes":
-				case "y":
-					hasChosen = true;
-					wantsDraw = true;
-					return true;
-				case "no":
-				case "n":
-					hasChosen = true;
-					wantsDraw = false;
-					return true;
-				}
-				return false;
-			}
-		};
+//		drawDecision = new CommandListener(){
+//			@Override
+//			public boolean processCommand(String command, String[] args){
+//				switch(command){
+//				case "yes":
+//				case "y":
+//					hasChosen = true;
+//					wantsDraw = true;
+//					return true;
+//				case "no":
+//				case "n":
+//					hasChosen = true;
+//					wantsDraw = false;
+//					return true;
+//				}
+//				return false;
+//			}
+//		};
 		playfield = gamelogic.getPlayfield();
 		playfield.setPlayfieldDisplay(this);
 		coords = new int[2][2];
-		multiJumpOptions = new int[3][2];
+		multiJumpOptions = new int[0][0];
 		jumpFigures = new List<Figure>();
 		buttons = new JButton[playfield.SIZE][playfield.SIZE];
 		createPlayfieldPanel();
@@ -213,87 +212,76 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				coords[1][1] = y;
 				Move m = Move.createMoveFromCoords(coords);
 				if(m.isInvalid() || !gamelogic.testMove(m) || (Move.jumpIsPossible(playfield.field[m.getX()][m.getY()].getFigureColor(), playfield) && m.getMoveType() == MoveType.STEP)){
-					//TODO cancel move
 					console.printWarning("Invalid move", "playfieldPnael");
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 					clickSituation = Click.ZERO;
 					return;
 				}
 				if(m.getMoveType() == MoveType.JUMP){
+					//TODO force the longest jump
 					//multiJumpTesting
-					list = gamelogic.testForMultiJump(coords[0][0],coords[0][1]);
-					list.toFirst();
-					while(list.hasAccess()) {
-						if(list.get().getMoveType() == MoveType.MULTIJUMP ) {
-							if(list.get().getMoveDirection(0).equals(m.getMoveDirection(0))){
-								console.printInfo("A Mulitjump was found","playfieldPanel");
-							}
-							else {
-								list.remove();
-							}
-						}else {
-							list.remove();
-						}
-						list.next();
-					}
+					list = Move.getMultiJumps(coords[0][0],coords[0][1], gamelogic.getPlayfield());
 					if(list.length != 0) {
-						list.toFirst();
-						int i = 0;
-						while(list.hasAccess()) {
-							switch(list.get().getMoveDirection(1)) {
-								case BL:
-									multiJumpOptions[i][0]	= coords[1][0]-2;
-									multiJumpOptions[i][1]	= coords[1][1]-2;
-									break;
-								case BR:
-									multiJumpOptions[i][0]	= coords[1][0]+2;
-									multiJumpOptions[i][1]	= coords[1][1]-2;
-									break;
-								case FL:
-									multiJumpOptions[i][0]	= coords[1][0]-2;
-									multiJumpOptions[i][1]	= coords[1][1]+2;
-									break;
-								case FR:
-									multiJumpOptions[i][0]	= coords[1][0]+2;
-									multiJumpOptions[i][1]	= coords[1][1]+2;
-									break;
+						multiJumpOptions = new int[list.length][2];
+						int counter = 0;
+						for(list.toFirst();list.hasAccess();list.next()) {
+							int targetX = list.get().getX();
+							int targetY = list.get().getY();
+							for(int i = 0; i < list.get().getSteps(); i++) {
+								switch(list.get().getMoveDirection(i)) {
+									case BL:
+										targetX-=2;
+										targetY-=2;
+										break;
+									case BR:
+										targetX+=2;
+										targetY-=2;
+										break;
+									case FL:
+										targetX-=2;
+										targetY+=2;
+										break;
+									case FR:
+										targetX+=2;
+										targetY+=2;
+										break;
+								}
 							}
-							buttons[multiJumpOptions[i][0]][multiJumpOptions[i][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
-							i++;
-							list.next();
+							multiJumpOptions[counter][0] = targetX;
+							multiJumpOptions[counter++][1] = targetY;
+							buttons[targetX][targetY].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
 						}
 						clickSituation = Click.SECOND;
 						return;
 					}	
 					
 				}
-				resetAndExecute(m,0);
-				
+				resetAndExecute(m);
 			}
 			break;
 		case SECOND:
+			list.toFirst();
 			for(int i = 0; i < list.length;i++) {
 				if(multiJumpOptions[i][0] == x && multiJumpOptions[i][1] == y) {
-					list.toFirst();
-					for(int j = 0; i < j;j++) {
-						list.next();
-					}
-					console.printInfo("Multijump: (" + coords[0][0] + "/" + coords[0][1] + ") - ("+ coords[1][0] + "/" + coords[1][1] + ") - ("+ multiJumpOptions[i][0] + "/" + multiJumpOptions[i][1] + ")","PlayfieldPanel");
-					resetAndExecute(list.get(),i);
+					resetAndExecute(list.get());
+					return;
 				}
+				list.next();
 			}
 			break;
 		}
 
 	}
-	private void resetAndExecute(Move m,int i) {
+	private void resetAndExecute(Move m) {
 		if(gamelogic.getTwoPlayerMode()){
 			//toggle color
 			figurecolor = (figurecolor == FigureColor.RED) ? FigureColor.WHITE : FigureColor.RED;
 		}		
 		buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 		buttons[coords[1][0]][coords[1][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-		buttons[multiJumpOptions[i][0]][multiJumpOptions[i][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+		for(int i = 0; i < multiJumpOptions.length; i++) {
+			buttons[multiJumpOptions[i][0]][multiJumpOptions[i][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+		}
 		clickSituation = Click.ZERO;
 		enableAllButtons(false);
 		gamelogic.makeMove(m);
@@ -340,17 +328,15 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			writer = new PrintWriter(file);
 			writer.write("No information the playfieldpanel");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}
-	/**
-	 * has to be synchronized because otherwise it is not able to wait.
-	 */
+	
 	@Override
-	public synchronized boolean acceptDraw(){
+	public boolean acceptDraw(){
+		//TODO implement this functionality
 		//console.addCommandListener(drawDecision);
-		console.printInfo("do you accept a draw? [yes/no] (default no)", "PlayfieldPanel");
+		//console.printInfo("do you accept a draw? [yes/no] (default no)", "PlayfieldPanel");
 		//int counter = 5;
 		//defaults to false
 		wantsDraw = false;
@@ -359,7 +345,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 //			try {
 //				wait(1000);
 //			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
 //			counter--;

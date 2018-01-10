@@ -56,7 +56,7 @@ public class RandomAI implements Player {
 	@Override
 	public void saveInformation(String directory) {
 		File file;
-		String fileName = "RandomAI Information.txt";
+		String fileName = "NNPlayer Information.txt";
 		if(FileUtilities.searchForEqualFiles(directory, fileName)){
 			file = new File(directory + "/" + "(1)" + fileName);
 		}

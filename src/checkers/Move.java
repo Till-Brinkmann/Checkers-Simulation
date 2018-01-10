@@ -1,5 +1,7 @@
 package checkers;
 
+import java.io.Serializable;
+
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import generic.List;
@@ -14,8 +16,12 @@ import generic.List;
  * @author Till
  * @author Marco
  */
-public class Move {
+public class Move implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public static enum MoveType{
 		STEP,
 		JUMP,
@@ -163,7 +169,7 @@ public class Move {
 	 * turns an array of coordinates into a move object
 	 * !ATTENTION!:the method does not apply complete move validation!
 	 * So the move could not be valid although it is not set invalid!
-	 * test with Gamelogic.testMove()!
+	 * Test with Gamelogic.testMove()!
 	 * <p>
 	 * @param coords     a two dimensional integer array which respresents in chronological order on which fields the figure was during
 	 * 					 the move. 
@@ -330,6 +336,21 @@ public class Move {
 			}
 		}
 		return moves;
+	}
+	/**
+	 * This method returns a list containing all possible multijumps from the figure standing on the given coordinates on the given playfield.
+	 * <p>
+	 * @param x An integer variable which is representing a point on the horizontal axis of the playfield.
+	 * @param y	An integer variable which is representing a point on the vertical axis of the playfield.	
+	 * @param field Field is an Object which represents the playfield.
+	 * @return List This new List contains all the possible multijumps on a specific playfield situation for one figure. 
+	 */
+	public static List<Move> getMultiJumps(int x, int y, Playfield field) {
+		List<Move> list = Move.getPossibleJumps(field.field[x][y], field);
+		for(list.toFirst();list.hasAccess();list.next()) {
+			if(list.get().getMoveType() != MoveType.MULTIJUMP) list.remove();
+		}
+		return list;
 	}
 	/**
 	 * @param Color of the figures that should be tested.

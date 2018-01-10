@@ -10,7 +10,6 @@ import java.io.PrintWriter;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
-import checkers.Player;
 import checkers.Figure;
 
 import checkers.Playfield;
@@ -18,7 +17,7 @@ import checkers.Playfield;
 public class FileUtilities {
 	public static Figure[][] loadGameSituation(File file, Playfield playfield) throws IOException{
 		Figure[][] field = new Figure[8][8];
-		
+
 		FileReader reader = new FileReader(file);
 		@SuppressWarnings("resource")
 		BufferedReader bufferedReader = new BufferedReader(reader);
@@ -68,7 +67,7 @@ public class FileUtilities {
 	}
 	public static void saveGameSituation(Playfield field, String filePath, String fileName) throws IOException{
 		File file = new File(filePath + "/" + fileName + ".pfs");
-		
+
 		file.createNewFile();
 		PrintWriter writer = new PrintWriter(file);
 
@@ -121,36 +120,6 @@ public class FileUtilities {
 			e.printStackTrace();
 		}
 	}
-	public static void createInformationFile(String name1, String name2, String startedFirst, Player winner, Player looser, int turns, int figureCounterPlayer1, int figureCounterPlayer2, int[] player1Moves, int[] player2Moves, String filePath) {
-		try {
-			PrintWriter writer = new PrintWriter(new File(filePath + "/roundInformation.txt"));
-			writer.write(name1 + " played against " + name2 + "\n\n");
-			writer.write(startedFirst + " started first\n\n");
-			if(winner == null || looser == null) {
-				writer.write("End situation: Draw\n\n");
-			}else 
-			{
-				writer.write("\"End situation: " + winner.getName() + " won the game\n\n");
-			}
-			writer.write(turns + "turns played\n");
-			writer.write(name1 + " lost " + (12 - figureCounterPlayer1) + " figures\n");
-			writer.write(name2 + " lost " + (12 - figureCounterPlayer2) + " figures\n\n");
-			writer.write("Made moves:\n");
-			writer.write(name1 + ":\n");
-			writer.write("Steps:" + player1Moves[0]);
-			writer.write("Jumps:" + player1Moves[1]);
-			writer.write("MuitJumps:" + player1Moves[2]);
-			writer.write(name2 + ":\n");
-			writer.write("Steps:" + player2Moves[0]);
-			writer.write("Jumps:" + player2Moves[1]);
-			writer.write("MuitJumps:" + player2Moves[2]);
-			writer.flush();
-			writer.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-	}
 	public static boolean searchForEqualFiles(String directory, String fileName) {
 		File files[] = new File(directory).listFiles();
 		for(int i = 0;i < files[i].length(); i++) {
@@ -159,5 +128,8 @@ public class FileUtilities {
 			 }
 		}
 		return false;
-}
+	}
+
+
+
 }
