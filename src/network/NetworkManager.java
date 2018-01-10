@@ -45,7 +45,8 @@ public class NetworkManager{
 		this.console = console;
 		runningOnlineGame = false;
 	}
-	public void createServer(int port) {   	    
+	public void createServer(int port) {  
+		if(!isConnected()) {
 	    	JFrame serverOptions = new JFrame("ServerOption");
 	    	serverOptions.setLayout(new FlowLayout());
 	    	JSpinner spinner = new JSpinner();
@@ -68,38 +69,47 @@ public class NetworkManager{
 	    	serverOptions.add(okButton);
 	    	serverOptions.pack();
 	    	serverOptions.setVisible(true);
+		}
+		else {
+		 console.printInfo("You are already connected!","NetworkManager");
+		}
 	}
 	public void createClient(String host,int port) {
-		ForkJoinPool.commonPool().execute(new Runnable() {
-    	    public void run()
-    	    {
-    	    	JFrame clientOptions = new JFrame("ClientOption");
-    	    	clientOptions.setLayout(new FlowLayout());
-    	    	JSpinner spinner = new JSpinner();
-    	    	spinner.setValue(6000);
-    	    	clientOptions.add(spinner);
-    	    	JTextField ip = new JTextField();
-    	    	ip.setText("                                 ");
-    	    	clientOptions.add(ip);
-    	    	JButton okButton = new JButton("confirm"); 
-    	    	okButton.addActionListener(new ActionListener()
-    	        {
-    	            public void actionPerformed(ActionEvent event)
-    	            {
-    	            	if(ip.getText().equals("")) {
-    	            		connector = new Client(manager, "localhost",(int)spinner.getValue());
-    	            	}
-    	            	else {
-    	            		connector = new Client(manager,(int)spinner.getValue(),ip.getText());
-    	            	}
-    	            	clientOptions.setVisible(false);
-    	            }
-    	        });
-    	    	clientOptions.add(okButton);  	    	
-    	    	clientOptions.setVisible(true);
-    	    	clientOptions.pack();
-    	    }
-		});
+		if(!isConnected()) {
+			ForkJoinPool.commonPool().execute(new Runnable() {
+	    	    public void run()
+	    	    {
+	    	    	JFrame clientOptions = new JFrame("ClientOption");
+	    	    	clientOptions.setLayout(new FlowLayout());
+	    	    	JSpinner spinner = new JSpinner();
+	    	    	spinner.setValue(6000);
+	    	    	clientOptions.add(spinner);
+	    	    	JTextField ip = new JTextField();
+	    	    	ip.setText("                                 ");
+	    	    	clientOptions.add(ip);
+	    	    	JButton okButton = new JButton("confirm"); 
+	    	    	okButton.addActionListener(new ActionListener()
+	    	        {
+	    	            public void actionPerformed(ActionEvent event)
+	    	            {
+	    	            	if(ip.getText().equals("")) {
+	    	            		connector = new Client(manager, "localhost",(int)spinner.getValue());
+	    	            	}
+	    	            	else {
+	    	            		connector = new Client(manager,(int)spinner.getValue(),ip.getText());
+	    	            	}
+	    	            	clientOptions.setVisible(false);
+	    	            }
+	    	        });
+	    	    	clientOptions.add(okButton);  	    	
+	    	    	clientOptions.setVisible(true);
+	    	    	clientOptions.pack();
+	    	    }
+			});
+		}
+		else {
+		 console.printInfo("You are already connected!","NetworkManager");
+		}
 	}
 	public void displayMassage(String message) {
 			console.print(">>>" + message);
@@ -115,6 +125,12 @@ public class NetworkManager{
 				gui.getGameLogic().finishGame(Situations.STOP, true);
 			}
 			connector.sendInfo(new Info(InfoType.STATUS,"disconnected"));
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			connector.closeConnection();
 		}
 		else {
@@ -254,5 +270,8 @@ public class NetworkManager{
         });
 		userNameWindow.add(confirm);
 		userNameWindow.setVisible(true);
+	}
+	public String getUser() {
+		return user;
 	}
 }

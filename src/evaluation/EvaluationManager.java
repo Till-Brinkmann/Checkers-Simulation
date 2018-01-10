@@ -27,7 +27,6 @@ public class EvaluationManager {
 		path = new File("resources/RecordedGames/" + gameName);
 		path.mkdirs();
 	}
-
 	public void createRound(int currentRound) {
 		round[currentRound] = new Round(currentRound,path,player1,player2,field,this);
 	}

@@ -25,7 +25,7 @@ public class Server extends Connector {
 		  connection = server.accept();
 		  manager.console.printInfo("Connection is established. Now you can write and receive textmessages on the console.", "Server");
 		  receiveInfo();
-		  sendInfo(new Info(InfoType.CONNECTIONINFO, manager.user));
+		  //sendInfo(new Info(InfoType.CONNECTIONINFO, manager.getUser()));
 		}
 		catch(Exception e) {
 			e.printStackTrace();
