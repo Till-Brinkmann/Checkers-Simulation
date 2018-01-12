@@ -27,11 +27,10 @@ public class GameLogic {
 	//the default playfield to use
 	private Playfield field;
 	private String gameName;
-	private int turnCounterRed;
-	private int turnCounterWhite;
-	private int winCountRed;
-	private int winCountWhite;
-	private int drawCount;
+	private int[] stepCount = new int[2];
+	private int[] jumpCount = new int[2];
+	private int[] multijumpCount = new int[2];
+
 	private Player playerWhite;
 	private Player playerRed;
 	private boolean redFailedOnce = false;
@@ -54,13 +53,19 @@ public class GameLogic {
 	private int currentRound = 0;
 	private int rounds;
 	
-	
-	private long timeBeforeMove;
 	//For NN!
 	private Situations endSituation;
 	private boolean failed;
 	
+	//for evaluation
 	private EvaluationManager evaluationManager;
+	private long timeBeforeMove;
+	private long gameTimeBefore;
+	private int winCountRed;
+	private int winCountWhite;
+	private int drawCount;
+	private int overallMovePossibilitiesRed;
+	private int overallMovePossibilitiesWhite;
 	public GameLogic(){
 		this(new Playfield());
 	}
@@ -130,9 +135,12 @@ public class GameLogic {
 			evaluationManager.setPlayfield(field);
 			evaluationManager.createRound(currentRound);
 		}
-		turnCounterRed = 0;
-		turnCounterWhite = 0;
-
+		//reset Varibles fpr
+		for(int i = 0; i<2; i++) {
+		stepCount[i] = 0;
+		jumpCount[i] = 0;
+		multijumpCount[i] = 0;
+		}
 		//test if an new playfield has to be created
 		if(!useCurrentPf) {
 			try {			
@@ -140,7 +148,8 @@ public class GameLogic {
 			} catch (IOException e) {
 				gui.console.printWarning(
 					"Gamelogic:startGame",
-					"Could not load startposition. Please check if your playfieldsaves are at the right position");
+					"Could not load startposition. Please check if your playfieldsave is the right put");
+				finishGame(Situations.STOP,false);
 				return;
 			}
 		}
@@ -161,7 +170,11 @@ public class GameLogic {
 				e.printStackTrace();
 			}
 		}
-		timeBeforeMove = System.nanoTime();
+		//set beginning moveTimes
+		if(evaluationManager != null) {
+			timeBeforeMove = System.nanoTime();
+			gameTimeBefore = System.currentTimeMillis();
+		}
 		playerRed.requestMove();
 	}
 	/**
@@ -175,13 +188,15 @@ public class GameLogic {
 	 * @param m         The Object Move represents an move of one figure on the board. It contains all information needed in order to be fully identified.
 	 */
 	public void makeMove(Move m){
-		//save time
+		//save move time
 		if(evaluationManager != null) {
 			if(inTurn == FigureColor.RED) {
 				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);
+				overallMovePossibilitiesRed += Move.getPossibleMoves(FigureColor.RED,field).length;
 			}
 			else {
 				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerWhite);
+				overallMovePossibilitiesWhite += Move.getPossibleMoves(FigureColor.WHITE,field).length;
 			}
 		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove is false
@@ -219,8 +234,8 @@ public class GameLogic {
 		else {//move is valid
 			//update moveWindow
 			gui.movesWindow.addMove(m);
-			//increment turn count
-			incrementTurnCounter();
+			//increment move count
+			incrementTurnCounter(m);
 			//we need to move before testing the other things
 			field.executeMove(m);
 			//automatic figureToKing check
@@ -284,15 +299,29 @@ public class GameLogic {
 		}
 	}
 	/**
-	 * This method increments one of the global variables turnCounterRed and turnCounterWhite after a turn by a specific FigureColor 
-	 * was finished.  
+	 * This method increments one of the global variables moveCount, after a turn was finished.  
+	 * @param m   A move.
 	 */
-	private void incrementTurnCounter() {
+	private void incrementTurnCounter(Move m) {
+		int i;
 		if(inTurn == FigureColor.RED) {
-			turnCounterRed++;
+			i = 0;
 		}
 		else {
-			turnCounterWhite++;
+			i = 1;
+		}
+		switch(m.getMoveType()) {
+		case INVALID:
+			break;
+		case JUMP:
+			jumpCount[i]++;
+			break;
+		case MULTIJUMP:
+			multijumpCount[i]++;
+			break;
+		case STEP:
+			stepCount[i]++;
+			break;
 		}
 	}
 	/**
@@ -367,6 +396,7 @@ public class GameLogic {
 			return;
 		}		
 		if(evaluationManager != null) {
+			evaluationManager.getRound(currentRound).setgameTime((System.currentTimeMillis() - gameTimeBefore));
 			evaluationManager.getRound(currentRound).evaluateGame(this);
 		}
 		currentRound++;
@@ -404,7 +434,7 @@ public class GameLogic {
 					@Override
 					public void compute() {
 						try {
-							startGame(gameName, playerWhite, playerRed, rounds, slowness, displayActivated, false);
+							startGame(gameName, playerWhite, playerRed, rounds, slowness, gui.displayEnabled.isSelected(), false);
 						} catch (IllegalArgumentException | SecurityException e) {
 							gui.console.printWarning("GameLogic", "failed to load the AI");
 							e.printStackTrace();
@@ -648,36 +678,10 @@ public class GameLogic {
 		return failed;
 	}
 	/**
-	 * Returns the global varible turnCounterRed which represents the total number of the red player turns. This is needed for the game
-	 * information.
-	 * <p>
-	 * @return turnCounterRed     An integer which counts the turns the red player made.
-	 */
-	public int getTurnCountRed() {
-		return turnCounterRed;
-	}
-	/**
-	 * Returns the global varible turnCounterWhite which represents the total number of the white player turns. This is needed for the game
-	 * information.
-	 * <p>
-	 * @return turnCountWhite      An integer which counts the turns the white player made.
-	 */
-	public int getTurnCountWhite() {
-		return turnCounterWhite;
-	}
-	/**
 	 * Returns the summ of both players turns. This is needed for the game
 	 * information.
 	 * <p>
 	 * @return int      An integer which stands for all turns mad in one run. 
-	 */
-	public int getTurnCount(){
-		return turnCounterRed + turnCounterWhite;
-	}
-	/**
-	 * Return a boolean which shows if the game is currently in progress.
-	 * <p>
-	 * @return  boolean   True if the game is running. False if is paused or stopped.
 	 */
 	public boolean getInProgress() {
 		return gameInProgress;	
@@ -693,5 +697,46 @@ public class GameLogic {
 	}
 	public FigureColor getInTurn() {
 		return inTurn;
+	}
+	public int[] getStepCount() {
+		return stepCount;
+	}
+	public int[] getJumpCount() {
+		return jumpCount;
+	}
+	public int[] getMultijump() {
+		return multijumpCount;
+	}
+	public int getWinCountRed() {
+		return winCountRed;
+	}
+	public int getWinCountWhite() {
+		return winCountWhite;
+	}
+	public int getDrawCount() {
+		return drawCount;
+	}
+	public int getOverallMovePossibilitiesRed() {		
+		return overallMovePossibilitiesRed;
+	}
+	public int getOverallMovePossibilitiesWhite() {
+		return overallMovePossibilitiesWhite;
+	}
+	public int getTurnCount() {
+		return getTurnCountRed() + getTurnCountWhite();
+	}
+	public int getTurnCountRed() {
+		int count = 0;
+		count +=stepCount[0];
+		count +=jumpCount[0];
+		count +=multijumpCount[0];
+		return count;
+	}
+	public int getTurnCountWhite() {
+		int count = 0;
+		count +=stepCount[1];
+		count +=jumpCount[1];
+		count +=multijumpCount[1];
+		return count;
 	}
 }

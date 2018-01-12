@@ -59,7 +59,7 @@ public class GUI extends JFrame{
 	JRadioButtonMenuItem medium;
 	JRadioButtonMenuItem fast;
 	
-	JCheckBoxMenuItem displayEnabled;
+	public JCheckBoxMenuItem displayEnabled;
 	public enum AISpeed{SLOW, MEDIUM, FAST, NOTACTIVE}
 	public AISpeed aiSpeed;
 	public GUI(GameLogic gamelogic){
@@ -256,6 +256,7 @@ public class GUI extends JFrame{
             		File file = filechooser.getSelectedFile();
 		        	try {
 		        		gmlc.getPlayfield().setGameSituation(file);
+		        		console.printInfo("Playfield was loaded successfully.");
 					} catch (IOException e) {
 						console.printWarning(file.getName() + " could not be loaded: " + e, "Load Playfield");
 					
@@ -275,9 +276,9 @@ public class GUI extends JFrame{
             {
             	try {
 					FileUtilities.saveGameSituation(gmlc.getPlayfield(), "resources/playfieldSaves", "" + System.currentTimeMillis());
-					console.printInfo("Playfield saved!");
+					console.printInfo("Playfield saved.");
 				} catch (IOException e) {
-					console.printWarning("Playfield saving error: "+ e);
+					console.printWarning("Playfield could not be saved");
 				}
             }
         });
