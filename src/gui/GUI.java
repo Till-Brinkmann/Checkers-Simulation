@@ -25,22 +25,25 @@ import checkers.GameLogic;
 import checkers.GameLogic.Situations;
 import network.NetworkManager;
 import utilities.FileUtilities;
-public class GUI extends JFrame{
 
-	private GameLogic gmlc;
-	/*
-	 * settings that are outsourced to different frames
-	 * to improve codestructure/readability
+/**
+ * Main class of the program and the main user interface.
+ * @author Till
+ *
+ */
+public class GUI extends JFrame{
+	/**
+	 * Reference to the current GameLogic.
 	 */
+	private GameLogic gmlc;
+	//settings that are outsourced to different frames to improve codestructure/readability
 	public Moves movesWindow;
-	public AboutCS aboutcsWindow;
 	public NetworkManager networkmanager;
 	public ColorSettings colorsettings;
 	public GameSettings gamesettings;
 	public SoundSettings soundsettings;
 	public JFileChooser filechooser;
 	public FileFilter filter;
-	public NNTrainingSettings nnTrainingSettings;
 
 	public Console console;
 	public PlayfieldPanel playfieldpanel;
@@ -55,7 +58,7 @@ public class GUI extends JFrame{
 	JRadioButtonMenuItem medium;
 	JRadioButtonMenuItem fast;
 	
-	JCheckBoxMenuItem displayEnabled;
+	public JCheckBoxMenuItem displayEnabled;
 	public enum AISpeed{SLOW, MEDIUM, FAST, NOTACTIVE}
 	public AISpeed aiSpeed;
 	public GUI(GameLogic gamelogic){
@@ -71,9 +74,11 @@ public class GUI extends JFrame{
 	}
 	public GUI(){
 		this(new GameLogic());
-
 	}
-
+	/**
+	 * Entry point of the program.
+	 * @param args Additional arguments.
+	 */
 	public static void main(String[] args) {
 		new GUI();
 
@@ -84,13 +89,12 @@ public class GUI extends JFrame{
 	}
 	private void initialize(){	
 		console = new Console();
-		networkmanager = new NetworkManager(this, console);
-		console.setNetworkManager(networkmanager);
 		playfieldpanel = new PlayfieldPanel(gmlc ,console);
 		colorsettings = new ColorSettings(this, Color.BLACK, Color.LIGHT_GRAY);
 		soundsettings = new SoundSettings(this);
-		aboutcsWindow = new AboutCS(); 
 		movesWindow = new Moves();
+		networkmanager = new NetworkManager(this,console);
+		console.setNetworkManager(networkmanager);
 	}
 	private void createWindow(){
 		setResizable(true);
@@ -115,14 +119,11 @@ public class GUI extends JFrame{
         loadgame.setBackground(Color.WHITE);
         JMenuItem savegame = new JMenuItem("Save Situation");
         savegame.setBackground(Color.WHITE);
-        JMenuItem nnTraining = new JMenuItem("NN Training");
-        nnTraining.setBackground(Color.WHITE);
         JMenuItem openResources = new JMenuItem("Open Resources");
         openResources.setBackground(Color.WHITE);
         game.add(newgame);
         game.add(loadgame);
         game.add(savegame);
-        game.add(nnTraining);
         game.add(openResources);
         menubar.add(game);
 
@@ -181,29 +182,38 @@ public class GUI extends JFrame{
 				
         JMenu help = new JMenu("Help");
         help.setBackground(Color.WHITE);
-        JMenuItem aboutcs = new JMenuItem("About Checker Simulation");
-        aboutcs.setBackground(Color.WHITE);
         JMenuItem guide = new JMenuItem("Guide");
         guide.setBackground(Color.WHITE);
         JMenuItem rules = new JMenuItem("Rules");
         rules.setBackground(Color.WHITE);
         help.add(guide);
-        help.add(aboutcs);
         help.add(rules);
         menubar.add(help);   
+        
+        JMenu network = new JMenu("Network");
+        network.setBackground(Color.WHITE);
+        JMenuItem changeUserName = new JMenuItem("Change username"); 
+        changeUserName.setBackground(Color.WHITE);
+        JMenuItem createServer = new JMenuItem("Create Server");
+        createServer.setBackground(Color.WHITE);
+        JMenuItem connectToServer = new JMenuItem("Connect to a server");
+        connectToServer.setBackground(Color.WHITE);
+        JMenuItem closeConnection = new JMenuItem("Close connection");
+        closeConnection.setBackground(Color.WHITE);
+        JMenuItem sendGameRequest = new JMenuItem("Send a game request");
+        sendGameRequest.setBackground(Color.WHITE);
+        network.add(changeUserName);
+        network.add(createServer);
+        network.add(connectToServer);
+        network.add(closeConnection);
+        network.add(sendGameRequest);
+        menubar.add(network);
         
         newgame.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
             	gamesettings = new GameSettings(GUI.this);
-            }
-        });
-        nnTraining.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent event)
-            {
-            	nnTrainingSettings = new NNTrainingSettings(GUI.this,console);
             }
         });
         openResources.addActionListener(new ActionListener()
@@ -233,6 +243,7 @@ public class GUI extends JFrame{
             		File file = filechooser.getSelectedFile();
 		        	try {
 		        		gmlc.getPlayfield().setGameSituation(file);
+		        		console.printInfo("Playfield was loaded successfully.");
 					} catch (IOException e) {
 						console.printWarning(file.getName() + " could not be loaded: " + e, "Load Playfield");
 					
@@ -252,9 +263,9 @@ public class GUI extends JFrame{
             {
             	try {
 					FileUtilities.saveGameSituation(gmlc.getPlayfield(), "resources/playfieldSaves", "" + System.currentTimeMillis());
-					console.printInfo("Playfield saved!");
+					console.printInfo("Playfield saved.");
 				} catch (IOException e) {
-					console.printWarning("Playfield saving error: "+ e);
+					console.printWarning("Playfield could not be saved");
 				}
             }
         });
@@ -386,14 +397,6 @@ public class GUI extends JFrame{
 				}
             }
         });
-        aboutcs.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent event)
-            {
-            	soundsettings.playSound("moveSound");
-            	aboutcsWindow.setVisible(true);
-            }
-        });
         rules.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
@@ -404,6 +407,44 @@ public class GUI extends JFrame{
                 	console.printWarning("gui", "could not find or open the pdf file");
                     e.printStackTrace();
                 }
+            }
+        });
+        changeUserName.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                networkmanager.changeUsername();
+            }
+        });
+        createServer.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.createServer(6000);
+            }
+        });
+        connectToServer.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.createClient("localhost", 6666);
+
+            }
+        });
+        closeConnection.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.closeConnection();
+
+
+            }
+        });
+        sendGameRequest.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	networkmanager.sendGameRequest();
             }
         });
         return menubar;

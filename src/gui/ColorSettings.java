@@ -6,8 +6,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
-
-@SuppressWarnings("serial")
+/**
+ * A window that holds components to customize color parameters of the program.
+ */
 public class ColorSettings extends JFrame{
 
 	private ImageIcon colorSettingsIcon;

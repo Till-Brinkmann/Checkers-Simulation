@@ -1,27 +1,49 @@
 package gui;
 
-import javax.swing.*;
-import java.awt.*;
-
-import javax.swing.event.*;
-import generic.Queue;
-
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
-
-import javax.sound.sampled.*;
-
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import datastructs.Queue;
+
+/**
+ * A window containing a crude music player and some settings for gamesounds.
+ * Also contains the soundsystem.
+ */
 public class SoundSettings extends JFrame implements PlayfieldSound
 {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1850463064180012073L;
-
 	
 	private Timer timer;
 	private boolean musicIsPlaying = false;

@@ -1,22 +1,27 @@
 package checkers;
 
+import java.io.Serializable;
+
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
-import checkers.Move.MoveType;
-import generic.List;
+import datastructs.List;
 
 /**
  * A class to save one particular Move. A move consists of many different variable which are all saved in this class. Furthermore,
  * it includes all static methods for selecting possible moves.
  * <p>
- * It is neccessary to now that in our definition of a move a move also contains a mulitjump which consist of various directions
+ * It is neccessary to know that in our definition of a move a move also contains a mulitjump which consists of various directions
  * which are saved in the global array directions. So even if a mulitjump consist of many subcomponents which could be also seen
- * as a move, it is one move!
+ * as a move, it is one move.
  * @author Till
  * @author Marco
  */
-public class Move {
+public class Move implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public static enum MoveType{
 		STEP,
 		JUMP,
@@ -38,7 +43,7 @@ public class Move {
 	public static final Move INVALID = new Move(MoveType.INVALID);
 	
 	/**
-	 * This is the constructor with the biggest amount of input parameters which are all important in order to have all information. It is suitable for
+	 * This is the constructor with the most input parameters which are all important in order to have all information. It is suitable for
 	 * multijumps, because you transfer an array of direction.
 	 * <p>
 	 * @param directions	An array of variables from the enumeration MoveDirection.
@@ -82,7 +87,7 @@ public class Move {
 	
 	/**
 	 * A step is being added to an already existing move. It inserts a new variable from the enumeration MoveDirection into the global
-	 * moveDirection array. This is needed when a move is going to be a multijump in which obviously more than one direction is possible.   
+	 * moveDirection array. This is needed when a move is going to be a multijump in which more than one direction is possible.   
 	 * <p>
 	 * @param dir     A variables from the enumeration MoveDirection .    
 	 */
@@ -348,8 +353,8 @@ public class Move {
 		return list;
 	}
 	/**
-	 * @param Color of the figures that should be tested.
-	 * @param Field playfield to test on.
+	 * @param color of the figures that should be tested.
+	 * @param field playfield to test on.
 	 * @return Returns true if a jump with a figure of the given color on the given playfield is possible.
 	 */
 	public static boolean jumpIsPossible(FigureColor color, Playfield field){
@@ -430,8 +435,8 @@ public class Move {
 		return moves;
 	}
 	/**
-	 * @param f The figure that should move.
-	 * @param p The Playfield that is used to search for moves.
+	 * @param figure The figure that should move.
+	 * @param playfield The Playfield that is used to search for moves.
 	 * @return Returns every possible move for the given Figure on the given Playfield.
 	 */
 	public static List<Move> getPossibleMoves(Figure figure, Playfield playfield){

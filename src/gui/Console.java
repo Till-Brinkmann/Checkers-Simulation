@@ -9,8 +9,8 @@ import javax.swing.*;
 import javax.swing.JTextArea;
 import javax.swing.text.DefaultCaret;
 
-import generic.DLList;
-import generic.List;
+import datastructs.DLList;
+import datastructs.List;
 import network.NetworkManager;
 
 
@@ -143,7 +143,7 @@ public class Console{
 			//it's something different
 			else {
 				//for the chat system
-				print(">>>[User]" + input.getText());
+				print(">>>[" + networkManager.user + "]" + input.getText());
 				if(networkManager.isConnected()) {
 					networkManager.sendMessage(in);
 				}

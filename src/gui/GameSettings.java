@@ -6,46 +6,51 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import checkers.GameLogic;
 import checkers.Player;
-import checkers.Playfield;
 import evaluation.EvaluationManager;
-import generic.List;
 import gui.GUI.AISpeed;
+import main.StackExecutor;
+import task.Task;
+import utilities.FileUtilities;
 
-
-@SuppressWarnings("serial")
+/**
+ * Pops up when the user starts a new game.
+ * It is used to set all parameters nedded to start a game (eg. which type of palyer to use, etc.).
+ */
 public class GameSettings extends JFrame{
 
-	/**
-	 *
-	 */
 	Class<?> ai;
 	URL url;
 	URLClassLoader loader;
+	StackExecutor executor;
 	
 	private JPanel backgroundPanel;
 	private ImageIcon gameSettingsIcon;
-	//List<Class<?>> availablePlayer;
 	Hashtable<String, Class<?>> availablePlayer;
 	private JCheckBox recordGame;
 	private JButton okButton;
@@ -63,24 +68,16 @@ public class GameSettings extends JFrame{
 	private boolean recordGameIsEnabled = false;
 	private String gameName;
 	private GUI gui;
+	private GameLogic gmlc;
 	private int slowness;
 	private JCheckBox useCurrentPf;
-	//TODO remove after other solution is tested
-	//private Thread gmlcThread;
-	public GameSettings(GUI pGui) {		
+	public GameSettings(GUI pGui) {	
 		super("Game Settings");
 		gui = pGui;
-		try {
-			loader = new URLClassLoader(
-					new URL[]{
-							new URL("file:" + new File("resources/AI").getAbsolutePath())
-							}
-					);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		gmlc = gui.getGameLogic();
+		loader = new URLClassLoader(FileUtilities.getAiUrls());
 		availablePlayer = new Hashtable<String, Class<?>>();
+		executor = new StackExecutor();
 		createPlayerTable();
 		initialize();
 		createWindow();
@@ -131,7 +128,7 @@ public class GameSettings extends JFrame{
 		
 		useCurrentPf = new JCheckBox("using current playfield",false);
 		useCurrentPf.setBackground(Color.WHITE);
-		if(gui.getGameLogic().getPlayfield().testPlayability()) {
+		if(gmlc.getPlayfield().testPlayability()) {
 			useCurrentPf.setEnabled(true);
 		}
 		else {
@@ -147,7 +144,6 @@ public class GameSettings extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	gui.getGameLogic().getPlayfield().enableGameRecording(recordGame.isSelected());
             	recordGameIsEnabled = recordGame.isSelected();
             }
 
@@ -156,77 +152,7 @@ public class GameSettings extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-            	setAlwaysOnTop(false);
-            	setVisible(false);
-            	if(gui.getGameLogic().getInProgress()) {
-            		gui.console.printWarning("A game is currently running. It has to be paused or stopped in order to create a new game.","Gamesettings");
-            		return;
-            	}
-            	gameName = gameNameField.getText();
-            	if(gameName.equals("") && recordGameIsEnabled){
-            	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));
-            	    gui.console.printInfo("When game recording is selected, you have to enter a game name!", "Gamesettings");
-            		return;
-            	}
-            	
-            	//the game is started in a separate Thread to reduce the load on the eventqueue
-            	if(currentSelectionPlayer1.equals("player") && currentSelectionPlayer2.equals("player")) {
-					gui.setAISpeed(AISpeed.NOTACTIVE);
-				}
-				else {
-					if(slownessForSlowMode.getValue() == 0) {
-						gui.setAISpeed(AISpeed.FAST);
-					}
-					else if(slownessForSlowMode.getValue() == 1000) {
-						gui.setAISpeed(AISpeed.MEDIUM);
-					}
-					else {
-						gui.setAISpeed(AISpeed.SLOW);
-					}
-				}
-				gui.setEnableResume(false);
-				gui.setEnablePause(true);
-				gui.setEnableStop(true);
-				if(displayCheckBox.isEnabled()) {
-					gui.setEnableDisplayEnabled(true);
-				}
-				else {
-					gui.setEnableDisplayEnabled(false);
-									}
-				if(displayCheckBox.isSelected()) {
-					gui.setDisplayEnabled(true);
-					
-				}
-				else {
-					gui.setDisplayEnabled(false);
-				}
-            	//gmlcThread = new Thread(
-				ForkJoinPool.commonPool().execute(new Runnable() {
-            	    public void run()
-            	    {
-            	    	try {
-            	    		Player red;
-            	    		Player white;
-            	    		if(Math.random() < 0.5){
-            	    			red = getPlayer1();
-            	    			white = getPlayer2();
-            	    		}
-            	    		else{
-            	    			white = getPlayer1();
-            	    			red = getPlayer2();
-            	    		}
-            	    		if(recordGameIsEnabled) {
-            	    			gui.getGameLogic().setManager(new EvaluationManager((int)roundsSpinner.getValue(),gameName , red, white));
-            	    		}
-            	    		gui.getGameLogic().startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
-						} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
-								 InvocationTargetException | NoSuchMethodException | SecurityException e) {
-							gui.console.printWarning("gmlc", "failed to load the ai");
-							e.printStackTrace();
-						}
-            	    }
-        	    });  
-            	//gmlcThread.start();
+            	createGame();
             }           
         });
 		player1ComboBox.addActionListener(new ActionListener()
@@ -309,12 +235,9 @@ public class GameSettings extends JFrame{
 	}
 	private void createPlayerTable() {
 		File[] files = new File("resources/AI").listFiles();
-		int listLength = 1;
-		
 		if(files != null) {
 			for(int i = 0; i < files.length; i++) {
 				if(files[i].getName().endsWith(".class")){
-					listLength++;
 					try {
 						ai = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
 						//append only if it is a player
@@ -322,31 +245,93 @@ public class GameSettings extends JFrame{
 							availablePlayer.put(ai.getName(), ai);
 						}
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 				else if(files[i].getName().endsWith(".jar")){
 					try {
-						//ai = loader.loadClass(new JarFile(files[i]).);
 						for(Enumeration<JarEntry> entries = new JarFile(files[i]).entries();entries.hasMoreElements();){
 							JarEntry entry = entries.nextElement();
 							if(entry.getName().startsWith("player/") && entry.getName().endsWith(".class")){
 								String className = entry.getName().replace('/', '.').substring(0, entry.getName().length()-6);
-								URLClassLoader jarloader = new URLClassLoader(new URL[]{files[i].toURI().toURL()});
-								ai = jarloader.loadClass(className);
+								ai = loader.loadClass(className);
 								if(testForPlayerInterface(ai)){
 									availablePlayer.put(ai.getName().replace("player.", ""), ai);
 								}
 							}
 						}
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
 			}
 		}
+	}
+	
+	private void createGame() {
+		if(gmlc.isInProgress()) {
+    		gui.console.printWarning("A game is currently running. It has to be paused or stopped in order to create a new game.","Gamesettings");
+    		return;
+    	}
+		gmlc = new GameLogic();
+		gui.linkGameLogic(gmlc);
+		gmlc.linkGUI(gui);
+		gmlc.getPlayfield().setPlayfieldSound(gui.soundsettings);
+		gui.playfieldpanel.gamelogic = gmlc;
+    	gameName = gameNameField.getText();
+    	if(gameName.equals("") && recordGameIsEnabled){
+    	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));
+    	    gui.console.printInfo("When game recording is selected, you have to enter a game name!", "Gamesettings");
+    		return;
+    	}
+    	
+    	if(currentSelectionPlayer1.equals("player") && currentSelectionPlayer2.equals("player")) {
+			gui.setAISpeed(AISpeed.NOTACTIVE);
+		}
+		else {
+			if(slownessForSlowMode.getValue() == 0) {
+				gui.setAISpeed(AISpeed.FAST);
+			}
+			else if(slownessForSlowMode.getValue() == 1000) {
+				gui.setAISpeed(AISpeed.MEDIUM);
+			}
+			else {
+				gui.setAISpeed(AISpeed.SLOW);
+			}
+		}
+		gui.setEnableResume(false);
+		gui.setEnablePause(true);
+		gui.setEnableStop(true);
+		gui.setEnableDisplayEnabled(displayCheckBox.isEnabled());
+		gui.setDisplayEnabled(displayCheckBox.isSelected());
+		
+		executor.execute(new Task() {
+    	    public void compute()
+    	    {
+    	    	try {
+    	    		Player red;
+    	    		Player white;
+    	    		if(Math.random() < 0.5){
+    	    			red = getPlayer1();
+    	    			white = getPlayer2();
+    	    		}
+    	    		else{
+    	    			white = getPlayer1();
+    	    			red = getPlayer2();
+    	    		}
+    	    		if(recordGameIsEnabled) {
+    	    			gmlc.setManager(new EvaluationManager((int)roundsSpinner.getValue(),gameName , red, white));
+    	    		}
+    	    		gmlc.startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
+				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
+						 InvocationTargetException | NoSuchMethodException | SecurityException e) {
+					gui.console.printWarning("GameSettings", "failed to load the ai");
+					e.printStackTrace();
+				}
+    	    }
+	    });
+    	setAlwaysOnTop(false);
+    	setVisible(false);
 	}
 	public Player getPlayer1() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
 	InvocationTargetException, NoSuchMethodException, SecurityException{

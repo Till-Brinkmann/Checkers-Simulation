@@ -13,19 +13,16 @@ import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.Move;
 import checkers.Move.MoveType;
+import datastructs.List;
 import checkers.Player;
 import checkers.Playfield;
-
-import generic.List;
 /**
- *
- * @author Till
- *
+ * The PlayfieldPanel consists of a field of buttons that can display the contents of a playfield.
+ * It also implements the Player interface to allow the user to interact with the program as a player.
  */
-@SuppressWarnings("serial")
 public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
-	public ImageIcon king;
+	public final ImageIcon king;
 	public Playfield playfield;
 	private JButton[][] buttons;
 	GameLogic gamelogic;
@@ -37,10 +34,8 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 
 	private enum Click{ZERO,FIRST,SECOND};
 	private Click clickSituation = Click.ZERO;
-	//the PlayfieldPanel must support up to two player
 	FigureColor figurecolor;
 	List<Figure> jumpFigures;
-	private boolean hasChosen;
 	private boolean wantsDraw;
 	List<Move> list;
 
@@ -49,7 +44,7 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		king = new ImageIcon("resources/Icons/dame.png");
 		gamelogic = pGamelogic;
 		console = pConsole;
-		//TODO darüber muss man noch nachdenken
+		//TODO we have to think about that
 //		console.addCommandListener(new CommandListener(){
 //			public boolean processCommand(String command){
 //				if(command.equals("requestDraw")){
@@ -213,13 +208,12 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				coords[1][1] = y;
 				Move m = Move.createMoveFromCoords(coords);
 				if(m.isInvalid() || !gamelogic.testMove(m) || (Move.jumpIsPossible(playfield.field[m.getX()][m.getY()].getFigureColor(), playfield) && m.getMoveType() == MoveType.STEP)){
-					console.printWarning("Invalid move", "playfieldPnael");
+					console.printWarning("Invalid move", "PlayfieldPanel");
 					buttons[coords[0][0]][coords[0][1]].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 					clickSituation = Click.ZERO;
 					return;
 				}
 				if(m.getMoveType() == MoveType.JUMP){
-					//TODO force the longest jump
 					//multiJumpTesting
 					list = Move.getMultiJumps(coords[0][0],coords[0][1], gamelogic.getPlayfield());
 					if(list.length != 0) {

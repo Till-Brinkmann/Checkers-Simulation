@@ -1,8 +1,10 @@
 package checkers;
-import java.io.*;
 
-import java.time.*;
-import java.util.Date;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
@@ -16,8 +18,8 @@ import utilities.FileUtilities;
  * other classes, especially the gamelogic. Therefore all methods have to be accessed from other classes and need the access modifier
  * "public".
  * <p>
- * We realized this playfield by creating a Figure array with a distinct size. The size is describes the length one the x and y axis
- * (Its is always a square) and not the amount of fields.
+ * We implemented this playfield by creating a 2-dimensional Figure array with a distinct size. The size describes the length on the x and y axis
+ * (Its is always a square) and not the number of fields.
  * <p>
  * @author Till
  * @author Marco
@@ -27,16 +29,13 @@ public class Playfield {
 
 	public final int SIZE;
 	public Figure[][] field;
-	PlayfieldDisplay display;
-	PlayfieldSound sound;
-	Instant instant;
-	boolean recordGame;
+	private PlayfieldDisplay display;
+	private PlayfieldSound sound;
 	FileReader reader;
 	BufferedReader bufferedReader;
 	PrintWriter writer;
 
 	int movesWithoutJumps = 0;
-	File filePath;
 	/**
 	 * This default constructor creates a playfield with the initial size of eight and then calls the subconstructor to set up this 
 	 * playfield further.
@@ -58,38 +57,31 @@ public class Playfield {
 	 * not found, then it throws an exeption.
 	 * <p>
 	 * @throws IOException Thrown when the file containing the start situation does not exist or is not available at the moment.
-	 * A specific detailed message with the error that accured in this method.
 	 */
-	public void createStartPosition(Playfield playfield) throws IOException{
-		field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/startPositionForSize" + SIZE +".pfs"), playfield);
+	public void createStartPosition() throws IOException{
+		field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/startPositionForSize" + SIZE +".pfs"), this);
 		if(display != null) display.updateDisplay();
 	}
 	
-	public void clearField(Playfield playfield) throws IOException {
-		 field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"), playfield);
+	public void clearField() throws IOException {
+		 field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"), this);
 		 if(display != null) display.updateDisplay();
 	}
 	
 	/**
 	 * This method tries to load a specific game situation from a .pfs file. This file type saves all information that is needed to
-	 * reconstruct this game sitation. 
+	 * reconstruct this game situation. 
 	 * <p>
 	 * The file parameter needs to be a .pfs file with the correct size in order to be loaded and displayed on the playfield
 	 * <p>
-	 * @param file             A file that respresents the path to a playfield save file.
-	 * @throws IOException Thrown when the file is currently not available. A specific detailed meassage with the error that accured in this method.
+	 * @param file A file that respresents the path to a playfield save file.
+	 * @throws IOException Thrown when the file is currently not available.
 	 */
 	public void setGameSituation(File file) throws IOException{
 		field = FileUtilities.loadGameSituation(file, this);
 		if(display != null) display.updateDisplay();
 	}
-	/**
-	 * enables 
-	 * @param selected
-	 */
-	public void enableGameRecording(boolean selected){
-		recordGame = selected;
-	}
+
 	/**
 	 * Sets the object that is responsible for displaying the contents of this playfield
 	 * <p>
@@ -102,16 +94,20 @@ public class Playfield {
 		display = d;
 	}
 	/**
-	 * Set the object that is responsible for 
-	 * @param s
+	 * Sets the object that is responsible for establishing a connection to the object that has the the task to playsounds. This object has to have the interface 
+	 * DisplaySounds.
+	 * <p>
+	 * @param s A object that is responsible for playing sound with the interface DisplaySounds.
 	 */
 	public void setPlayfieldSound(PlayfieldSound s) {
 		sound = s;
 	}
 	/**
-	 * 
-	 * @param x
-	 * @param y
+	 * In this method one figure on the playfield changes from a normal figure to a king fingure by calling the figureType method with the parameter FigureType.KING
+	 * in a certain figure. 
+	 * <p>
+	 * @param x       An integer variable which is representing a point on the vertical axis of the playfield.
+	 * @param y	 	  An integer variable which is representing a point on the horizontal axis of the playfield.	
 	 */
 	public void changeFigureToKing(int x, int y){
 		if(sound != null)sound.playSound("toDameSound.wav");
@@ -119,8 +115,11 @@ public class Playfield {
 		if(display != null) display.updateDisplay();
 	}
 	/**
-	 * 
-	 * @param m
+	 * By calling this method a speficic move will be executed on the playfield. It changes the references on the field array.
+	 * <p>
+	 * The method also tests if the move is valid. If this is not given the method returns without changing the playfield.
+	 * <p>
+	 * @param m A move object that should be executed on the playfield.
 	 */
 	public void executeMove(Move m){
 		//coords array for displaying the move
@@ -215,9 +214,8 @@ public class Playfield {
 		if(display != null) display.updateDisplay();
 	}
 	/**
-	 * 
-	 * @param color
-	 * @return
+	 * @param color The color to test for.
+	 * @return Returns the number of figures with the given color. 
 	 */
 	public int getFigureQuantity(FigureColor color){
 		int quantity = 0;
@@ -231,10 +229,10 @@ public class Playfield {
 		return quantity;
 	}
 	/**
-	 * 
+	 * Returns the number of figures on the playfield from one color.
 	 * @param figurecolor
 	 * @param figuretype
-	 * @return
+	 * @return The number of figures with the given color and type.
 	 */
 	public int getFigureTypeQuantity(FigureColor figurecolor, FigureType figuretype) {
 		int quantity = 0;
@@ -249,16 +247,15 @@ public class Playfield {
 	}
 	/**
 	 * 
-	 * @param x
-	 * @param y
-	 * @return
+	 * @param x X position of the field. 
+	 * @param y Y position of the field.
+	 * @return Returns true if the field with the given coordinates is occupied by a figure.
 	 */
 	public boolean isOccupied(int x, int y){
 		return (field[x][y] != null);
 	}
 	/**
-	 * 
-	 * @return
+	 * @return True, if the playfield is completely empty (has no figures on it).
 	 */
 	public boolean isEmpty(){
 		for(int x = 0; x < 8; x++) {
@@ -271,9 +268,8 @@ public class Playfield {
 		return true;
 	}
 	/**
-	 * 
-	 * @param figurecolor
-	 * @return
+	 * @param figurecolor FigureColor of the figures.
+	 * @return Returns all figures the player with the given color has.
 	 */
 	public Figure[] getFiguresFor(FigureColor figurecolor) {
 		int counter = 0;
@@ -289,8 +285,7 @@ public class Playfield {
 		return figures;
 	}
 	/**
-	 * 
-	 * @return
+	 * @return Returns a copy of this playfield including also copied figures.
 	 */
 	public Playfield copy() {
 		Playfield copy = new Playfield(SIZE);
@@ -308,35 +303,35 @@ public class Playfield {
 	}
 	/**
 	 * 
+	 * @param x X position of the field. 
+	 * @param y Y position of the field.
+	 * @return Returns the FigureColor of the figure on the field if there is a figure. Otherwise null.
 	 */
 	public FigureColor colorOf(int x, int y) {
+		if(!isOccupied(x, y)) return null;
 		return field[x][y].getFigureColor();
 	}
 	/**
 	 * 
-	 * @param x
-	 * @param y
-	 * @return
+	 * @param x X position of the field. 
+	 * @param y Y position of the field.
+	 * @return Returns the FigureType of the figure on the field if there is a figure. Otherwise null.
 	 */
 	public FigureType getType(int x, int y) {
+		if(!isOccupied(x, y)) return null;
 		return field[x][y].getFigureType();
 	}
-	/**
-	 * 
-	 * @return
-	 */
+
 	public int getMovesWithoutJumps(){
 		return movesWithoutJumps;
 	}
-	/**
-	 * 
-	 */
+
 	public void playWinSound() {
 		if(sound != null)sound.playSound("winSound.wav");
 	}
 	/**
-	 * 
-	 * @return
+	 * A situation is only playable when both players have at least one figure.
+	 * @return Returns true, if the current situation on the playfield could be played.
 	 */
 	public boolean testPlayability() {
 		int whiteFigures = 0;
@@ -359,15 +354,6 @@ public class Playfield {
 		else {
 			return false;
 		}
-	}
-	public void createPaths(String gameName) {
-		filePath = new File("resources/RecordedGames/" + gameName);
-		filePath.mkdirs();
-		File filePathToGameSituations = new File("resources/RecordedGames/" + gameName + "/GameSituations");
-		filePathToGameSituations.mkdirs();
-	}
-	public File getFilePath() {
-		return filePath;
 	}
 }
 

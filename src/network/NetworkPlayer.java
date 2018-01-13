@@ -2,18 +2,20 @@ package network;
 
 import checkers.Figure.FigureColor;
 import checkers.Player;
-
+/**
+ * Dummy Player for playing over network.
+ */
 public class NetworkPlayer implements Player {
 
-	private NetworkManager manager;
+	private String name = "Online Player";
 	
 	public NetworkPlayer(NetworkManager manager) {
-		this.manager = manager;
+		
 	}
+	
     @Override
 	public void prepare(FigureColor color) {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 	@Override
@@ -23,20 +25,17 @@ public class NetworkPlayer implements Player {
 
 	@Override
 	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
+		return name;
 	}
 
 	@Override
 	public boolean acceptDraw() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public void saveInformation(String directory) {
-		// TODO Auto-generated method stub
-
+		
 	}
 
 }

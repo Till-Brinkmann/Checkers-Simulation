@@ -1,17 +1,17 @@
 package evaluation;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import checkers.Figure.FigureColor;
 import checkers.GameLogic;
 import checkers.GameLogic.Situations;
 import checkers.Player;
-import checkers.Playfield;
-import generic.List;
+import datastructs.List;
 import utilities.FileUtilities;
-
+/**
+ * Holds the information to evaluate one round and provides methods to modify and acquire these values.
+ */
 public class Round {
 	EvaluationManager manager;
 	
@@ -23,25 +23,34 @@ public class Round {
 	protected double[] moveTimeMax = new double[2];
 	protected double[] moveTimeOverall = new double[2];
 	private int round;
-	private int player1turns;
-	private int player2turns;
 	private FigureColor inTurn;
 	private Situations endSituation;
 	private boolean failed;
 	List<Long> moveTimePlayer1 = new List<Long>();
 	List<Long> moveTimePlayer2 = new List<Long>();
+	private double gameTime;
 	private String roundsPathString;
 	private File roundsPath;
-	private Playfield field;
+
+	private int[] stepCount = new int[2];
+
+	private int[] jumpCount = new int[2];
+
+	private int[] multijumpCount = new int[2];
+	
+	private int[] movePossibilitiesAvg = new int[2];
+	private int[] movePossibilitiesOverall = new int[2];
+
+	private int turnCount = 0;
+
+
 	
 	
-	public Round(int currentRound, File path, Player player1, Player player2, Playfield field, EvaluationManager manager) {
-		this.field = field;
+	public Round(int currentRound, File path, Player player1, Player player2, EvaluationManager manager) {
 		this.player1 = player1;
 		this.player2 = player2;
 		this.manager = manager;
-		player1turns = 0;
-		player2turns = 0;
+
 		round = currentRound;
 		roundsPath = new File(path.getAbsolutePath() + "/Round " + (round+1));
 		roundsPath.mkdirs();
@@ -57,10 +66,17 @@ public class Round {
 	public void evaluateGame(GameLogic gmlc) {
 		endSituation = gmlc.getFinalSituation();
 		failed = gmlc.getFailed();
-		player1turns = gmlc.getTurnCountRed();
-		player2turns = gmlc.getTurnCountWhite();
+		turnCount  = gmlc.getTurnCount();
+		stepCount = gmlc.getStepCount();
+		jumpCount = gmlc.getJumpCount();
+		multijumpCount = gmlc.getMultijump();
+		movePossibilitiesOverall[0] = gmlc.getOverallMovePossibilitiesRed();
+		movePossibilitiesOverall[1] = gmlc.getOverallMovePossibilitiesWhite();
+		movePossibilitiesAvg[0] = movePossibilitiesOverall[0] / (turnCount);
+		movePossibilitiesAvg[1] = movePossibilitiesOverall[1] / (turnCount);		
 		setTimes();
-		FileUtilities.createTimesFile(moveTimeMin,moveTimeMax, moveTimeAvg, moveTimeOverall, player1.getName(), player2.getName(), roundsPath.getAbsolutePath());
+		FileUtilities.createTimesFile(moveTimeMin,moveTimeMax, moveTimeAvg, moveTimeOverall, player1.getName(), player2.getName(), roundsPath.getAbsolutePath(), gameTime);
+		FileUtilities.createGameSummaryFile(endSituation, failed, player1.getName(), player2.getName(), roundsPath.getAbsolutePath(), stepCount, jumpCount, multijumpCount, movePossibilitiesAvg, movePossibilitiesOverall);
 		player1.saveInformation(roundsPath.getAbsolutePath());
 		player2.saveInformation(roundsPath.getAbsolutePath());
 	}
@@ -120,16 +136,32 @@ public class Round {
 	public String getRoundsPathString() {
 		return	roundsPathString;
 	}
-	public int getPlayer1turns() {
-		return player1turns;
-	}
-	public int getPlayer2turns() {
-		return player2turns;
-	}
 	public FigureColor getInturn() {
 		return inTurn;
 	}
 	public Situations getEndSitation() {
 		return endSituation;
 	}
+	public void setgameTime(double l) {
+		gameTime = l;
+			}
+	public int[] getStepCount() {
+		return stepCount;
+	}
+	public int[] getJumpCount() {
+		return jumpCount;
+	}
+	public int[] getMultijumpCount() {
+		return multijumpCount;
+	}
+	public int[] getMovePossibilitiesOverall() {
+		return movePossibilitiesOverall;		
+	}
+	public int[] getMovePossibilitiesAvg() {
+		return movePossibilitiesAvg;
+	}
+	public int getTurnCount() {
+		return turnCount;
+	}
+
 }

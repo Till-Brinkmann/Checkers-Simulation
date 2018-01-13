@@ -11,8 +11,13 @@ package checkers;
  */
 
 public class Figure {
-	
+	/**
+	 * All available FigureColors.
+	 */
 	public enum FigureColor{WHITE, RED};	
+	/**
+	 * Enum containing all figure types.	 
+	 */
 	public enum FigureType{NORMAL,KING};
 	
 	private FigureColor color;
@@ -33,7 +38,7 @@ public class Figure {
 		this.y = y;
 	}
 	/**
-	 * Essential method to identify whether this the Figure Object is white or Red
+	 * Essential method to identify whether the Figure object is white or Red
 	 * <p>
 	 * @return color  a global predefined variable from the enumeration FigureColor.
 	 */
@@ -41,7 +46,7 @@ public class Figure {
 		return color;
 	}
 	/**
-	 * Essential method to identify whether this the Figure Object is a Man or a King
+	 * Essential method to identify whether the Figure object is a Man or a King
 	 * <p>
 	 * @return type  a global predefined variable from the enumeration FigureType.
 	 */
@@ -50,7 +55,7 @@ public class Figure {
 	}	
 	/**
 	 * This method alters the Figure's type.
-	 * This is needed, because when a man reaches the other side of the playfield his type has to change into a king. 
+	 * This is needed, because when a man reaches the other side of the playfield his type has to change to a king. 
 	 * <p>
 	 * @param type  a global predefined variable from the enumeration FigureType.
 	 */

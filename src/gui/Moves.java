@@ -1,9 +1,7 @@
 package gui;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.TextArea;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -15,13 +13,11 @@ import javax.swing.text.DefaultCaret;
 
 import checkers.Move;
 import checkers.Move.MoveType;
-
+/**
+ * A window that displays every move in the game as text.
+ */
 public class Moves extends JFrame{
-	/**
-	 * 
-	 */
 	
-	private static final long serialVersionUID = -2256803045454871738L;
 	private DefaultCaret caret;
 	private ImageIcon guideIcon;
 	private JPanel text;
