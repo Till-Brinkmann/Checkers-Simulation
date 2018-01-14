@@ -15,8 +15,7 @@ Simply click on Game>new Game. In the upcoming window you can choose what player
 By clicking on  Game>save game, the situation on the board, is saved as a .pfs file in the [resources/playfieldSaves](resources/playfieldSaves) directory. If you want to load this specific situation, you click Game>load game and selected the .pfs file.
 During a game you can also stop and pause the game by clicking on Run. The console gives you current information about the happenings in the program.
 ### How to train your own Neural Network
-Instead of using the two already existing and trained neuronal networks, we give every user the possibility to train a fully customizable evolutionary-based neuronal network. By clicking on Game>NN Training, a new window with various options appears. When a run is finished the program saves all surviver of the last epoch in the [resources/NNSave](resource/NNSave) directory as .nni files. Now you can either continue learning by ticking the checkbox 'continue training' or create new ones with a different set-up.
-If you want to play against one of your networks, you have to replace the .nni file in the [resources/NNPlayer1Info](resource/NNPlayer1Info) directory or the [resources/NNPlayer2Info](resource/NNPlayer2Info) directory with one of the nni. files in the NNSave folder.
+For that you can use the checkers simulation nnt (neural network training) program.
 ### Adding your own player
 If you want to program your own player in java, you can add it to the available players. But it has to have the interface player implemented. Moreover, the class file has to be copied in the [resources/AI](resources/AI)directory. After that it should appear in the two drop down menus when a new game is going to be created.
 ### More setup possibilities
