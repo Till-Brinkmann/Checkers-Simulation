@@ -4,7 +4,7 @@ package opponent;
 import checkers.NNMove;
 import checkers.NNPlayfield;
 import checkers.Player;
-import generic.List;
+import datastructs.List;
 import gui.CommandListener;
 import gui.NNGUI;
 /**

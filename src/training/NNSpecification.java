@@ -1,6 +1,5 @@
 package training;
 
-import json.JSONArray;
 import json.JSONObject;
 
 public class NNSpecification {

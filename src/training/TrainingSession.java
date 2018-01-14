@@ -102,10 +102,10 @@ public class TrainingSession {
 				save();
 			}
 		}
-		stopped = true;
 		synchronized(waitLock) {
-			
+			stopped = true;
 			waitLock.notify();
+			started = false;
 		}
 	}
 	
@@ -207,16 +207,15 @@ public class TrainingSession {
 	public void awaitStopping() {
 		if(!isRunning()) return;
 		stopTraining = true;
-		//synchronized(waitLock) {
-			//while(isRunning()) {
-//				try {
-//					waitLock.wait();
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-			//}
-		//}
-		started = false;
+		synchronized(waitLock) {
+			while(isRunning()) {
+				try {
+					waitLock.wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	/**
 	 * @return Returns true if a training is running currently, otherwise false.

@@ -3,8 +3,7 @@ package nn;
 import checkers.NNMove;
 import checkers.NNPlayfield;
 import checkers.Player;
-import generic.List;
-import gui.NNGUI;
+import datastructs.List;
 import training.NNSpecification;
 
 public class NNPlayer implements Player{

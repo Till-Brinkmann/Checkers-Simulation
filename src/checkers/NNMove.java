@@ -1,6 +1,6 @@
 package checkers;
 
-import generic.List;
+import datastructs.List;
 
 public class NNMove {
 	
