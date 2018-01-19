@@ -71,6 +71,7 @@ public class GameSettings extends JFrame{
 	private GameLogic gmlc;
 	private int slowness;
 	private JCheckBox useCurrentPf;
+	private JCheckBox autoPfTurning;
 	/**
 	 * Does everything!
 	 * @param pGui A refernz to the GUI object.
@@ -98,7 +99,7 @@ public class GameSettings extends JFrame{
 		setBackground(Color.WHITE);
 		gameSettingsIcon = new ImageIcon("resources/Icons/options.png");
 		setIconImage(gameSettingsIcon.getImage());
-		recordGame = new JCheckBox("gameRecording");
+		recordGame = new JCheckBox("Game recording");
 		recordGame.setBackground(Color.WHITE);
 		gameNameField = new JTextField(10);
 		okButton  = new JButton("confirm");
@@ -122,9 +123,9 @@ public class GameSettings extends JFrame{
 		slownessForSlowMode.setPaintLabels(true);
 		Hashtable<Integer, JLabel> table = new Hashtable<Integer, JLabel>();
 		
-		table.put(0, new JLabel("fast"));
-		table.put(1000, new JLabel("medium"));
-		table.put(2000, new JLabel("slow"));
+		table.put(0, new JLabel("Fast"));
+		table.put(1000, new JLabel("Medium"));
+		table.put(2000, new JLabel("Slow"));
 		slownessForSlowMode.setLabelTable(table);
 		slownessForSlowMode.setForeground(Color.CYAN);
 		slownessForSlowMode.setBackground(Color.WHITE);
@@ -133,7 +134,7 @@ public class GameSettings extends JFrame{
 		displayCheckBox.setBackground(Color.WHITE);
 		displayCheckBox.setEnabled(false);
 		
-		useCurrentPf = new JCheckBox("using current playfield",false);
+		useCurrentPf = new JCheckBox("Using current playfield",false);
 		useCurrentPf.setBackground(Color.WHITE);
 		if(gmlc.getPlayfield().testPlayability()) {
 			useCurrentPf.setEnabled(true);
@@ -141,6 +142,9 @@ public class GameSettings extends JFrame{
 		else {
 			useCurrentPf.setEnabled(false);
 		}
+		autoPfTurning = new JCheckBox("Auto playfield turning", false);
+		autoPfTurning.setBackground(Color.WHITE);
+		
 		slownessForSlowMode.addChangeListener(new ChangeListener()
         {
         	public void stateChanged(ChangeEvent evt){
@@ -195,7 +199,7 @@ public class GameSettings extends JFrame{
 	 */
 	private void createWindow() {
 		setResizable(false);
-		setSize(300,250);
+		setSize(300,325);
 		setAlwaysOnTop (true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
@@ -224,6 +228,7 @@ public class GameSettings extends JFrame{
 		playerSelection.add(player2ComboBox);
 		playerSelection.add(displayCheckBox);
 		playerSelection.add(useCurrentPf);
+		playerSelection.add(autoPfTurning);
 		
 		JPanel slownessPanel = new JPanel();
 		slownessPanel.setPreferredSize(new Dimension(300,6));
@@ -337,7 +342,7 @@ public class GameSettings extends JFrame{
     	    		if(recordGameIsEnabled) {
     	    			gmlc.setManager(new EvaluationManager((int)roundsSpinner.getValue(),gameName , red, white));
     	    		}
-    	    		gmlc.startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
+    	    		gmlc.startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected(), autoPfTurning.isSelected());
 				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
 						 InvocationTargetException | NoSuchMethodException | SecurityException e) {
 					gui.console.printWarning("GameSettings", "failed to load the ai");

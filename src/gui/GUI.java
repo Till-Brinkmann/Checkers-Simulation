@@ -250,6 +250,15 @@ public class GUI extends JFrame{
             	movesWindow.setVisible(true);
             }
         });
+        JMenuItem turnPf = new JMenuItem("Turn Playfield");
+        turnPf.setBackground(Color.WHITE);
+        turnPf.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	playfieldpanel.turnPlayfield();
+            }
+        });
         JCheckBoxMenuItem showfieldnumbers = new JCheckBoxMenuItem("show field numbers");
         showfieldnumbers.setBackground(Color.WHITE);   
         showfieldnumbers.addActionListener(new ActionListener()
@@ -259,7 +268,7 @@ public class GUI extends JFrame{
         	playfieldpanel.buttonNumeration(showfieldnumbers.isSelected());
             }
 
-        });
+        });        
         //has to be accessabled
         displayEnabled = new JCheckBoxMenuItem("display field");
         displayEnabled.setBackground(Color.WHITE);
@@ -343,6 +352,7 @@ public class GUI extends JFrame{
         preferences.add(speed);
         preferences.add(color);
         preferences.add(sound);
+        preferences.add(turnPf);
         preferences.add(showmoves);
         preferences.add(showfieldnumbers);
         preferences.add(displayEnabled);

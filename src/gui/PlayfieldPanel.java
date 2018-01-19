@@ -25,23 +25,26 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	public final ImageIcon king;
 	public Playfield playfield;
 	private JButton[][] buttons;
-	GameLogic gamelogic;
-	Console console;
-	CommandListener drawDecision;
+	public GameLogic gamelogic;
+	public Console console;
+	public CommandListener drawDecision;
+	
 	//for move-making
 	private int[][] coords;
 	private int[][] multiJumpOptions;
-
 	private enum Click{ZERO,FIRST,SECOND};
 	private Click clickSituation = Click.ZERO;
-	FigureColor figurecolor;
+	private FigureColor figurecolor;
 	List<Figure> jumpFigures;
 	private boolean wantsDraw = false;
 	List<Move> list;
+	
+	//for playfield turning
+	public FigureColor pfTurnDirection;
 
 	/**
 	 * Sets the needed references and initializes all necessary object. After that it calls the method createPlayfieldPanel().
-	 * <o>
+	 * <p>
 	 * @param pGamelogic
 	 * @param pConsole
 	 */
@@ -89,6 +92,37 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
                     }
                   });
             }
+        }
+        pfTurnDirection = FigureColor.RED;
+	}
+	public void turnPlayfield() {		
+		removeButtons();
+		if(pfTurnDirection == FigureColor.RED) {
+	        for (int y = 0; y < playfield.SIZE ; y++) {
+	            for(int x = playfield.SIZE-1; x >= 0; x--){
+	        		add(buttons[x][y]);
+	            }            
+			}
+	        pfTurnDirection = FigureColor.WHITE;
+		}
+		else {
+	        for (int y = playfield.SIZE - 1; y >= 0 ; y--) {
+	            for(int x = 0; x < playfield.SIZE; x++){
+	            	add(buttons[x][y]);
+	            }
+	        }   
+	        pfTurnDirection = FigureColor.RED;
+		}
+        validate();
+
+	}
+	public void removeButtons() {
+        for (int y = playfield.SIZE - 1; y >= 0 ; y--) {
+            for(int x = 0; x < playfield.SIZE; x++){
+            	if(pfTurnDirection == FigureColor.RED) {
+            		remove(buttons[x][y]);   
+            	}
+            }	            
         }
 	}
 	/**
@@ -168,7 +202,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				setButtonColor(x, y, Color.white);
 				return;
 			case RED:
-			//TODO das richtige rot für die figuren finden
 				setButtonColor(x, y, new Color(160,10,10));
 				return;
 		}

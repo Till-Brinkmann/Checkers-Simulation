@@ -136,7 +136,6 @@ public class Round {
 		try {
 			FileUtilities.saveGameSituation(gmlc.getPlayfield(),roundsPath.getAbsolutePath(),"Turn" + (gmlc.getTurnCount()));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}

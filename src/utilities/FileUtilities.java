@@ -224,7 +224,6 @@ public class FileUtilities {
 				}
 			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		URL[] urlArray = new URL[urls.length];
