@@ -1,7 +1,9 @@
 package checkers;
 
 import datastructs.List;
-
+/**
+ * More efficient Move for NN training.
+ */
 public class NNMove {
 	
 	public static final NNMove INVALID = new NNMove((byte)0,(byte)0,0);

@@ -11,7 +11,9 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
-
+/**
+ * Main frame of the program.
+ */
 public class NNGUI extends JFrame{
 
 	public static Console console = new Console();
@@ -53,6 +55,12 @@ public class NNGUI extends JFrame{
 		});
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setVisible(true);
+		//in case the resources do not exist make them now
+		if(!TrainingPanel.tsDirsDir.exists()) TrainingPanel.tsDirsDir.mkdirs();
+		//load sessions
+		console.printInfo("Loading Training sessions...");
+		tp.loadTrainingSessions();
+		console.printInfo("Fininshed.");
 	}
 	
 	private void initComponents(){

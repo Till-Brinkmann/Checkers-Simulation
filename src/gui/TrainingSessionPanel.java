@@ -33,7 +33,6 @@ public class TrainingSessionPanel extends JPanel {
 			"Sigmoid Max: ",
 			"Weight Min: ",
 			"Weight Max: ",
-			"Default Mutationpercentage: ",
 			"Current Mutationpercentage: "
 	};
 	protected JButton startStop;
@@ -59,7 +58,7 @@ public class TrainingSessionPanel extends JPanel {
 				new Insets(0,0,0,0),
 				0,
 				0);
-		for(int i = 0; i < 12; i++) {
+		for(int i = 0; i < 11; i++) {
 			add(new JLabel(nnspecLabelnames[i]), c);
 			nnspecLabels[i] = new JLabel("No Value");
 			c.gridx = 1;
@@ -90,17 +89,17 @@ public class TrainingSessionPanel extends JPanel {
 	
 	public void update() {
 		if(ts == null) {
-			for(int i = 0; i < 12; i++) {
+			for(int i = 0; i < 11; i++) {
 				nnspecLabels[i].setText("No Value");
 			}
 			startStop.setEnabled(false);
 			return;
 		}
 		String[] specStrings = ts.nnspecs.toStringArray();
-		for(int i = 0; i < 11; i++) {
+		for(int i = 0; i < 10; i++) {
 			nnspecLabels[i].setText(specStrings[i]);
 		}
-		nnspecLabels[11].setText(Float.toString(ts.changePercentage));
+		nnspecLabels[10].setText(Float.toString(ts.changePercentage));
 		if(ts.isRunning()) {
 			startStop.setForeground(Color.RED);
 			startStop.setText("Stop");

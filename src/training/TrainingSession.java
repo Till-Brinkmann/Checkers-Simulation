@@ -2,20 +2,25 @@ package training;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 
 import checkers.NNGame;
+import checkers.Player;
+import gui.CommandListener;
 import gui.NNGUI;
 import gui.TrainingPanel;
+import json.JSONArray;
 import json.JSONObject;
 import nn.NNPlayer;
 import opponent.MiniMaxAB;
+import opponent.RandomAI;
 
 /**
  * A training session represents the whole process of training a nn.
- * TODO This includes saving all necessary setup information (permanently on disk)
+ * This includes saving all necessary setup information (permanently on disk)
  *
  */
 public class TrainingSession {
@@ -23,8 +28,7 @@ public class TrainingSession {
 	public enum TrainingMode{
 		NORMAL,
 		MINMAX,
-		RULES,
-		STRATEGY
+		RANDOMAI,
 	}
 	public final String name;
 	
@@ -41,8 +45,17 @@ public class TrainingSession {
 	private Object waitLock;
 	
 	public float changePercentage;
+	public float defaultChangePercentage;
+	public float learnrate;
 	
 	public long epoch;
+	
+	private Player opponent;
+	
+	File sessionDir;
+	
+	//for RandomAi mode
+	private int rtp = 10;
 	
 	public final Comparator<NNPlayer> nnPlayerComparator = new Comparator<NNPlayer>(){			
 		@Override
@@ -52,52 +65,179 @@ public class TrainingSession {
 		
 	};
 	
-	private MiniMaxAB miniMax;
-	
-	public TrainingSession(String name, TrainingMode mode, NNSpecification nnspecs) {
+	public TrainingSession(
+			String name,
+			TrainingMode mode,
+			NNSpecification nnspecs,
+			float defaultChangePercentage,
+			float changePercentage,
+			float learnrate,
+			int epoch) {
 		this.name = name;
 		this.mode = mode;
 		this.nnspecs = nnspecs;
-		this.changePercentage = nnspecs.defaultChangePercentage;
+		this.defaultChangePercentage = defaultChangePercentage;
+		this.learnrate = learnrate;
+		this.changePercentage = changePercentage;
+		sessionDir = new File(TrainingPanel.tsDirsDir.getPath() + "/" + name);
 		nnPlayer = new NNPlayer[nnspecs.nnQuantity];
-		//TODO try loading NNPlayer from disk
-		if(nnPlayer[0] == null){
-			//we do not have any players to continue training with
-			//load new ones
-			for(int i = 0; i < nnspecs.nnQuantity; i++){
-				nnPlayer[i] = new NNPlayer(nnspecs);
-				nnPlayer[i].net.randomWeights();
-			}
-		}
+		loadNNPlayer();
 		waitLock = new Object();
 		started = false;
 	}
-//	public TrainingSession(File saveDir) {
-//		//TODO load from disk
-//	}
+	
+	private void loadNNPlayer() {
+		//IOException err = new IOException("The nn file does not match the requirements of this trainingsession.");
+		File[] nnfiles = new File(sessionDir.getPath() + "/NNPlayer").listFiles();
+		FileReader fileReader;
+		//temp vars for nn parameters
+		double[][] afterInputWeights;
+		double[][][] hiddenWeights;
+		double[][] toOutputWeights;
+        double [][] bias;
+		//char buffer
+		char[] chars = new char[1000000];
+		//try loading every file
+		if(nnfiles != null) {
+			for(int nncounter = 0; nncounter < nnfiles.length; nncounter++) {
+				try {
+					//reset temps
+					afterInputWeights = new double[nnspecs.hiddenNeuronCount][nnspecs.inputs];
+					hiddenWeights = new double[nnspecs.hiddenLayerCount - 1][nnspecs.hiddenNeuronCount][nnspecs.hiddenNeuronCount];
+					toOutputWeights = new double[nnspecs.outputs][nnspecs.hiddenNeuronCount];
+			        bias = new double[nnspecs.hiddenLayerCount + 2][nnspecs.hiddenNeuronCount];
+			        bias[0] = new double[nnspecs.inputs];
+			        bias[bias.length-1] = new double[nnspecs.outputs];
+			        bias[0] = new double[nnspecs.inputs];
+			        bias[bias.length-1] = new double[nnspecs.outputs];
+					//create a new buffer that is big enough to hold all data
+					chars = new char[(int)nnfiles[nncounter].length()];
+					//init filereader
+					fileReader = new FileReader(nnfiles[nncounter]);
+					//read all chars and close
+					fileReader.read(chars);
+					fileReader.close();
+					//create a new JSONObject from the char array
+					JSONObject nnobject = new JSONObject(String.valueOf(chars));
+					//load all information from the nnobject
+					JSONArray array = nnobject.getJSONArray("AfterInputWeights");
+					if(array.length() != afterInputWeights.length);
+						//throw err;
+					JSONArray innerArray;
+					for(int i = 0; i < array.length(); i++) {
+						innerArray = array.getJSONArray(i);
+						if(innerArray.length() != afterInputWeights[i].length)
+							;//throw err;
+						for(int j = 0; j < innerArray.length(); j++) {
+							afterInputWeights[i][j] = innerArray.getDouble(j);
+						}
+					}
+					JSONArray innerArray2;
+					array = nnobject.getJSONArray("HiddenWeights");
+					if(array.length() != hiddenWeights.length)
+						;//throw err;
+					for(int i = 0; i < array.length(); i++) {
+						innerArray = array.getJSONArray(i);
+						if(innerArray.length() != hiddenWeights[i].length)
+							;//throw err;
+						for(int j = 0; j < innerArray.length(); j++) {
+							innerArray2 = innerArray.getJSONArray(j);
+							if(innerArray2.length() != hiddenWeights[i][j].length)
+								;//throw err;
+							for(int k = 0; k < innerArray2.length(); k++) {
+								hiddenWeights[i][j][k] = innerArray2.getDouble(k);
+							}
+						}
+					}
+					array = nnobject.getJSONArray("ToOutputWeights");
+					if(array.length() != toOutputWeights.length)
+						;//throw err;
+					for(int i = 0; i < array.length(); i++) {
+						innerArray = array.getJSONArray(i);
+						if(innerArray.length() != toOutputWeights[i].length)
+							;//throw err;
+						for(int j = 0; j < innerArray.length(); j++) {
+							toOutputWeights[i][j] = innerArray.getDouble(j);
+						}
+					}
+					array = nnobject.getJSONArray("Bias");
+					if(array.length() != toOutputWeights.length)
+						;//throw err;
+					for(int i = 0; i < array.length(); i++) {
+						innerArray = array.getJSONArray(i);
+						if(innerArray.length() != bias[i].length)
+							;//throw err;
+						for(int j = 0; j < innerArray.length(); j++) {
+							toOutputWeights[i][j] = innerArray.getDouble(j);
+						}
+					}
+					nnPlayer[nncounter] = new NNPlayer(nnspecs);
+					nnPlayer[nncounter].net.afterInputWeights = afterInputWeights;
+					nnPlayer[nncounter].net.hiddenWeights = hiddenWeights;
+					nnPlayer[nncounter].net.toOutputWeights = toOutputWeights;
+					nnPlayer[nncounter].net.bias = bias;
+				} catch (Exception e) {
+					e.printStackTrace();
+					//something bad happened so just make a new player with random weights
+					nnPlayer[nncounter] = new NNPlayer(nnspecs);
+					nnPlayer[nncounter].net.randomWeights();
+				}
+				//we filled the array so we are done
+				if(nncounter == nnPlayer.length - 1) return;
+			}
+			//fill the rest with new random players
+			for(int i = nnfiles.length; i < nnPlayer.length; i++) {
+				nnPlayer[i] = new NNPlayer(nnspecs);
+				nnPlayer[i].net.randomWeights();
+			}
+			return;
+		}
+		for(int i = 0; i < nnPlayer.length; i++) {
+			nnPlayer[i] = new NNPlayer(nnspecs);
+			nnPlayer[i].net.randomWeights();
+		}
+	}
 	
 	public void train(){
+		NNGUI.console.printInfo("Reloading NNPlayer...", name);
+		loadNNPlayer();
 		started = true;
 		stopTraining = false;
 		stopped = false;
 		NNGUI.console.printInfo("Starting Training", name);
 		//do some setup
-		if(mode == TrainingMode.MINMAX) miniMax = new MiniMaxAB();
+		opponent = mode == TrainingMode.MINMAX ? new MiniMaxAB() : null;
+		if(mode == TrainingMode.RANDOMAI) {
+			opponent = new RandomAI();
+			NNGUI.console.addCommandListener(new CommandListener() {
+				@Override
+				public boolean processCommand(String command, String[] args) {
+					if(command.equals("set") && args.length == 2) {
+						if(args[0].equals("Rounds")) {
+							rtp = Integer.parseInt(args[1]);
+							return true;
+						}
+					}
+					return false;
+				}
+				
+			});
+		}
+		//training loop
 		while(!stopTraining) {
 			switch(mode){
 			case NORMAL:
 				trainNormal();
 				break;
 			case MINMAX:
-				trainWMiniMax();
+				trainAgainstMiniMax();
 				break;
-			case RULES:
-				break;
-			case STRATEGY:
-				break;
+			case RANDOMAI:
+				trainAgainstRandomAI(rtp);
 			}
+			
 			epoch++;
-			//in case the program or the computer crashes.
+			//save in case the program or the computer crashes.
 			if(epoch % 100 == 0) {
 				save();
 			}
@@ -128,17 +268,17 @@ public class TrainingSession {
     	randomizeArray();
     	//TODO diesen wert auch editierbar machen
     	//in der gui updaten
-    	changePercentage /= (1 + nnspecs.learnrate);
+    	changePercentage *= (1 - learnrate);
 	}
 	
-	private void trainWMiniMax() {
+	private void trainAgainstMiniMax() {
 		resetPlayer();
 		for(NNPlayer p : nnPlayer) {
 			//starts first
-			new NNGame(p, miniMax)
+			new NNGame(p, opponent)
 			.start();
 			//and as second
-			new NNGame(miniMax, p)
+			new NNGame(opponent, p)
 			.start();
 		}
 		sortAndCalculateSum();
@@ -146,9 +286,30 @@ public class TrainingSession {
     		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
     		nnPlayer[i].net.changeAll(changePercentage);
     	}
-		changePercentage /= (1 + nnspecs.learnrate);
+		changePercentage *= (1 - learnrate);
 	}
-	//----training helper methods start----
+	private void trainAgainstRandomAI(int roundsToPlay) {
+		resetPlayer();
+		for(NNPlayer p : nnPlayer) {
+			for(int rounds = 0; rounds < roundsToPlay; rounds++) {
+				//starts first
+				new NNGame(p, opponent)
+				.start();
+				//and as second
+				new NNGame(opponent, p)
+				.start();
+			}
+		}
+		sortAndCalculateSum();
+		for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
+    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
+    		nnPlayer[i].net.changeAll(changePercentage);
+    	}
+		changePercentage *= (1 - learnrate);
+	}
+	
+	//----training helper methods start----//
+	
 	private NNPlayer weightedRandomSelection(){
 		float random = (float)Math.random() * sumFitness;
 		for(NNPlayer p : nnPlayer) {
@@ -232,14 +393,14 @@ public class TrainingSession {
 		.put("Mode", mode.name())
 		.put("NNSpecs", nnspecs.toJSONObject())
 		.put("Current Changepercentage", changePercentage)
+		.put("Default Changepercentage", defaultChangePercentage)
+		.put("Learnrate", learnrate)
 		.put("Epoch", epoch);
 	}
 	
 	public void save() {
 		FileOutputStream writer;
-		File sessionDir;
 		File nnPlayerDir;
-		sessionDir = new File(TrainingPanel.tsDir.getPath() + "/" + name);
 		try {
 			if(!sessionDir.exists()) sessionDir.mkdirs();
 			writer = new FileOutputStream(new File(sessionDir.getPath() + "/Session.json"));

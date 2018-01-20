@@ -17,12 +17,11 @@ public class NNSpecification {
 	public final float weightMin;
 	public final float weightMax;
 	
-	public final float defaultChangePercentage;
-	public final float learnrate;
+	
 
 	public NNSpecification(int inputs, int hiddenLayerCount, int hiddenNeuronCount, int outputs,
 			float sigmin, float sigmax, float weightMin, float weightMax, int nnQuantity,
-			int nnSurviver, float defaultChangePercentage, float learnrate) {
+			int nnSurviver) {
 		this.inputs = inputs;
 		this.hiddenLayerCount = hiddenLayerCount;
 		this.hiddenNeuronCount = hiddenNeuronCount;
@@ -33,8 +32,6 @@ public class NNSpecification {
 		this.weightMax = weightMax;
 		this.nnQuantity = nnQuantity;
 		this.nnSurviver = nnSurviver;
-		this.defaultChangePercentage = defaultChangePercentage;
-		this.learnrate = learnrate;
 	}
 	
 	public String[] toStringArray() {
@@ -49,22 +46,19 @@ public class NNSpecification {
 			Float.toString(sigmax),
 			Float.toString(weightMin),
 			Float.toString(weightMax),
-			Float.toString(defaultChangePercentage),
 		};
 	}
 	public JSONObject toJSONObject() {
 		return new JSONObject()
-				.put("NNQuantity", nnQuantity)
-				.put("NNSurviver", nnSurviver)
+				.put("NN Quantity", nnQuantity)
+				.put("NN Surviver", nnSurviver)
 				.put("Inputs", inputs)
-				.put("HiddenlayerCount", hiddenLayerCount)
-				.put("HiddenNeuronCount", hiddenNeuronCount)
+				.put("Hiddenlayer Count", hiddenLayerCount)
+				.put("Hiddenneuron Count", hiddenNeuronCount)
 				.put("Outputs", outputs)
 				.put("Sigmoid Min", sigmin)
 				.put("Sigmoid Max", sigmax)
 				.put("Weight Min", weightMin)
-				.put("Weight Max", weightMax)
-				.put("Default ChangePercentage", defaultChangePercentage)
-				.put("Learnrate", learnrate);
+				.put("Weight Max", weightMax);
 	}
 }
