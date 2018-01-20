@@ -71,6 +71,11 @@ public class GameSettings extends JFrame{
 	private GameLogic gmlc;
 	private int slowness;
 	private JCheckBox useCurrentPf;
+	private JCheckBox autoPfTurning;
+	/**
+	 * Does everything!
+	 * @param pGui A refernz to the GUI object.
+	 */
 	public GameSettings(GUI pGui) {	
 		super("Game Settings");
 		gui = pGui;
@@ -87,11 +92,14 @@ public class GameSettings extends JFrame{
 			player2ComboBox.addItem(key);
 		}
 	}
+	/**
+	 * This method initializes all window elements and add the related actionlisteners.
+	 */
 	private void initialize() {
 		setBackground(Color.WHITE);
 		gameSettingsIcon = new ImageIcon("resources/Icons/options.png");
 		setIconImage(gameSettingsIcon.getImage());
-		recordGame = new JCheckBox("gameRecording");
+		recordGame = new JCheckBox("Game recording");
 		recordGame.setBackground(Color.WHITE);
 		gameNameField = new JTextField(10);
 		okButton  = new JButton("confirm");
@@ -115,9 +123,9 @@ public class GameSettings extends JFrame{
 		slownessForSlowMode.setPaintLabels(true);
 		Hashtable<Integer, JLabel> table = new Hashtable<Integer, JLabel>();
 		
-		table.put(0, new JLabel("fast"));
-		table.put(1000, new JLabel("medium"));
-		table.put(2000, new JLabel("slow"));
+		table.put(0, new JLabel("Fast"));
+		table.put(1000, new JLabel("Medium"));
+		table.put(2000, new JLabel("Slow"));
 		slownessForSlowMode.setLabelTable(table);
 		slownessForSlowMode.setForeground(Color.CYAN);
 		slownessForSlowMode.setBackground(Color.WHITE);
@@ -126,7 +134,7 @@ public class GameSettings extends JFrame{
 		displayCheckBox.setBackground(Color.WHITE);
 		displayCheckBox.setEnabled(false);
 		
-		useCurrentPf = new JCheckBox("using current playfield",false);
+		useCurrentPf = new JCheckBox("Using current playfield",false);
 		useCurrentPf.setBackground(Color.WHITE);
 		if(gmlc.getPlayfield().testPlayability()) {
 			useCurrentPf.setEnabled(true);
@@ -134,6 +142,9 @@ public class GameSettings extends JFrame{
 		else {
 			useCurrentPf.setEnabled(false);
 		}
+		autoPfTurning = new JCheckBox("Auto playfield turning", false);
+		autoPfTurning.setBackground(Color.WHITE);
+		
 		slownessForSlowMode.addChangeListener(new ChangeListener()
         {
         	public void stateChanged(ChangeEvent evt){
@@ -183,9 +194,12 @@ public class GameSettings extends JFrame{
 			}
         });
 	}
+	/**
+	 * Sets up the window properties and adds the elements to the window.
+	 */
 	private void createWindow() {
 		setResizable(false);
-		setSize(300,250);
+		setSize(300,325);
 		setAlwaysOnTop (true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
@@ -214,6 +228,7 @@ public class GameSettings extends JFrame{
 		playerSelection.add(player2ComboBox);
 		playerSelection.add(displayCheckBox);
 		playerSelection.add(useCurrentPf);
+		playerSelection.add(autoPfTurning);
 		
 		JPanel slownessPanel = new JPanel();
 		slownessPanel.setPreferredSize(new Dimension(300,6));
@@ -233,6 +248,9 @@ public class GameSettings extends JFrame{
 		add(backgroundPanel);		
 		setVisible(true);
 	}
+	/**
+	 * Searches for all available Players and adds them to a hashtable. 
+	 */
 	private void createPlayerTable() {
 		File[] files = new File("resources/AI").listFiles();
 		if(files != null) {
@@ -267,7 +285,9 @@ public class GameSettings extends JFrame{
 			}
 		}
 	}
-	
+	/**
+	 * Initiates a game by adjusting all values and options. After getting all information from the window elements, it calls the startGame() method in the GameLogic.
+	 */
 	private void createGame() {
 		if(gmlc.isInProgress()) {
     		gui.console.printWarning("A game is currently running. It has to be paused or stopped in order to create a new game.","Gamesettings");
@@ -322,7 +342,7 @@ public class GameSettings extends JFrame{
     	    		if(recordGameIsEnabled) {
     	    			gmlc.setManager(new EvaluationManager((int)roundsSpinner.getValue(),gameName , red, white));
     	    		}
-    	    		gmlc.startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected());
+    	    		gmlc.startGame(gameName, red, white,(int)roundsSpinner.getValue(),slowness, displayCheckBox.isSelected(), useCurrentPf.isSelected(), autoPfTurning.isSelected());
 				} catch (InstantiationException | IllegalAccessException | IllegalArgumentException |
 						 InvocationTargetException | NoSuchMethodException | SecurityException e) {
 					gui.console.printWarning("GameSettings", "failed to load the ai");
@@ -333,6 +353,17 @@ public class GameSettings extends JFrame{
     	setAlwaysOnTop(false);
     	setVisible(false);
 	}
+	/**
+	 * Returns the first Player by creating a new instance of a class represented by a .class file. 
+	 * <p>
+	 * @return Player
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 */
 	public Player getPlayer1() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
 	InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(currentSelectionPlayer1.equals("Player")) {
@@ -342,6 +373,17 @@ public class GameSettings extends JFrame{
 		gui.console.printInfo("Class" + ai.getName() + " was loaded successfully", "GameSettings");
 		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
+	/**
+	 * Returns the second Player by creating a new instance of a class represented by a .class file. 
+	 * <p>
+	 * @return Player
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 */
 	public Player getPlayer2() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
 	InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(currentSelectionPlayer2.equals("Player")) {
@@ -351,7 +393,11 @@ public class GameSettings extends JFrame{
 		gui.console.printInfo("Class" + ai.getName() + " was loaded successfully", "GameSettings");
 		return (Player) ai.getConstructor(GameLogic.class, Console.class).newInstance(gui.getGameLogic(), gui.console);
 	}
-	
+	/**
+	 * Tests, if a class has implemented the Player interface.
+	 * @param ai2 
+	 * @return True, if the class implements this interface. False, when not.
+	 */
 	private boolean testForPlayerInterface(Class<?> ai2) {
 		for(Class<?> c : ai2.getInterfaces()) {
 			if(c.equals(Player.class)) {
@@ -359,12 +405,7 @@ public class GameSettings extends JFrame{
 				return true;
 			}
 		}
-		//gui.console.printWarning("GameSettings","Interface could not be found in "+ ai2.getName());
 		return false;
-	}
-	
-	public void updateBackground( Color color){
-		backgroundPanel.setBackground(color);
 	}
 }
 

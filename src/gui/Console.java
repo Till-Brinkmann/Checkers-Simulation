@@ -87,6 +87,7 @@ public class Console{
 	}
 	/**
 	 * Creates the output section of the console.
+	 * <p>
 	 * @return Returns a JScrollPane holding the console output area.
 	 */
 	private JScrollPane createOutput(){
@@ -104,6 +105,7 @@ public class Console{
 	}
 	/**
 	 * Creates the input section of the console.
+	 * <p>
 	 * @return Returns a JScrollPane holding the console input area.
 	 */
 	private JScrollPane createInput(){
@@ -126,7 +128,9 @@ public class Console{
 
 	}
 	/**
-	 * Processes the given KeyEvent.
+	 * Processes the given KeyEvent. If the enter key was pressed it tests, if the input is a command or a message and based on that descision the next
+	 * are induced.
+	 * <p>
 	 * @param keyevent
 	 */
 	private void processKeyEvent(KeyEvent keyevent){
@@ -175,11 +179,19 @@ public class Console{
 			break;
 		}
 	}
-        
+    /**
+     * Adds a CommandListener to the listeners List.
+     * <p>
+     * @param l An object with an implemented CommandListener interface
+     */
 	public void addCommandListener(CommandListener l){
 		listener.append(l);
 	}
-	
+    /**
+     * Removes a CommandListener from the listeners List. If it does not exist, nothing changes.
+     * <p>
+     * @param l An object with an implemented CommandListener interface
+     */
 	public void removeCommandListener(CommandListener l){
 		listener.toFirst();
 		while(listener.hasAccess()){
@@ -190,7 +202,11 @@ public class Console{
 			listener.next();
 		}
 	}
-
+	/**
+	 * This method test, if the console input equals to a existing command. If it does then the command is directly executed.
+	 * <p>
+	 * @param in The input which was typed in the console
+	 */
 	private void processCommand(String in) {
 		boolean wasProcessed = false;
 		//cut the slash off
@@ -297,6 +313,9 @@ public class Console{
 		}
 		if(!wasProcessed) printCommandOutput("The command could not be processed by any module.", "Maybe you wrote it wrong.");
 	}
+	/**
+	 * Prints all available commands on the console.
+	 */
 	public void commandInfos() {
 		printInfo("Available console commands:","GUI");
 		print("/set MaxLines [number]");

@@ -22,12 +22,18 @@ public class Move implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	/**
+	 * All possible types of a move
+	 */
 	public static enum MoveType{
 		STEP,
 		JUMP,
 		MULTIJUMP,
 		INVALID
 	};
+	/**
+	 * All possible directions a Figure can move.
+	 */
 	public static enum MoveDirection{
 		FR, // Forward/Right
 		FL, // Forward/Left

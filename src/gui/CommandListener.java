@@ -4,7 +4,8 @@ package gui;
  */
 public interface CommandListener {
 	/**
-	 * method to process the command passed in the command argument
+	 * A method to process the command passed in the command argument.
+	 * <p>
 	 * @param command
 	 * @return true if the command could be processed otherwise false
 	 */

@@ -179,11 +179,9 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 						playStopMusic(false);						
 						
 					} catch (UnsupportedAudioFileException | IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				} catch (LineUnavailableException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}            	
             }
@@ -205,7 +203,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 							randomMusicClip(false);
 						}
 					} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
             	}
@@ -229,7 +226,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 							randomMusicClip(false);
 						}
 					} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
             	}
@@ -350,7 +346,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 								break;
 						}
 					} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}						
 				}				
@@ -492,7 +487,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 				try {
 					playSound(soundFiles[0]);
 				} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
                 break;
@@ -503,7 +497,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 				try {
 					playSound(soundFiles[1]);
 				} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
                 break;
@@ -514,7 +507,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 				try {
 					playSound(soundFiles[2]);
 				} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
                 break;
@@ -525,7 +517,6 @@ public class SoundSettings extends JFrame implements PlayfieldSound
 				try {
 					playSound(soundFiles[3]);
 				} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
                 break;

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -174,12 +175,42 @@ public class FileUtilities {
 			writer.write("Move possibilities overall: " + movePossibilitiesOverall[1] + "\n");	
 			writer.write("Move possibilities avg: " + movePossibilitiesAvg[0] + "\n\n");
 			writer.write("");
-			writer.flush();
 			writer.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		
+	}
+	public static void createTotalTimesFile(double min, double max, double avg, double overall, String pathString){
+		File total = new File(pathString + "/Total Time.txt");
+		try {
+			FileWriter writer = new FileWriter(total);
+
+			
+			writer.write("Min: " + min + "\n");
+			writer.write("Max: " + max + "\n");
+			writer.write("Avg: " + avg + "\n");
+			writer.write("Overall: " + overall + "\n");
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public static void createRunSummaryFile(int redWins, int whiteWins, int draws, int stopped, int avgTurnCountsPerG, String name1, String name2, String pathString) {
+		File runSummary = new File(pathString + "/RunSummary.txt");
+		try {
+			FileWriter writer = new FileWriter(runSummary);
+			
+			
+			writer.write(name1 + " wins:" + redWins + " Times\n");
+			writer.write(name2 + " wins:" + whiteWins + " Times\n");
+			writer.write("Draws:"+ draws + "\n");
+			writer.write("Stopped games:" + stopped + "\n\n");
+			writer.write("Avg Turns per game: " + avgTurnCountsPerG);
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	public static URL[] getAiUrls() {
 		List<URL> urls = new List<URL>();
@@ -193,7 +224,6 @@ public class FileUtilities {
 				}
 			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		URL[] urlArray = new URL[urls.length];

@@ -25,8 +25,9 @@ public class List<ContentType>{
 		length = 0;
 	}
 	/**
-	 * Inserts the new content before current.
-	 * @param content The object to add.
+	 * Inserts the new content before current one.
+	 * <p>
+	 * @param content The object that will be added to the list.
 	 */
 	public void insert(ContentType content){
 		if(isEmpty()){
@@ -41,6 +42,11 @@ public class List<ContentType>{
 			length++;
 		}
 	}
+	/**
+	 * Inserts the new content at the end of the list.
+	 * <p>
+	 * @param content The object that will be added to the list.
+	 */
 	public void append(ContentType content){
 		if(isEmpty()){
 			first = new Entry(content);
@@ -53,8 +59,9 @@ public class List<ContentType>{
 		length++;
 	}
 	/**
-	 * Concats the given list ot this list.
-	 * @param list The list to concat.
+	 * Concatenates the given list to this list.
+	 * <p>
+	 * @param list The list which concats.
 	 * @return this For a slightly cleaner code when concatenating multiple lists or calling a method with a concatenated list.
 	 */
 	public List<ContentType> concat(List<ContentType> list){

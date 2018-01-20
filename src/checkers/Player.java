@@ -9,7 +9,6 @@ import checkers.Figure.FigureColor;
  * @author Marco Adamczyk
  */
 public interface Player {
-
 	/**
 	 * This method gives the Player the neccesary information, so that the Player can set up itself for the next move.
 	 * <p>

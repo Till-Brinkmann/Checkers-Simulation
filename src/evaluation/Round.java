@@ -10,7 +10,7 @@ import checkers.Player;
 import datastructs.List;
 import utilities.FileUtilities;
 /**
- * Holds the information to evaluate one round and provides methods to modify and acquire these values.
+ * Holds the information of one round and provides methods to modify and acquire these values.
  */
 public class Round {
 	EvaluationManager manager;
@@ -43,9 +43,15 @@ public class Round {
 
 	private int turnCount = 0;
 
-
-	
-	
+	/**
+	 * The constructor set all necessary variables, so that the basic information about this round are known.
+	 * <p>
+	 * @param currentRound The round number in the run.
+	 * @param path A String thats is representing the path to the round directory, in which all Files for this round are saved.
+	 * @param player1 An object with the Player interface that possesses in this round the red pieces.
+	 * @param player2 An object with the Player interface that possesses in this round the red pieces.
+	 * @param manager A reference to the EvaluationManager.
+	 */
 	public Round(int currentRound, File path, Player player1, Player player2, EvaluationManager manager) {
 		this.player1 = player1;
 		this.player2 = player2;
@@ -55,14 +61,24 @@ public class Round {
 		roundsPath = new File(path.getAbsolutePath() + "/Round " + (round+1));
 		roundsPath.mkdirs();
 	}
-	public void setMoveTime(long l,Player player) {
+	/**
+	 * Adds the time a player spend on a move to a List.
+	 * <p>
+	 * @param moveTime The time a Player spend on a move.
+	 * @param player An object with the Player interface.
+	 */
+	public void setMoveTime(long moveTime,Player player) {
 		if(player == player1) {
-			moveTimePlayer1.append(l);
+			moveTimePlayer1.append(moveTime);
 		}
 		else {
-			moveTimePlayer2.append(l);
+			moveTimePlayer2.append(moveTime);
 		}
 	}
+	/**
+	 * This method sets all information for this one round. It is only called after a round was finished.
+	 * @param gmlc A reference to the GameLogic.
+	 */
 	public void evaluateGame(GameLogic gmlc) {
 		endSituation = gmlc.getFinalSituation();
 		failed = gmlc.getFailed();
@@ -80,6 +96,9 @@ public class Round {
 		player1.saveInformation(roundsPath.getAbsolutePath());
 		player2.saveInformation(roundsPath.getAbsolutePath());
 	}
+	/**
+	 * Evaluates all move times from both players. Important values are saved in other variables.
+	 */
 	public void setTimes(){
 		float minTime = +Float.MAX_VALUE;
 		float maxTime = -Float.MIN_VALUE;
@@ -117,7 +136,6 @@ public class Round {
 		try {
 			FileUtilities.saveGameSituation(gmlc.getPlayfield(),roundsPath.getAbsolutePath(),"Turn" + (gmlc.getTurnCount()));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}

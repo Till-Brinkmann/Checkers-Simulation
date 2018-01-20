@@ -55,6 +55,7 @@ public class GameLogic {
 	private int currentRound = 0;
 	private int rounds;
 	
+	private boolean autoPfTurning;
 	//for evaluation
 	private EvaluationManager evaluationManager;
 	private long timeBeforeMove;
@@ -102,14 +103,15 @@ public class GameLogic {
 	 * @param displayActivated
 	 * @param useCurrentPf
 	 */
-	public void startGame(String gameName, Player playerRed, Player playerWhite, int rounds, int slowness, boolean displayActivated, boolean useCurrentPf){
+	public void startGame(String gameName, Player playerRed, Player playerWhite, int rounds, int slowness, boolean displayActivated, boolean useCurrentPf, boolean autoPfTurning){
 		//reset moveWindow
 		gui.movesWindow.resetTextArea();
 		gameInProgress = true;
 		pause = false;
 		//how many game should be played
 		this.rounds = rounds;
-		
+		//if the display should be turned after every move
+		this.autoPfTurning = autoPfTurning;
 		//if both player are one object one Player controls both white and red
 		twoPlayerMode = playerRed == playerWhite;
 		
@@ -134,7 +136,6 @@ public class GameLogic {
 		this.gameName = gameName;
 		
 		if(evaluationManager != null) {
-			evaluationManager.setPlayfield(field);
 			evaluationManager.createRound(currentRound);
 		}
 		//reset Varibles fpr
@@ -154,6 +155,10 @@ public class GameLogic {
 				finishGame(Situations.STOP,false);
 				return;
 			}
+		}
+		//turn the playfield in the right way
+		if(gui.playfieldpanel.pfTurnDirection == FigureColor.WHITE) {
+			gui.playfieldpanel.turnPlayfield();
 		}
 		playerRed.prepare(FigureColor.RED);
 		//prepare only needs to be called once for Red then
@@ -273,6 +278,7 @@ public class GameLogic {
 	 * uncluttered overview over the code.
 	 */
 	private void moveRequesting() {
+		gui.playfieldpanel.turnPlayfield();
 		switch(inTurn){
 			case RED:
 				if(!playerRed.equals(gui.playfieldpanel)) {
@@ -434,7 +440,7 @@ public class GameLogic {
 
 					@Override
 					public void compute() {
-						startGame(gameName, playerWhite, playerRed, rounds, slowness, gui.displayEnabled.isSelected(), false);
+						startGame(gameName, playerWhite, playerRed, rounds, slowness, gui.displayEnabled.isSelected(), false,autoPfTurning);
 					}
 					
 				});

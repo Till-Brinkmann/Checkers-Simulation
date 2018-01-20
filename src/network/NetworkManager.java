@@ -130,7 +130,6 @@ public class NetworkManager{
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			connector.closeConnection();
@@ -238,7 +237,7 @@ public class NetworkManager{
     	    	if(gui.getGameLogic().isInProgress()) {
     	    		gui.getGameLogic().finishGame(Situations.STOP,false);
     	    	}
-    	    	gui.getGameLogic().startGame("Online Game", playerRed, playerWhite, request.getRounds(), 1000, true, false);	
+    	    	gui.getGameLogic().startGame("Online Game", playerRed, playerWhite, request.getRounds(), 1000, true, false, false);	
     	    }
 	    });  	
 	}

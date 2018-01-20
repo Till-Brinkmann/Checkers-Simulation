@@ -25,53 +25,34 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	public final ImageIcon king;
 	public Playfield playfield;
 	private JButton[][] buttons;
-	GameLogic gamelogic;
-	Console console;
-	CommandListener drawDecision;
+	public GameLogic gamelogic;
+	public Console console;
+	public CommandListener drawDecision;
+	
 	//for move-making
 	private int[][] coords;
 	private int[][] multiJumpOptions;
-
 	private enum Click{ZERO,FIRST,SECOND};
 	private Click clickSituation = Click.ZERO;
-	FigureColor figurecolor;
+	private FigureColor figurecolor;
 	List<Figure> jumpFigures;
-	private boolean wantsDraw;
+	private boolean wantsDraw = false;
 	List<Move> list;
+	
+	//for playfield turning
+	public FigureColor pfTurnDirection;
 
+	/**
+	 * Sets the needed references and initializes all necessary object. After that it calls the method createPlayfieldPanel().
+	 * <p>
+	 * @param pGamelogic
+	 * @param pConsole
+	 */
 	public PlayfieldPanel(GameLogic pGamelogic, Console pConsole){
 		super();
 		king = new ImageIcon("resources/Icons/dame.png");
 		gamelogic = pGamelogic;
 		console = pConsole;
-		//TODO we have to think about that
-//		console.addCommandListener(new CommandListener(){
-//			public boolean processCommand(String command){
-//				if(command.equals("requestDraw")){
-//					gamelogic.requestDraw();
-//					return true;
-//				}
-//				return false;
-//			}
-//		});
-//		drawDecision = new CommandListener(){
-//			@Override
-//			public boolean processCommand(String command, String[] args){
-//				switch(command){
-//				case "yes":
-//				case "y":
-//					hasChosen = true;
-//					wantsDraw = true;
-//					return true;
-//				case "no":
-//				case "n":
-//					hasChosen = true;
-//					wantsDraw = false;
-//					return true;
-//				}
-//				return false;
-//			}
-//		};
 		playfield = gamelogic.getPlayfield();
 		playfield.setPlayfieldDisplay(this);
 		coords = new int[2][2];
@@ -81,6 +62,9 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		createPlayfieldPanel();
 		enableAllButtons(false);
 	}
+	/**
+	 * Sets window preferences, adds buttons to the button array and adds actionlisteners to every button.
+	 */
 	public void createPlayfieldPanel(){
 		setLayout(new GridLayout(playfield.SIZE,playfield.SIZE));
 		setPreferredSize(new Dimension(700,700));
@@ -109,7 +93,43 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
                   });
             }
         }
+        pfTurnDirection = FigureColor.RED;
 	}
+	public void turnPlayfield() {		
+		removeButtons();
+		if(pfTurnDirection == FigureColor.RED) {
+	        for (int y = 0; y < playfield.SIZE ; y++) {
+	            for(int x = playfield.SIZE-1; x >= 0; x--){
+	        		add(buttons[x][y]);
+	            }            
+			}
+	        pfTurnDirection = FigureColor.WHITE;
+		}
+		else {
+	        for (int y = playfield.SIZE - 1; y >= 0 ; y--) {
+	            for(int x = 0; x < playfield.SIZE; x++){
+	            	add(buttons[x][y]);
+	            }
+	        }
+	        pfTurnDirection = FigureColor.RED;
+		}
+        validate();
+
+	}
+	public void removeButtons() {
+        for (int y = playfield.SIZE - 1; y >= 0 ; y--) {
+            for(int x = 0; x < playfield.SIZE; x++){
+            	if(pfTurnDirection == FigureColor.RED) {
+            		remove(buttons[x][y]);   
+            	}
+            }	            
+        }
+	}
+	/**
+	 * Adds to every button specific coordinates, which describes the buttons location on the board.
+	 * <p>
+	 * @param selected True, if the coordinates should be added. False, if not.
+	 */
 	public void buttonNumeration(boolean selected) {
         for (int y = 0; y < playfield.SIZE; y++) {
             for(int x = 0; x < playfield.SIZE; x++){
@@ -128,15 +148,31 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	public JButton[][] getButtons(){
 		return buttons;
 	}
-
+	/**
+	 * Changes the color of distinct one button.
+	 * <p>
+	 * @param x       An integer variable which is representing a point on the vertical axis of the button array.
+	 * @param y	 	  An integer variable which is representing a point on the horizontal axis of the button array.	
+	 * @param color A Color object
+	 */
 	private void setButtonColor(int x, int y, Color color){
 		buttons[x][y].setBackground(color);
 	}
+	/**
+	 * Sets the icon of distinct button.
+	 * <p>
+	 * @param x       An integer variable which is representing a point on the vertical axis of the button array.
+	 * @param y	 	  An integer variable which is representing a point on the horizontal axis of the button array.	
+	 * @param icon An ImageIcon object.
+	 */
 	private void setButtonIcon(int x, int y, ImageIcon icon) {
 		buttons[x][y].setIcon(icon);
 	}
 
 	@Override
+	/**
+	 * Updates every button.
+	 */
 	public void updateDisplay() {
 		for(int y = 0; y < playfield.SIZE; y++){
 			for(int x = 0; x < playfield.SIZE; x++){
@@ -145,6 +181,12 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		}
 	}
 	@Override
+	/**
+	 * Compares a certain button to the exact same field on the board and sets it correct properties.
+	 * <p>
+	 * @param x       An integer variable which is representing a point on the vertical axis of the button array.
+	 * @param y	 	  An integer variable which is representing a point on the horizontal axis of the button array.	
+	 */
 	public void updateField(int x, int y) {
 		if(playfield.isOccupied(x, y)){
 			switch (playfield.field[x][y].getFigureType()){
@@ -160,7 +202,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 				setButtonColor(x, y, Color.white);
 				return;
 			case RED:
-			//TODO das richtige rot für die figuren finden
 				setButtonColor(x, y, new Color(160,10,10));
 				return;
 		}
@@ -170,6 +211,9 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			setButtonIcon(x, y, null);
 		}
 	}
+	/**
+	 * Sets the buttons color and icon as if the board is empty.
+	 */
 	public void clearField() {
 		  for (int y = 0; y < playfield.SIZE; y++) {
 	            for(int x = 0; x < playfield.SIZE; x++){
@@ -178,14 +222,17 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	            }
 	        }
 	}
+	/**
+	 * This method executes different actions depending on the button that was clicked.
+	 * <p>
+	 * @param x       An integer variable which is representing a point on the vertical axis of the button array.
+	 * @param y	 	  An integer variable which is representing a point on the horizontal axis of the button array.	
+	 */
 	private void saveCoordinates(int x, int y) {
 		switch(clickSituation) {
 		case ZERO:
 			if(playfield.isOccupied(x, y)){
-				//TODO x and y here are probably unsafe
 				if(Move.jumpIsPossible(playfield.field[x][y].getFigureColor(), playfield)){
-					//if a jump is possible only figures that can jump can be clicked
-					//TODO update jumpFigures
 					if(Move.getPossibleJumps(playfield.field[x][y], playfield).length != 0) {
 						selectFigure(x, y);
 					}
@@ -267,6 +314,11 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		}
 
 	}
+	/**
+	 * After the buttons were clicked and a valid move could be created, all included variables are reseted and the move is passed to the Gamelogic.
+	 * <p>
+	 * @param m A Move object.
+	 */
 	private void resetAndExecute(Move m) {
 		if(gamelogic.getTwoPlayerMode()){
 			//toggle color
@@ -281,13 +333,23 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		enableAllButtons(false);
 		gamelogic.makeMove(m);
 	}
+	/**
+	 * The spot that was clicked is saved and the buttons lineBorder thickness increases.
+	 * <p>
+	 * @param x       an integer variable which is representing a point on the vertical axis of the button array.
+	 * @param y	 	  an integer variable which is representing a point on the horizontal axis of the button array.	
+	 */
 	private void selectFigure(int x, int y){
 		coords[0][0] = x;
 		coords[0][1] = y;
 		clickSituation = Click.FIRST;
 		buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
 	}
-
+	/**
+	 * Change if the buttons should be clickable.
+	 * <p>
+	 * @param enabled True, if the buttons should be clickable. False, if not.
+	 */
 	public void enableAllButtons(boolean enabled) {
 		for(int x = 0; x < playfield.SIZE; x++){
 			for(int y = 0; y < playfield.SIZE; y++){
@@ -296,10 +358,19 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 		}
 	}
 
+	
+	/**
+	 * Sets the color that the playfieldpanel player has.
+	 */
 	@Override
 	public void prepare(FigureColor color) {
 		figurecolor = color;
 	}
+	
+	/**
+	 * Enables all buttons, so that a move can be made.
+	 * This method is called by the Gamelogic.
+	 */
 	@Override
 	public void requestMove() {
 		//enable all buttons exept for enemy figures
@@ -311,11 +382,17 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 			}
 		}
 	}
+	/**
+	 * Returns the name when seen as a player.
+	 */
 	@Override
 	public String getName(){
 		return "Human player (PlayfieldPanel)";
 	}
 	@Override
+	/**
+	 * Creates a Field in a certain path with specific information after a game.
+	 */
 	public void saveInformation(String pathName) {
 		File file = new File(pathName + "/Playfieldpanel(real Player) Information.txt");
 		PrintWriter writer ;
@@ -329,23 +406,6 @@ public class PlayfieldPanel extends JPanel implements PlayfieldDisplay, Player{
 	
 	@Override
 	public boolean acceptDraw(){
-		//TODO implement this functionality
-		//console.addCommandListener(drawDecision);
-		//console.printInfo("do you accept a draw? [yes/no] (default no)", "PlayfieldPanel");
-		//int counter = 5;
-		//defaults to false
-		wantsDraw = false;
-//		while(!hasChosen && counter != 0){
-//			console.print(String.valueOf(counter));
-//			try {
-//				wait(1000);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//			counter--;
-//		}
-//		console.removeCommandListener(drawDecision);
-//		hasChosen = false;
 		return wantsDraw;
 	}
 }

@@ -18,14 +18,24 @@ public class ColorSettings extends JFrame{
     private JPanel backgroundPanel;
     private JSlider[] backgroundSlider;
     private JLabel labelFg;
-    private JCheckBox officialFigureColor;
     private JButton okButton;
     GUI gui;
-
+    /**
+     * Initializes the color settings with random colors.
+     * <p>
+     * @param pGui A reference to the GUI objet.
+     */
 	public ColorSettings(GUI pGui) {
 		this(pGui, new Color((int)Math.round((Math.random()*Integer.MAX_VALUE*2)+Integer.MIN_VALUE)),
 				new Color((int)Math.round((Math.random()*Integer.MAX_VALUE*2)+Integer.MIN_VALUE)));
 	}
+	/**
+	 * Initializes the color settings with a distinct colors. 
+	 * <p>
+	 * @param gui A reference to the GUI object.
+	 * @param fg  A Color object.
+	 * @param bg A Color object
+	 */
 	public ColorSettings(GUI gui, Color fg ,Color bg) {
 		super("Color Settings");
 		this.gui = gui;
@@ -33,7 +43,12 @@ public class ColorSettings extends JFrame{
 		createWindow();
 		updateColors();
 	}
-	
+	/**
+	 * Initializes the rgb-sliders and the confirm button. Furthermore, it adds the actionlisteners.
+	 * <p>
+	 * @param fg  A Color object.
+	 * @param bg A Color object
+	 */
 	private void initialize(Color fg, Color bg) {
 		colorSettingsIcon = new ImageIcon("resources/Icons/colorChanger.png");
 		setIconImage(colorSettingsIcon.getImage());
@@ -46,8 +61,6 @@ public class ColorSettings extends JFrame{
 			foregroundSlider[i] = new JSlider(0,255,(fg.getRGB() & (255 << 8*i))>> 8*i);
 			foregroundSlider[i].setBackground(Color.WHITE);
 		}
-		officialFigureColor = new JCheckBox("official figure colors");
-		officialFigureColor.setBackground(Color.WHITE);
 		okButton = new JButton("confirm");
 		okButton.setBackground(Color.WHITE);
 		for(int i = 0; i < 3; i++){
@@ -64,14 +77,6 @@ public class ColorSettings extends JFrame{
 	            }
 	        });
 		}
-		officialFigureColor.addActionListener(new ActionListener()
-        {
-            public void actionPerformed(ActionEvent event)
-            {
-
-            }
-
-        });
 		okButton.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
@@ -81,7 +86,9 @@ public class ColorSettings extends JFrame{
 
         });
 	}
-
+	/**
+	 * Sets up the window properties and adds the elements to the window.
+	 */
 	private void createWindow() {
 		setResizable(false);
 		setBackground(Color.WHITE);
@@ -106,15 +113,23 @@ public class ColorSettings extends JFrame{
 			foregroundPanel.add(foregroundSlider[i]);
 		}
 		add(foregroundPanel);
-		add(officialFigureColor);
 		add(okButton);
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		pack();
 	}
+	/**
+	 * A Color object is created by getting the values from the three rgb-sliders.
+	 * <p>
+	 * @param rgb A JSlider array.
+	 * @return A Color object.
+	 */
 	public Color sliderMixer(JSlider[] rgb){
 		Color color = new Color(rgb[0].getValue(),rgb[1].getValue(),rgb[2].getValue());
 		return color;
 	}
+	/**
+	 * The color of every element is set to the current color of the three rgb-sliders.
+	 */
 	private void updateColors(){
 		Color backgroundColor = sliderMixer(backgroundSlider);
 		Color foregroundColor = sliderMixer(foregroundSlider); 

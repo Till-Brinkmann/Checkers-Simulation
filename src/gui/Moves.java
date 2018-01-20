@@ -25,13 +25,19 @@ public class Moves extends JFrame{
 	private int fontSize = 13;
 	private String fontName = "Arial";
 	private JScrollPane scrollpane;
+	/**
+	 * Set the name of the window and calls another method for setting up the window.
+	 */
 	public Moves() {
 		super("Moves");
-		guideIcon = new ImageIcon("resources/Icons/guideIcon.png");
-		setIconImage(guideIcon.getImage());
 		createWindow();
 	}
+	/**
+	 * Sets up the window properties and adds the elements to the window.
+	 */
 	private void createWindow() {
+		guideIcon = new ImageIcon("resources/Icons/guideIcon.png");
+		setIconImage(guideIcon.getImage());
 		setResizable(false);
 		setSize(700,550);
 		getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
@@ -43,6 +49,11 @@ public class Moves extends JFrame{
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		pack();
 	}
+	/**
+	 * Initializes and the returns a JScrollpane object.
+	 * <p>
+	 * @return A JScrollpane object.
+	 */
 	private JScrollPane createTextField() {
 		textarea.setEditable(false);
 		textarea.setLineWrap(true);
@@ -56,6 +67,11 @@ public class Moves extends JFrame{
 		
 
 	}
+	/**
+	 * This method writes a distinct move, represented by a move object, as a String, into global text area.
+	 * <p>
+	 * @param m A move object.
+	 */
 	@SuppressWarnings("incomplete-switch")
 	public void addMove(Move m) {
 		String finalMoveMessage = "";
@@ -107,9 +123,18 @@ public class Moves extends JFrame{
 		}
 		textarea.append(finalMoveMessage + "\n");
 	}
+	/**
+	 * Clears the global text area.
+	 */
 	public void resetTextArea() {
 		textarea.setText("");
 	}
+	/**
+	 * Updates the used fonts and font size in the global text area.
+	 * <p>
+	 * @param fontName A stands for a specific font.
+	 * @param fontSize An Integer that represent the font size.
+	 */
 	public void updateFont(String fontName,int fontSize) {
 		this.fontName = fontName;
 		this.fontSize = fontSize;
