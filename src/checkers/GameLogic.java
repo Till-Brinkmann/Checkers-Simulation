@@ -126,12 +126,12 @@ public class GameLogic {
 		//SlowMode
 		this.slowness = slowness;
 		//set the new Playfield as the field to display if displaying is enabled
-		gui.playfieldpanel.playfield = field;
+		gui.playfieldplayer.playfield = field;
 		if(!displayActivated) {
 			field.setPlayfieldDisplay(null);
 		}
 		else {
-			field.setPlayfieldDisplay(gui.playfieldpanel);
+			field.setPlayfieldDisplay(gui.playfieldplayer);
 		}
 		this.gameName = gameName;
 		
@@ -157,8 +157,8 @@ public class GameLogic {
 			}
 		}
 		//turn the playfield in the right way
-		if(gui.playfieldpanel.pfTurnDirection == FigureColor.WHITE) {
-			gui.playfieldpanel.turnPlayfield();
+		if(gui.playfieldplayer.playfieldpanel.reversed == true) {
+			gui.playfieldplayer.playfieldpanel.turnPlayfield();
 		}
 		playerRed.prepare(FigureColor.RED);
 		//prepare only needs to be called once for Red then
@@ -169,7 +169,7 @@ public class GameLogic {
 		gui.console.printInfo("GameLogic", "Therefore " + namePlayerRed + "starts first");
 		gui.console.printInfo("GameLogic","Playing "+ (rounds-currentRound) + " more Rounds before reset");
 		inTurn = FigureColor.RED;
-		if(!playerRed.equals(gui.playfieldpanel)) {
+		if(!playerRed.equals(gui.playfieldplayer)) {
 			try {
 				Thread.sleep(slowness);
 			} catch (InterruptedException e) {
@@ -278,10 +278,12 @@ public class GameLogic {
 	 * uncluttered overview over the code.
 	 */
 	private void moveRequesting() {
-		gui.playfieldpanel.turnPlayfield();
+		if(autoPfTurning) {
+			gui.playfieldplayer.playfieldpanel.turnPlayfield();
+		}
 		switch(inTurn){
 			case RED:
-				if(!playerRed.equals(gui.playfieldpanel)) {
+				if(!playerRed.equals(gui.playfieldplayer)) {
 					try {
 						Thread.sleep(slowness);
 					} catch (InterruptedException e) {
@@ -293,7 +295,7 @@ public class GameLogic {
 				playerRed.requestMove();
 				break;
 			case WHITE:
-				if(!playerWhite.equals(gui.playfieldpanel)) {
+				if(!playerWhite.equals(gui.playfieldplayer)) {
 					try {
 						Thread.sleep(slowness);
 					} catch (InterruptedException e) {
@@ -410,7 +412,7 @@ public class GameLogic {
 		currentRound++;
 		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
-			gui.playfieldpanel.updateDisplay();
+			gui.playfieldplayer.updateDisplay();
 			
 			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
 			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
@@ -650,9 +652,7 @@ public class GameLogic {
 	 */
 	public void setPause(boolean b) {
 		pause = b;
-		gameInProgress = false;
 		if(!pause) {	
-			gameInProgress = true;
 			moveExecutor.execute(moveRequestingTask);
 		}
 	}

@@ -35,9 +35,10 @@ public class GUI extends JFrame{
 	/**
 	 * Reference to the current GameLogic.
 	 */
-	private GameLogic gmlc;
+	public GameLogic gmlc;
 	//settings that are outsourced to different frames to improve codestructure/readability
 	public Moves movesWindow;
+	public PlayfieldEditor playfieldeditor;
 	public NetworkManager networkmanager;
 	public ColorSettings colorsettings;
 	public GameSettings gamesettings;
@@ -46,9 +47,9 @@ public class GUI extends JFrame{
 	public FileFilter filter;
 
 	public Console console;
-	public PlayfieldPanel playfieldpanel;
+	public PlayfieldPlayer playfieldplayer;
 
-	public ImageIcon dameWhite;
+	public ImageIcon kingIcon;
 
 	public JMenuItem resume;
 	public JMenuItem pause;
@@ -103,11 +104,13 @@ public class GUI extends JFrame{
 	 */
 	private void initialize(){	
 		console = new Console();
-		playfieldpanel = new PlayfieldPanel(gmlc ,console);
+		playfieldplayer = new PlayfieldPlayer(gmlc ,console);
 		colorsettings = new ColorSettings(this, Color.BLACK, Color.LIGHT_GRAY);
 		soundsettings = new SoundSettings(this);
+		playfieldeditor = new PlayfieldEditor(console, this);
 		movesWindow = new Moves();
 		networkmanager = new NetworkManager(this,console);
+		
 		console.setNetworkManager(networkmanager);
 	}
 	/**
@@ -116,11 +119,11 @@ public class GUI extends JFrame{
 	private void createWindow(){
 		setResizable(true);
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
-		dameWhite = new ImageIcon("resources/Icons/dame.png");
-		setIconImage(dameWhite.getImage());
+		kingIcon = new ImageIcon("resources/Icons/dame.png");
+		setIconImage(kingIcon.getImage());
 
 		setJMenuBar(createMenuBar());
-		add(playfieldpanel);
+		add(playfieldplayer.playfieldpanel);
 		add(console.panel);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pack();
@@ -134,11 +137,12 @@ public class GUI extends JFrame{
 	private JMenuBar createMenuBar(){
         JMenuBar menubar = new JMenuBar();
         menubar.setBackground(Color.WHITE);
-        menubar.add(createGameMenu());
-        menubar.add(createPreferencesMenu());                
-        menubar.add(createRunMenu());				
-        menubar.add(createHelpMenu());                   
+        menubar.add(createGameMenu());        
+        menubar.add(createRunMenu());	
+        menubar.add(createExtrasMenu());
+        menubar.add(createPreferencesMenu());                                   
         menubar.add(createNetworkMenu());
+        menubar.add(createHelpMenu());
         return menubar;
 	}
 	/**
@@ -217,12 +221,22 @@ public class GUI extends JFrame{
         return game;
 	}
 	/**
-	 * Creates a JMenu and adds multiple JMenuItems. To every JMenuItem a actionlisteners is added.
+	 * Creates a JMenu and adds multiple JMenuItems. To every JMenuItem a actionlistener is added.
 	 * <p>
 	 * @return A JMenu object.
 	 */
-	public JMenu createPreferencesMenu() {
-        JMenu preferences = new JMenu("Preferences");
+	public JMenu createExtrasMenu() {
+		JMenu extras = new JMenu("Extras");
+		extras.setBackground(Color.WHITE);
+		JMenuItem pfEditor = new JMenuItem("Editor");
+        pfEditor.setBackground(Color.WHITE);
+        pfEditor.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+            	playfieldeditor.setVisible(true);
+            }
+        });
         JMenuItem color = new JMenuItem("Color");
         color.setBackground(Color.WHITE);
         color.addActionListener(new ActionListener()
@@ -250,13 +264,29 @@ public class GUI extends JFrame{
             	movesWindow.setVisible(true);
             }
         });
-        JMenuItem turnPf = new JMenuItem("Turn Playfield");
+        
+        extras.add(pfEditor);
+        extras.add(color);
+        extras.add(sound);
+        extras.add(showmoves);
+        return extras;
+	}
+	/**
+	 * Creates a JMenu and adds multiple JMenuItems. To every JMenuItem a actionlistener is added.
+	 * <p>
+	 * @return A JMenu object.
+	 */
+	public JMenu createPreferencesMenu() {
+        JMenu preferences = new JMenu("Preferences");
+        preferences.setBackground(Color.WHITE);
+
+        JMenuItem turnPf = new JMenuItem("Flip playfield");
         turnPf.setBackground(Color.WHITE);
         turnPf.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent event)
             {
-            	playfieldpanel.turnPlayfield();
+            	playfieldplayer.playfieldpanel.turnPlayfield();
             }
         });
         JCheckBoxMenuItem showfieldnumbers = new JCheckBoxMenuItem("show field numbers");
@@ -265,7 +295,7 @@ public class GUI extends JFrame{
         {
             public void actionPerformed(ActionEvent event)
             {
-        	playfieldpanel.buttonNumeration(showfieldnumbers.isSelected());
+        	playfieldplayer.playfieldpanel.buttonNumeration(showfieldnumbers.isSelected());
             }
 
         });        
@@ -279,12 +309,12 @@ public class GUI extends JFrame{
 	            public void actionPerformed(ActionEvent event)
 	            {
 	            	if(displayEnabled.isSelected()) {
-	            		playfieldpanel.playfield.setPlayfieldDisplay(playfieldpanel);
+	            		playfieldplayer.playfield.setPlayfieldDisplay(playfieldplayer);
 	            		
 	            		
 	            	}else {
-	            		playfieldpanel.playfield.setPlayfieldDisplay(null);
-	            		playfieldpanel.clearField();
+	            		playfieldplayer.playfield.setPlayfieldDisplay(null);
+	            		playfieldplayer.playfieldpanel.clearField();
 	            	}
 	            }
 
@@ -345,15 +375,9 @@ public class GUI extends JFrame{
 		speed.add(slow);
 		speed.add(medium);
 		speed.add(fast);
-				
-
-	      
-
+				   
+		preferences.add(turnPf);
         preferences.add(speed);
-        preferences.add(color);
-        preferences.add(sound);
-        preferences.add(turnPf);
-        preferences.add(showmoves);
         preferences.add(showfieldnumbers);
         preferences.add(displayEnabled);
         return preferences;
@@ -375,7 +399,7 @@ public class GUI extends JFrame{
             	resume.setEnabled(false);
             	pause.setEnabled(true);
             	gmlc.setPause(false);
-            	playfieldpanel.enableAllButtons(true);
+            	playfieldplayer.playfieldpanel.enableAllButtons(true);
             }
         });
         pause = new JMenuItem("Pause");
@@ -388,7 +412,7 @@ public class GUI extends JFrame{
             	pause.setEnabled(false);
             	resume.setEnabled(true);
             	gmlc.setPause(true);
-            	playfieldpanel.enableAllButtons(false);
+            	playfieldplayer.playfieldpanel.enableAllButtons(false);
             }
         });
         stop = new JMenuItem("Stop");
@@ -401,7 +425,7 @@ public class GUI extends JFrame{
             	stop.setEnabled(false);
             	gmlc.setPause(true);
             	gmlc.finishGame(Situations.STOP,false);
-            	playfieldpanel.enableAllButtons(false);
+            	playfieldplayer.playfieldpanel.enableAllButtons(false);
             }
         });
         run.add(resume);
@@ -520,7 +544,7 @@ public class GUI extends JFrame{
 	public void updateBackground( Color color){
 		setBackground(color);
 		console.updateBackground(color);
-		playfieldpanel.setBackground(color);
+		playfieldplayer.playfieldpanel.setBackground(color);
 	}
 	/**
 	 * Updates the color of the text in the console.
@@ -530,7 +554,7 @@ public class GUI extends JFrame{
 	public void updateForeground( Color color){
 		setForeground(color);
 		console.updateForeground(color);
-		playfieldpanel.setForeground(color);
+		playfieldplayer.playfieldpanel.setForeground(color);
 	}
 	public GameLogic getGameLogic() {
 		return gmlc;
@@ -572,7 +596,7 @@ public class GUI extends JFrame{
 	public void setDisplayEnabled(boolean enabled) {
 		displayEnabled.setSelected(enabled);
 		if(!enabled) {
-			playfieldpanel.clearField();
+			playfieldplayer.playfieldpanel.clearField();
 		}
 	}
 	public void setEnableDisplayEnabled(boolean b) {

@@ -88,7 +88,7 @@ public class SoundSettings extends JFrame implements PlayfieldSound
     	super("GameSettings");
     	gui = pGui;
     	
-    	gui.playfieldpanel.playfield.setPlayfieldSound(this);
+    	gui.playfieldplayer.playfield.setPlayfieldSound(this);
     	playerBackIcon = new ImageIcon("resources/Icons/playerBackIcon.png");
     	playerStopIcon = new ImageIcon("resources/Icons/playerStopIcon.png");
     	playerPlayIcon = new ImageIcon("resources/Icons/playerPlayIcon.png");
