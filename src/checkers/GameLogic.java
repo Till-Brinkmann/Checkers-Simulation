@@ -106,6 +106,7 @@ public class GameLogic {
 	public void startGame(String gameName, Player playerRed, Player playerWhite, int rounds, int slowness, boolean displayActivated, boolean useCurrentPf, boolean autoPfTurning){
 		//reset moveWindow
 		gui.movesWindow.resetTextArea();
+		
 		gameInProgress = true;
 		pause = false;
 		//how many game should be played
@@ -127,6 +128,7 @@ public class GameLogic {
 		this.slowness = slowness;
 		//set the new Playfield as the field to display if displaying is enabled
 		gui.playfieldplayer.playfield = field;
+		
 		if(!displayActivated) {
 			field.setPlayfieldDisplay(null);
 		}
@@ -156,7 +158,7 @@ public class GameLogic {
 				return;
 			}
 		}
-		//turn the playfield in the right way
+		//turn the playfield in the right direction
 		if(gui.playfieldplayer.playfieldpanel.reversed == true) {
 			gui.playfieldplayer.playfieldpanel.turnPlayfield();
 		}
@@ -412,7 +414,6 @@ public class GameLogic {
 		currentRound++;
 		if(currentRound == rounds || end == Situations.STOP) {
 			currentRound = 0;
-			gui.playfieldplayer.updateDisplay();
 			
 			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
 			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
@@ -429,6 +430,9 @@ public class GameLogic {
 			gui.setEnableStop(false);
 			gui.setDisplayEnabled(true);
 			gui.setEnableDisplayEnabled(false);
+			
+			//resets field borders
+			gui.playfieldplayer.playfieldpanel.resetBorders();
 			//stop running online game
 			if(gui.networkmanager.runningOnlineGame) {
 				gui.networkmanager.runningOnlineGame = false;

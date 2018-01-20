@@ -165,5 +165,13 @@ public class PlayfieldPanel extends JPanel{
             	addActionListener(x,y,al);
             }
         }
+	}
+
+	public void resetBorders() {
+		for(int x = 0; x < SIZE; x++){
+			for(int y = 0; y < SIZE; y++){
+				buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY));
+			}
+		}
 	}	
 }

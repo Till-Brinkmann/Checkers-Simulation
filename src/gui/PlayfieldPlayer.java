@@ -238,9 +238,13 @@ public class PlayfieldPlayer implements PlayfieldDisplay, Player{
 		clickSituation = Click.FIRST;
 		playfieldpanel.buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY, 4));
 	}
-	public void setPlayfieldPanel(PlayfieldPanel panel) {
-		playfieldpanel = panel;
-	}
+
+	
+//	public void setPlayfieldPanel(PlayfieldPanel panel) {
+//		playfieldpanel = panel;
+//		playfield = gamelogic.getPlayfield();
+//		playfield.setPlayfieldDisplay(this);
+//	}
 	
 	
 	/**

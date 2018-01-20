@@ -206,9 +206,9 @@ public class PlayfieldEditor extends JFrame {
             		if(flipPf.getBackground() == Color.gray && gui.playfieldplayer.playfieldpanel.reversed == false) {
             			gui.playfieldplayer.playfieldpanel.turnPlayfield();
             		}
-            		if(flipPf.getBackground() == Color.gray && gui.playfieldplayer.playfieldpanel.reversed == false) {
+            		if(flipPf.getBackground() == Color.WHITE && gui.playfieldplayer.playfieldpanel.reversed == true) {
             			gui.playfieldplayer.playfieldpanel.turnPlayfield();
-            		}
+            		}           		
             		gui.gmlc.getPlayfield().setGameSituation(playfieldpanel);
             	}
             	else {

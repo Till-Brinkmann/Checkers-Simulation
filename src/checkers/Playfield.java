@@ -94,7 +94,7 @@ public class Playfield {
 						field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.KING);
 					}
 				}
-				else if(panel.buttons[x][y].getBackground() == Color.WHITE) {
+				else if(panel.buttons[x][y].getBackground().equals(Color.WHITE)) {
 					if(panel.buttons[x][y].getIcon() == null) {
 						field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.NORMAL);
 					}
@@ -128,6 +128,9 @@ public class Playfield {
 	 */
 	public void setPlayfieldSound(PlayfieldSound s) {
 		sound = s;
+	}
+	public void changeFiguresToKing() {
+		
 	}
 	/**
 	 * In this method one figure on the playfield changes from a normal figure to a king fingure by calling the figureType method with the parameter FigureType.KING
