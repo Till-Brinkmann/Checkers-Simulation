@@ -290,14 +290,14 @@ public class GameSettings extends JFrame{
 	 */
 	private void createGame() {
 		if(gmlc.isInProgress()) {
-    		gui.console.printWarning("A game is currently running. It has to be paused or stopped in order to create a new game.","Gamesettings");
+    		gui.console.printWarning("A game is currently running. It has to be stopped befor a new game can be created.","Gamesettings");
     		return;
     	}
-		gmlc = new GameLogic();
+		gmlc = new GameLogic(gui.gmlc.getPlayfield());
 		gui.linkGameLogic(gmlc);
 		gmlc.linkGUI(gui);
 		gmlc.getPlayfield().setPlayfieldSound(gui.soundsettings);
-		gui.playfieldpanel.gamelogic = gmlc;
+		gui.playfieldplayer.gamelogic = gmlc;
     	gameName = gameNameField.getText();
     	if(gameName.equals("") && recordGameIsEnabled){
     	    gameNameField.setBorder(BorderFactory.createLineBorder(Color.RED, 1));
@@ -367,7 +367,7 @@ public class GameSettings extends JFrame{
 	public Player getPlayer1() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
 	InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(currentSelectionPlayer1.equals("Player")) {
-			return gui.playfieldpanel;
+			return gui.playfieldplayer;
 		}
 		ai = availablePlayer.get(player1ComboBox.getSelectedItem().toString());
 		gui.console.printInfo("Class" + ai.getName() + " was loaded successfully", "GameSettings");
@@ -387,7 +387,7 @@ public class GameSettings extends JFrame{
 	public Player getPlayer2() throws InstantiationException, IllegalAccessException, IllegalArgumentException,
 	InvocationTargetException, NoSuchMethodException, SecurityException{
 		if(currentSelectionPlayer2.equals("Player")) {
-			return gui.playfieldpanel;
+			return gui.playfieldplayer;
 		}
 		ai = availablePlayer.get(player2ComboBox.getSelectedItem().toString());
 		gui.console.printInfo("Class" + ai.getName() + " was loaded successfully", "GameSettings");

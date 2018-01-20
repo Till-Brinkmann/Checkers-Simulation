@@ -41,7 +41,7 @@ public class NetworkManager{
 	public boolean runningOnlineGame;
 	public NetworkManager(GUI gui, Console console) {
 		//only human player available
-		selectedPlayer = gui.playfieldpanel;
+		selectedPlayer = gui.playfieldplayer;
 		manager = this;
 		this.gui = gui;
 		this.console = console;

@@ -1,5 +1,6 @@
 package checkers;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -10,6 +11,7 @@ import checkers.Figure.FigureColor;
 import checkers.Figure.FigureType;
 import checkers.Move.MoveType;
 import gui.PlayfieldDisplay;
+import gui.PlayfieldPanel;
 import gui.PlayfieldSound;
 import utilities.FileUtilities;
 
@@ -81,7 +83,32 @@ public class Playfield {
 		field = FileUtilities.loadGameSituation(file, this);
 		if(display != null) display.updateDisplay();
 	}
-
+	public void setGameSituation(PlayfieldPanel panel) {
+		for(int y = 0; y < SIZE; y++){
+			for(int x = 0; x < SIZE; x++){
+				if(panel.buttons[x][y].getBackground().equals(new Color(160,10,10))) {
+					if(panel.buttons[x][y].getIcon() == null) {
+						field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.NORMAL);
+					}
+					else {
+						field[x][y] = new Figure(x, y, FigureColor.RED, FigureType.KING);
+					}
+				}
+				else if(panel.buttons[x][y].getBackground().equals(Color.WHITE)) {
+					if(panel.buttons[x][y].getIcon() == null) {
+						field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.NORMAL);
+					}
+					else {
+						field[x][y] = new Figure(x, y, FigureColor.WHITE, FigureType.KING);
+					}
+				}
+				else {
+					field[x][y] = null;
+				}
+			}
+		}			
+		if(display != null) display.updateDisplay();
+	}
 	/**
 	 * Sets the object that is responsible for displaying the contents of this playfield
 	 * <p>
@@ -101,6 +128,9 @@ public class Playfield {
 	 */
 	public void setPlayfieldSound(PlayfieldSound s) {
 		sound = s;
+	}
+	public void changeFiguresToKing() {
+		
 	}
 	/**
 	 * In this method one figure on the playfield changes from a normal figure to a king fingure by calling the figureType method with the parameter FigureType.KING
@@ -313,7 +343,7 @@ public class Playfield {
 	}
 	/**
 	 * 
-	 * @param x X position of the field. 
+	 * @param x X position of the field.
 	 * @param y Y position of the field.
 	 * @return Returns the FigureType of the figure on the field if there is a figure. Otherwise null.
 	 */
@@ -334,26 +364,11 @@ public class Playfield {
 	 * @return Returns true, if the current situation on the playfield could be played.
 	 */
 	public boolean testPlayability() {
-		int whiteFigures = 0;
-		int redFigures = 0;
-		for(int y = 0;y < SIZE; y++) {
-			for(int x = 0;x < SIZE; x++) {
-				if(isOccupied(x,y)) {
-					if(field[x][y].getFigureColor() == FigureColor.RED) {
-						redFigures++;
-					}
-					else {
-						whiteFigures++;
-					}
-				}
-			}
-		}
-		if(whiteFigures > 0 && redFigures > 0) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		if(getFigureQuantity(FigureColor.RED) == 0) return false;
+		if(getFigureQuantity(FigureColor.WHITE) == 0) return false;
+		if(Move.getPossibleMoves(FigureColor.RED, this).length == 0) return false;
+		if(Move.getPossibleMoves(FigureColor.WHITE, this).length == 0) return false;
+		return true;
 	}
 }
 
