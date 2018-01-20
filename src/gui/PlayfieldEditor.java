@@ -202,8 +202,14 @@ public class PlayfieldEditor extends JFrame {
             {        		
             	if(!gui.gmlc.isInProgress()) {
             		setVisible(false);
+            		
+            		if(flipPf.getBackground() == Color.gray && gui.playfieldplayer.playfieldpanel.reversed == false) {
+            			gui.playfieldplayer.playfieldpanel.turnPlayfield();
+            		}
+            		if(flipPf.getBackground() == Color.gray && gui.playfieldplayer.playfieldpanel.reversed == false) {
+            			gui.playfieldplayer.playfieldpanel.turnPlayfield();
+            		}
             		gui.gmlc.getPlayfield().setGameSituation(playfieldpanel);
-            		gui.playfieldplayer.setPlayfieldPanel(playfieldpanel);
             	}
             	else {
             		console.printWarning("A game is in progress. Please stop the game if you want to transfer the playfield","PlayfieldEditor");            		

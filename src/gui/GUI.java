@@ -299,7 +299,7 @@ public class GUI extends JFrame{
             }
 
         });        
-        //has to be accessabled
+        //has to be accessibled
         displayEnabled = new JCheckBoxMenuItem("display field");
         displayEnabled.setBackground(Color.WHITE);
         displayEnabled.setSelected(true);
