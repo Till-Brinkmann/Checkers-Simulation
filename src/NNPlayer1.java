@@ -21,6 +21,7 @@ public class NNPlayer1 implements Player {
 		public double[][] afterInputWeights;
 		public double[][][] hiddenWeights;
 		public double[][] toOutputWeights;
+		public double[][] bias;
 	    private double sigmin;
 	    private double sigmax;
 	    
@@ -32,26 +33,31 @@ public class NNPlayer1 implements Player {
 	    	afterInputWeights = new double[hiddenNeurons][inputNeurons];
 	        hiddenWeights = new double[hiddenlayer-1][hiddenNeurons][hiddenNeurons];
 	        toOutputWeights = new double[outputNeurons][hiddenNeurons];
+	        bias = new double[hiddenlayer][hiddenNeurons];
 	    }
 	    
 	    public double[] run(double[] inputVector){
-	        double[] hiddenVector = new double[afterInputWeights.length];
-	        double[] outputVector = new double[toOutputWeights.length];
-	        hiddenVector = vector_matrix_multiplication(inputVector, afterInputWeights);
-	        for (int x = 0; x < hiddenVector.length; x++){
-	            hiddenVector[x] = sigmoid(hiddenVector[x]);
+	        //add input bias
+	        double[] ffVector; //= vectorAdd(inputVector, bias[0]);
+	        //calculate values of the first hidden layer
+	        ffVector = vector_matrix_multiplication(inputVector, afterInputWeights);
+	        //sigmoid values and add bias for first hiddenlayer
+	        for (int x = 0; x < ffVector.length; x++){
+	            ffVector[x] = sigmoid(ffVector[x] + bias[0][x]);
 	        }
+	        //feed forward through all hidden layers
 	        for (int i = 0; i < hiddenWeights.length; i++){
-	            hiddenVector = vector_matrix_multiplication(hiddenVector, hiddenWeights[i]);
-	            for (int x = 0; x < hiddenVector.length; x++){
-	                hiddenVector[x] = sigmoid(hiddenVector[x]);
+	            ffVector = vector_matrix_multiplication(ffVector, hiddenWeights[i]);
+	            for (int x = 0; x < ffVector.length; x++){
+	                ffVector[x] = sigmoid(ffVector[x] + bias[i + 1][x]);
 	            }
 	        }
-	        outputVector = vector_matrix_multiplication(hiddenVector, toOutputWeights);
-	        for (int x = 0; x < outputVector.length; x++){
-	            outputVector[x] = sigmoid(outputVector[x]);
+	        //calculate output values
+	        ffVector = vector_matrix_multiplication(ffVector, toOutputWeights);
+	        for (int x = 0; x < ffVector.length; x++){
+	        	ffVector[x] = sigmoid(ffVector[x] /*+ bias[bias.length - 1][x]*/);
 	        }
-	        return outputVector;
+	        return ffVector;
 	    }
 	    
 	    private double sigmoid(double x) {
@@ -128,7 +134,14 @@ public class NNPlayer1 implements Player {
 					nn.toOutputWeights[i][j] = innerArray.getDouble(j);
 				}
 			}
-		} catch (IOException e) {
+			array = nnobject.getJSONArray("Bias");
+			for(int i = 0; i < array.length(); i++) {
+				innerArray = array.getJSONArray(i);
+				for(int j = 0; j < innerArray.length(); j++) {
+					nn.bias[i][j] = innerArray.getDouble(j);
+				}
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
