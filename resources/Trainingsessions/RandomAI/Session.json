@@ -1,9 +1,9 @@
 {
-  "Default Changepercentage": 100,
+  "Default Changepercentage": 180,
   "Mode": "RANDOMAI",
-  "Epoch": 2,
+  "Epoch": 4735,
   "Learnrate": 9.999999747378752E-5,
-  "Current Changepercentage": 99.52104949951172,
+  "Current Changepercentage": 93.39293670654297,
   "NNSpecs": {
     "NN Surviver": 15,
     "Weight Max": 10,

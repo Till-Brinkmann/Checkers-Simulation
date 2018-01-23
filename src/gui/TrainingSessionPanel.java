@@ -111,10 +111,12 @@ public class TrainingSessionPanel extends JPanel {
 	}
 	
 	private void toggleStartStopButton() {
+		if(ts == null) return;
 		if(ts.isRunning()) {
 			//stop it.
 			startStop.setText("Waiting...");
 			ts.awaitStopping();
+			ts.save();
 			startStop.setForeground(Color.GREEN);
 			startStop.setText("Start");
 			//update();

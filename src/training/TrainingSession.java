@@ -98,6 +98,7 @@ public class TrainingSession {
 		//char buffer
 		char[] chars = new char[1000000];
 		//try loading every file
+		String errmsg = "The nn file does not match the requirements of this trainingsession.";
 		if(nnfiles != null) {
 			for(int nncounter = 0; nncounter < nnfiles.length; nncounter++) {
 				try {
@@ -105,11 +106,7 @@ public class TrainingSession {
 					afterInputWeights = new double[nnspecs.hiddenNeuronCount][nnspecs.inputs];
 					hiddenWeights = new double[nnspecs.hiddenLayerCount - 1][nnspecs.hiddenNeuronCount][nnspecs.hiddenNeuronCount];
 					toOutputWeights = new double[nnspecs.outputs][nnspecs.hiddenNeuronCount];
-			        bias = new double[nnspecs.hiddenLayerCount + 2][nnspecs.hiddenNeuronCount];
-			        bias[0] = new double[nnspecs.inputs];
-			        bias[bias.length-1] = new double[nnspecs.outputs];
-			        bias[0] = new double[nnspecs.inputs];
-			        bias[bias.length-1] = new double[nnspecs.outputs];
+			        bias = new double[nnspecs.hiddenLayerCount][nnspecs.hiddenNeuronCount];
 					//create a new buffer that is big enough to hold all data
 					chars = new char[(int)nnfiles[nncounter].length()];
 					//init filereader
@@ -121,13 +118,13 @@ public class TrainingSession {
 					JSONObject nnobject = new JSONObject(String.valueOf(chars));
 					//load all information from the nnobject
 					JSONArray array = nnobject.getJSONArray("AfterInputWeights");
-					if(array.length() != afterInputWeights.length);
-						//throw err;
+					if(array.length() != afterInputWeights.length)
+						throw new IOException(errmsg);
 					JSONArray innerArray;
 					for(int i = 0; i < array.length(); i++) {
 						innerArray = array.getJSONArray(i);
 						if(innerArray.length() != afterInputWeights[i].length)
-							;//throw err;
+							throw new IOException(errmsg);
 						for(int j = 0; j < innerArray.length(); j++) {
 							afterInputWeights[i][j] = innerArray.getDouble(j);
 						}
@@ -135,15 +132,15 @@ public class TrainingSession {
 					JSONArray innerArray2;
 					array = nnobject.getJSONArray("HiddenWeights");
 					if(array.length() != hiddenWeights.length)
-						;//throw err;
+						throw new IOException(errmsg);
 					for(int i = 0; i < array.length(); i++) {
 						innerArray = array.getJSONArray(i);
 						if(innerArray.length() != hiddenWeights[i].length)
-							;//throw err;
+							throw new IOException(errmsg);
 						for(int j = 0; j < innerArray.length(); j++) {
 							innerArray2 = innerArray.getJSONArray(j);
 							if(innerArray2.length() != hiddenWeights[i][j].length)
-								;//throw err;
+								throw new IOException(errmsg);
 							for(int k = 0; k < innerArray2.length(); k++) {
 								hiddenWeights[i][j][k] = innerArray2.getDouble(k);
 							}
@@ -151,24 +148,24 @@ public class TrainingSession {
 					}
 					array = nnobject.getJSONArray("ToOutputWeights");
 					if(array.length() != toOutputWeights.length)
-						;//throw err;
+						throw new IOException(errmsg);
 					for(int i = 0; i < array.length(); i++) {
 						innerArray = array.getJSONArray(i);
 						if(innerArray.length() != toOutputWeights[i].length)
-							;//throw err;
+							throw new IOException(errmsg);
 						for(int j = 0; j < innerArray.length(); j++) {
 							toOutputWeights[i][j] = innerArray.getDouble(j);
 						}
 					}
 					array = nnobject.getJSONArray("Bias");
-					if(array.length() != toOutputWeights.length)
-						;//throw err;
+					if(array.length() != bias.length)
+						throw new IOException(errmsg);
 					for(int i = 0; i < array.length(); i++) {
 						innerArray = array.getJSONArray(i);
 						if(innerArray.length() != bias[i].length)
-							;//throw err;
+							throw new IOException(errmsg);
 						for(int j = 0; j < innerArray.length(); j++) {
-							toOutputWeights[i][j] = innerArray.getDouble(j);
+							bias[i][j] = innerArray.getDouble(j);
 						}
 					}
 					nnPlayer[nncounter] = new NNPlayer(nnspecs);
@@ -177,6 +174,7 @@ public class TrainingSession {
 					nnPlayer[nncounter].net.toOutputWeights = toOutputWeights;
 					nnPlayer[nncounter].net.bias = bias;
 				} catch (Exception e) {
+					//TODO Maybe print that on the program console.
 					e.printStackTrace();
 					//something bad happened so just make a new player with random weights
 					nnPlayer[nncounter] = new NNPlayer(nnspecs);

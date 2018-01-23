@@ -17,19 +17,19 @@ public class NN
     
     public NN(int inputNeurons, int outputNeurons,  int hiddenNeurons, int hiddenlayer, double sigmin, double sigmax, double weightMin, double weightMax)
     {
-        sigoffset = (sigmin + sigmax) / 2 -0.5;
-        this.sigscale = sigmax - sigmin;
+        sigoffset = (sigmin + sigmax) / 2 - 0.5;
+        sigscale = sigmax - sigmin;
         this.weightMin = weightMin;
         weightDiff = weightMax - weightMin;
         afterInputWeights = new double[hiddenNeurons][inputNeurons];
         hiddenWeights = new double[hiddenlayer-1][hiddenNeurons][hiddenNeurons];
         toOutputWeights = new double[outputNeurons][hiddenNeurons];
         //Size of first dimension is the number of layers and size of second the number of neurons inside this layer.
-        bias = new double[hiddenlayer + 2][hiddenNeurons];
-        //set to size of input layer
+        bias = new double[hiddenlayer][hiddenNeurons];
+        /*//set to size of input layer
         bias[0] = new double[inputNeurons];
         //output bias (has to be the size of the output)
-        bias[hiddenlayer + 1] = new double[outputNeurons];
+        bias[hiddenlayer + 1] = new double[outputNeurons];*/
     }
     
     public NN(NNSpecification specs){
@@ -44,7 +44,7 @@ public class NN
         ffVector = vector_matrix_multiplication(inputVector, afterInputWeights);
         //sigmoid values and add bias for first hiddenlayer
         for (int x = 0; x < ffVector.length; x++){
-            ffVector[x] = sigmoid(ffVector[x] + bias[1][x]);
+            ffVector[x] = sigmoid(ffVector[x] + bias[0][x]);
         }
         //feed forward through all hidden layers
         for (int i = 0; i < hiddenWeights.length; i++){
@@ -56,7 +56,7 @@ public class NN
         //calculate output values
         ffVector = vector_matrix_multiplication(ffVector, toOutputWeights);
         for (int x = 0; x < ffVector.length; x++){
-        	ffVector[x] = sigmoid(ffVector[x] + bias[bias.length - 1][x]);
+        	ffVector[x] = sigmoid(ffVector[x] /*+ bias[bias.length - 1][x]*/);
         }
         return ffVector;
     }
@@ -87,7 +87,7 @@ public class NN
     }
     public void changeAll(double percent){ //in percent
     	double scale = percent / 100;
-        for (int i = 0; i < afterInputWeights.length; i++){
+        /*for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
                 afterInputWeights[i][x] *= changeFunction(scale);
                 if(afterInputWeights[i][x] == 0) afterInputWeights[i][x] += changeFunction(0.00001);
@@ -111,6 +111,28 @@ public class NN
             for (int x = 0; x < bias[i].length; x++){
             	bias[i][x] *= changeFunction(scale);
             	if(bias[i][x] == 0) bias[i][x] += changeFunction(0.00001);
+            }
+        }*/
+    	for (int i = 0; i < afterInputWeights.length; i++){
+            for (int x = 0; x < afterInputWeights[0].length; x++){
+                afterInputWeights[i][x] += changeFunction(scale);
+            }
+        }
+        for (int i = 0; i < hiddenWeights.length; i++){
+            for (int x = 0; x < hiddenWeights[0].length; x++){
+                for (int y = 0; y < hiddenWeights[0][0].length; y++){
+                    hiddenWeights[i][x][y] += changeFunction(scale);
+                }
+            }
+        }
+        for (int i = 0; i < toOutputWeights.length; i++){
+            for (int x = 0; x < toOutputWeights[0].length; x++){
+                toOutputWeights[i][x] += changeFunction(scale);
+            }
+        }
+        for (int i = 0; i < bias.length; i++){
+            for (int x = 0; x < bias[i].length; x++){
+            	bias[i][x] += changeFunction(scale);
             }
         }
     }
@@ -145,8 +167,8 @@ public class NN
     }
     
     private static double changeFunction(double scale){
-    	double random = Math.random() < 0.9 ? Math.random() : -Math.random();
-    	return (StrictMath.pow(2*random-1, 3) + 1)*scale;
+    	double random = Math.random();//< 0.9 ? Math.random() : -Math.random();
+    	return (StrictMath.pow(2*random-1, 3))*scale;
     }
     
     private double sigmoid(double x) {

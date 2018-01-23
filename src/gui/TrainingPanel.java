@@ -194,7 +194,6 @@ public class TrainingPanel extends JPanel {
 	}
 	
 	public void saveAll() {
-		//TODO sachen löschen
 		for(File tsDir : tsDirsDir.listFiles()) {
 			if(tsDir.isDirectory() && tsDir.listFiles(new FilenameFilter() {
 					@Override
