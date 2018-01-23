@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 public class PlayfieldPanel extends JPanel{
 	private final int SIZE;
@@ -38,7 +39,7 @@ public class PlayfieldPanel extends JPanel{
                 buttons[x][y].setIconTextGap(0);
                 buttons[x][y].setActionCommand(x +""+ y);
                 buttons[x][y].setEnabled(true);
-                buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY)); 
+                buttons[x][y].setBorder(BorderFactory.createLineBorder(Color.GRAY));
                 add(buttons[x][y]);
                 reversed = false;
             }
@@ -49,8 +50,15 @@ public class PlayfieldPanel extends JPanel{
 		//this.applyComponentOrientation(reversed ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT);
 		//this.
 		//reversed = !reversed;
-		removeButtons();
-		addButtons();
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				removeButtons();
+				addButtons();
+			}
+			
+		});
 	}
 	private void addButtons() {
 		if(!reversed) {

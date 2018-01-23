@@ -210,7 +210,6 @@ public class Console{
 	private void processCommand(String in) {
 		boolean wasProcessed = false;
 		//cut the slash off
-		
 		String command = in.substring(1,in.indexOf(" ") < 1 ? in.length() : in.indexOf(" "));
 		String[] args;
 		if(in.length() > 1){
@@ -220,7 +219,6 @@ public class Console{
 		else {
 			args = new String[0];
 		}
-		
 		//own Commands
 		switch (command){
 		case "exit":
@@ -228,6 +226,10 @@ public class Console{
 			break;
 		case "sayhello":
 			printCommandOutput("This is an easteregg!!:", "Hello World");
+			wasProcessed = true;
+			break;
+		case "clear":
+			clearCsl();
 			wasProcessed = true;
 			break;
 		case "set":
@@ -326,12 +328,16 @@ public class Console{
 		print("/exit");
 		print("/availableCommands");
 	}
+	
+	private void clearCsl() {
+		output.setText("--Cleared Console--\n");
+		lines = 1;
+	}
 	public synchronized void print(String arg){
 		output.append(arg + "\n");
 		lines++;
 		if(lines >= maxLines){
-			output.setText("--Cleared Console--");
-			lines = 1;
+			clearCsl();
 		}
 	}
 	private void printCommand(String arg){
