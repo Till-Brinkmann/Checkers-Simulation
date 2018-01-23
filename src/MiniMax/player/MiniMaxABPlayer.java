@@ -109,7 +109,6 @@ public class MiniMaxABPlayer extends MiniMaxPlayer implements Player{
 			writer.flush();
 			writer.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}

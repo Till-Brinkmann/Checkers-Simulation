@@ -67,7 +67,6 @@ public class RandomAI implements Player {
 		try {
 			file.createNewFile();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		PrintWriter writer ;
@@ -77,7 +76,6 @@ public class RandomAI implements Player {
 			writer.flush();
 			writer.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}

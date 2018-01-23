@@ -73,7 +73,6 @@ public class MiniMaxMTTask implements Task, MiniMaxParent{
 			if(aStartedTasks == 0) {
 				//if you can not make any moves you lose!
 				value = -100;
-				//TODO remove again if not better
 				parent.notifyFinished(this);
 				return;
 			}

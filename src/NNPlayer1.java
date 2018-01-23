@@ -96,9 +96,11 @@ public class NNPlayer1 implements Player {
 			}
 			
 		})[0];
-		char[] chars = new char[1600000];
+		char[] chars = new char[(int)nnfile.length()];
 		try {
-			new FileReader(nnfile).read(chars);
+			FileReader fileReader = new FileReader(nnfile);
+			fileReader.read(chars);
+			fileReader.close();
 			JSONObject nnobject = new JSONObject(String.valueOf(chars));
 			JSONArray array = nnobject.getJSONArray("AfterInputWeights");
 			JSONArray innerArray;

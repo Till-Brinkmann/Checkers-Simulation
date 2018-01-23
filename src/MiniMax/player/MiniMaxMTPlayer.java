@@ -124,7 +124,6 @@ public class MiniMaxMTPlayer implements Player, MiniMaxParent{
 
 	@Override
 	public void saveInformation(String path) {
-		// TODO Auto-generated method stub
 		
 	}
 
