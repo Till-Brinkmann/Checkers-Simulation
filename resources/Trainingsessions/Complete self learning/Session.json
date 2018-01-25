@@ -1,0 +1,20 @@
+{
+  "Default Changepercentage": 120,
+  "Mode": "NORMAL",
+  "Epoch": 3,
+  "Learnrate": 9.999999747378752E-6,
+  "Current Changepercentage": 119.99639892578125,
+  "NNSpecs": {
+    "NN Surviver": 20,
+    "Weight Max": 10,
+    "NN Quantity": 150,
+    "Hiddenneuron Count": 60,
+    "Weight Min": -10,
+    "Outputs": 64,
+    "Hiddenlayer Count": 4,
+    "Inputs": 64,
+    "Sigmoid Max": 1,
+    "Sigmoid Min": -1
+  },
+  "Name": "Complete self learning"
+}
