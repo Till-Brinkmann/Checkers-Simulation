@@ -1,7 +1,6 @@
 import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
-import java.io.IOException;
 
 import checkers.Figure;
 import checkers.Figure.FigureColor;
@@ -27,13 +26,7 @@ public class NNPlayer1 implements Player {
 	    
 	    
 	    
-	    public ReducedNN(int inputNeurons, int outputNeurons,  int hiddenNeurons, int hiddenlayer, double sigmin, double sigmax) {
-	    	this.sigmin = sigmin;
-	        this.sigmax = sigmax;
-	    	afterInputWeights = new double[hiddenNeurons][inputNeurons];
-	        hiddenWeights = new double[hiddenlayer-1][hiddenNeurons][hiddenNeurons];
-	        toOutputWeights = new double[outputNeurons][hiddenNeurons];
-	        bias = new double[hiddenlayer][hiddenNeurons];
+	    public ReducedNN() {
 	    }
 	    
 	    public double[] run(double[] inputVector){
@@ -73,6 +66,61 @@ public class NNPlayer1 implements Player {
 	        }
 	        return resultVector;
 	    }
+	    
+	    public void load(File nnfile) {
+	    	char[] chars = new char[(int)nnfile.length()];
+			try {
+				FileReader fileReader = new FileReader(nnfile);
+				fileReader.read(chars);
+				fileReader.close();
+				JSONObject nnobject = new JSONObject(String.valueOf(chars));
+				JSONArray array = nnobject.getJSONArray("AfterInputWeights");
+				//last dimension is 1 because it is set again later anyway
+				afterInputWeights = new double[array.length()][1];
+				JSONArray innerArray;
+				for(int i = 0; i < array.length(); i++) {
+					innerArray = array.getJSONArray(i);
+					afterInputWeights[i] = new double[innerArray.length()];
+					for(int j = 0; j < innerArray.length(); j++) {
+						nn.afterInputWeights[i][j] = innerArray.getDouble(j);
+					}
+				}
+				JSONArray innerArray2;
+				array = nnobject.getJSONArray("HiddenWeights");
+				hiddenWeights = new double[array.length()][1][1];
+				for(int i = 0; i < array.length(); i++) {
+					innerArray = array.getJSONArray(i);
+					hiddenWeights[i] = new double[innerArray.length()][1]; 
+					for(int j = 0; j < innerArray.length(); j++) {
+						innerArray2 = innerArray.getJSONArray(j);
+						hiddenWeights[i][j] = new double[innerArray2.length()];
+						for(int k = 0; k < innerArray2.length(); k++) {
+							nn.hiddenWeights[i][j][k] = innerArray2.getDouble(k);
+						}
+					}
+				}
+				array = nnobject.getJSONArray("ToOutputWeights");
+				toOutputWeights = new double[array.length()][1];
+				for(int i = 0; i < array.length(); i++) {
+					innerArray = array.getJSONArray(i);
+					toOutputWeights[i] = new double[innerArray.length()];
+					for(int j = 0; j < innerArray.length(); j++) {
+						nn.toOutputWeights[i][j] = innerArray.getDouble(j);
+					}
+				}
+				array = nnobject.getJSONArray("Bias");
+				bias = new double[array.length()][1];
+				for(int i = 0; i < array.length(); i++) {
+					innerArray = array.getJSONArray(i);
+					bias[i] = new double[innerArray.length()];
+					for(int j = 0; j < innerArray.length(); j++) {
+						nn.bias[i][j] = innerArray.getDouble(j);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+	    }
 	}
 	
 	private ReducedNN nn;
@@ -87,7 +135,8 @@ public class NNPlayer1 implements Player {
 	public NNPlayer1(GameLogic gmlc, Console csl) {
 		this.gmlc = gmlc;
 		this.csl = csl;
-		nn = new ReducedNN(64, 64, 64, 10, -1, 1);
+		//TODO verschiedene Hiddenlayergrößen zulassen (nur Output und Input müssen gleich groß sein) 
+		nn = new ReducedNN();
 		inputVector = new double[64];
 		loadWeights();
 	}
@@ -102,48 +151,7 @@ public class NNPlayer1 implements Player {
 			}
 			
 		})[0];
-		char[] chars = new char[(int)nnfile.length()];
-		try {
-			FileReader fileReader = new FileReader(nnfile);
-			fileReader.read(chars);
-			fileReader.close();
-			JSONObject nnobject = new JSONObject(String.valueOf(chars));
-			JSONArray array = nnobject.getJSONArray("AfterInputWeights");
-			JSONArray innerArray;
-			for(int i = 0; i < array.length(); i++) {
-				innerArray = array.getJSONArray(i);
-				for(int j = 0; j < innerArray.length(); j++) {
-					nn.afterInputWeights[i][j] = innerArray.getDouble(j);
-				}
-			}
-			JSONArray innerArray2;
-			array = nnobject.getJSONArray("HiddenWeights");
-			for(int i = 0; i < array.length(); i++) {
-				innerArray = array.getJSONArray(i);
-				for(int j = 0; j < innerArray.length(); j++) {
-					innerArray2 = innerArray.getJSONArray(j);
-					for(int k = 0; k < innerArray2.length(); k++) {
-						nn.hiddenWeights[i][j][k] = innerArray2.getDouble(k);
-					}
-				}
-			}
-			array = nnobject.getJSONArray("ToOutputWeights");
-			for(int i = 0; i < array.length(); i++) {
-				innerArray = array.getJSONArray(i);
-				for(int j = 0; j < innerArray.length(); j++) {
-					nn.toOutputWeights[i][j] = innerArray.getDouble(j);
-				}
-			}
-			array = nnobject.getJSONArray("Bias");
-			for(int i = 0; i < array.length(); i++) {
-				innerArray = array.getJSONArray(i);
-				for(int j = 0; j < innerArray.length(); j++) {
-					nn.bias[i][j] = innerArray.getDouble(j);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		nn.load(nnfile);
 	}
 
 	@Override
