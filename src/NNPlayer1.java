@@ -21,8 +21,8 @@ public class NNPlayer1 implements Player {
 		public double[][][] hiddenWeights;
 		public double[][] toOutputWeights;
 		public double[][] bias;
-	    private double sigmin;
-	    private double sigmax;
+	    private double sigoffset;
+	    private double sigscale;
 	    
 	    
 	    
@@ -54,7 +54,7 @@ public class NNPlayer1 implements Player {
 	    }
 	    
 	    private double sigmoid(double x) {
-	        return (1/( 1 + Math.pow(Math.E,(-x))) + ((sigmin + sigmax) / 2)-0.5) * (sigmax-sigmin);
+	        return (1/( 1 + Math.pow(Math.E,(-x))) + sigoffset) * sigscale;
 	    }
 	    
 	    private double[] vector_matrix_multiplication(double[] vector, double[][] matrix){
@@ -74,6 +74,10 @@ public class NNPlayer1 implements Player {
 				fileReader.read(chars);
 				fileReader.close();
 				JSONObject nnobject = new JSONObject(String.valueOf(chars));
+				//sigmoid modifications
+				sigoffset = nnobject.getDouble("Sigmoid Offset");
+				sigscale = nnobject.getDouble("Sigmoid Scale");
+				//weights
 				JSONArray array = nnobject.getJSONArray("AfterInputWeights");
 				//last dimension is 1 because it is set again later anyway
 				afterInputWeights = new double[array.length()][1];
@@ -108,6 +112,7 @@ public class NNPlayer1 implements Player {
 						nn.toOutputWeights[i][j] = innerArray.getDouble(j);
 					}
 				}
+				//bias
 				array = nnobject.getJSONArray("Bias");
 				bias = new double[array.length()][1];
 				for(int i = 0; i < array.length(); i++) {
