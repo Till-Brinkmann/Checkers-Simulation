@@ -15,7 +15,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 import javax.swing.JComboBox;
@@ -144,6 +143,10 @@ public class TrainingPanel extends JPanel {
 	}
 	
 	public void loadTrainingSessions() {
+		if(tsDirsDir.listFiles() == null) {
+			NNGUI.console.printWarning("No Trainingsessions found.");
+			return;
+		}
 		for(File tsDir : tsDirsDir.listFiles()) {
 			File[] propfiles = tsDir.listFiles(new FilenameFilter() {
 
@@ -186,7 +189,7 @@ public class TrainingPanel extends JPanel {
 				epoch = object.getInt("Epoch");
 				sessions.addItem(new TrainingSession(name, mode, nnspecs, defaultChangePercentage, changePercentage, learnrate, epoch));
 			} catch (Exception e) {
-				//do nothing as we can just use the default values
+				//do nothing
 				e.printStackTrace();
 				return;
 			}
@@ -194,6 +197,10 @@ public class TrainingPanel extends JPanel {
 	}
 	
 	public void saveAll() {
+		if(tsDirsDir.listFiles() == null) {
+			NNGUI.console.printWarning("No Trainingsessions found.");
+			return;
+		}
 		for(File tsDir : tsDirsDir.listFiles()) {
 			if(tsDir.isDirectory() && tsDir.listFiles(new FilenameFilter() {
 					@Override
@@ -235,8 +242,8 @@ public class TrainingPanel extends JPanel {
 			}
 		}
 		for(int i = 0; i < sessions.getItemCount(); i++) {
+			//saves automatically when stopped
 			sessions.getItemAt(i).awaitStopping();
-			sessions.getItemAt(i).save();;
 		}
 	}
 

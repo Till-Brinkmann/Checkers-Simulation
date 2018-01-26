@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 
@@ -14,6 +15,9 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import json.JSONArray;
+import json.JSONObject;
 
 public class LineChart extends JFrame{
 	public enum FitnessType{AVG, MAX, NONNORMALIZED};	
@@ -48,7 +52,6 @@ public class LineChart extends JFrame{
 	    setDefaultCloseOperation(HIDE_ON_CLOSE);
 	    setVisible(true);
 	}
-	//json should save this values in order to reload them in the next run with reloadChart
 	public double[][] getSeries(FitnessType type) {
 		switch(type) {
 		case AVG:
@@ -89,7 +92,7 @@ public class LineChart extends JFrame{
 			addFitness(max[i], FitnessType.MAX);			
 		}
 		for(int i = 0; i < normalized.length; i++) {
-			addFitness(normalized[i], FitnessType.NONNORMALIZED);			
+			addFitness(normalized[i], FitnessType.NONNORMALIZED);		
 		}
 		currentIndex = epochs;
 	}
@@ -113,5 +116,11 @@ public class LineChart extends JFrame{
 	public void createJpeg(String name, String directory,int width, int heigth) throws IOException {
 		File chartFile = new File(directory + "/" + name + ".png" );
 		ChartUtils.saveChartAsPNG(chartFile, chart, width, heigth);		
+	}
+	public JSONObject toJSONObject() {
+		return new JSONObject()
+				.put("Maximum", new JSONArray(getSeries(FitnessType.MAX)[1]))
+				.put("Average", new JSONArray(getSeries(FitnessType.AVG)[1]))
+				.put("Max Non Normalized", new JSONArray(getSeries(FitnessType.NONNORMALIZED)[1]));
 	}
 }

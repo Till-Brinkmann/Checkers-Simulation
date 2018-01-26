@@ -11,13 +11,16 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
+
+import training.TrainingSession;
 /**
  * Main frame of the program.
  */
 public class NNGUI extends JFrame{
 
 	public static Console console = new Console();
-	private TrainingPanel tp;
+	public static LineChart chart = new LineChart();
+	private static TrainingPanel tp;
 	public NNGUI() {
 		super("Checker Simulation NN Training");
 		initComponents();
@@ -48,19 +51,14 @@ public class NNGUI extends JFrame{
 			@Override
 			public void windowIconified(WindowEvent arg0) {}
 			@Override
-			public void windowOpened(WindowEvent arg0) {
-				//TODO load sessions
-			}
+			public void windowOpened(WindowEvent arg0) {}
 			
 		});
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setVisible(true);
-		//in case the resources do not exist make them now
-		if(!TrainingPanel.tsDirsDir.exists()) TrainingPanel.tsDirsDir.mkdirs();
-		//load sessions
-		console.printInfo("Loading Training sessions...");
+		console.printInfo("Loading Trainingsessions...");
 		tp.loadTrainingSessions();
-		console.printInfo("Fininshed.");
+		console.print("...Finished");
 	}
 	
 	private void initComponents(){
@@ -93,12 +91,49 @@ public class NNGUI extends JFrame{
 		this.setBounds(
 				mode.getWidth()/10,
 				mode.getHeight()/10,
-				Math.round(mode.getWidth()/2.5f),
-				Math.round(mode.getHeight()/2.5f));
+				(int) Math.round((mode.getHeight()/2.3f)*1.777),
+				(int) Math.round(mode.getHeight()/2.3f));
 	}
 	
 	public static void main(String[] args){
-		new NNGUI();
+		boolean noGUI = false;
+		boolean startTraining = false;
+		String tsName = "";
+		for(int i = 0; i < args.length; i++) {
+			if(args[i].equals("--noGUI")) noGUI = true;
+			if(args[i].equals("--train")) {
+				if(i + 1 >= args.length || (!args[i+1].startsWith("\"") && !args[i+1].endsWith("\""))) {
+					System.out.println(
+							"Please add the name of the trainingsession"
+							+ " you want to start in brackets(\") behind the --train parameter.");
+				}
+				else {
+					startTraining = true;
+					tsName = args[i+1].substring(1,args[i+1].length()-1);
+				}
+			}
+		}
+		
+		if(noGUI && startTraining) {
+			tp = new TrainingPanel();
+			TrainingSession ts = null;
+			tp.loadTrainingSessions();
+			for(int i = 0, max = tp.sessions.getItemCount(); i < max; i++) {
+				if(tp.sessions.getItemAt(i).name == tsName) {
+					ts = tp.sessions.getItemAt(i);
+					break;
+				}
+			}
+			if(ts == null) {
+				System.out.println("Session could not be found or loaded.");
+				return;
+			}
+			//this will loop until the console is closed
+			ts.train();
+		}
+		else {
+			new NNGUI();
+		}
 	}
 
 }

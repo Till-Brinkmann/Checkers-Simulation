@@ -10,6 +10,7 @@ import java.util.Comparator;
 import checkers.NNGame;
 import checkers.Player;
 import gui.CommandListener;
+import gui.LineChart.FitnessType;
 import gui.NNGUI;
 import gui.TrainingPanel;
 import json.JSONArray;
@@ -81,7 +82,7 @@ public class TrainingSession {
 		this.changePercentage = changePercentage;
 		sessionDir = new File(TrainingPanel.tsDirsDir.getPath() + "/" + name);
 		nnPlayer = new NNPlayer[nnspecs.nnQuantity];
-		loadNNPlayer();
+		//loadNNPlayer();
 		waitLock = new Object();
 		started = false;
 	}
@@ -196,9 +197,35 @@ public class TrainingSession {
 		}
 	}
 	
+	private void loadChartData() {
+		File chartData = new File(sessionDir.getAbsoluteFile() + "/Epochdata.json");
+		if(!chartData.exists()) return;
+		char[] chars = new char[(int)chartData.length()];
+		try {
+			FileReader fileReader = new FileReader(chartData);
+			fileReader.read(chars);
+			fileReader.close();
+			JSONObject data = new JSONObject(String.valueOf(chars));
+			JSONArray maxArray = data.getJSONArray("Maximum");
+			JSONArray avgArray = data.getJSONArray("Average");
+			JSONArray maxNonNormArray = data.getJSONArray("Max Non Normalized");
+			for(int i = 0; i < Math.min(maxNonNormArray.length(), Math.min(avgArray.length(), maxArray.length())); i++) {
+				NNGUI.chart.addFitness(avgArray.getDouble(i), FitnessType.AVG);
+				NNGUI.chart.addFitness(maxArray.getDouble(i), FitnessType.MAX);
+				NNGUI.chart.addFitness(maxNonNormArray.getDouble(i), FitnessType.NONNORMALIZED);
+				NNGUI.chart.increaseIndex(1);
+			}
+			//NNGUI.chart.reloadChart(avg, max, maxNonNorm, );
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void train(){
 		NNGUI.console.printInfo("Reloading NNPlayer...", name);
 		loadNNPlayer();
+		NNGUI.chart.clearDataSet();
+		loadChartData();
 		started = true;
 		stopTraining = false;
 		stopped = false;
@@ -236,10 +263,12 @@ public class TrainingSession {
 			
 			epoch++;
 			//save in case the program or the computer crashes.
-			if(epoch % 100 == 0) {
+			if(epoch % 42 == 0) {
 				save();
 			}
 		}
+		//save when stopped
+		save();
 		synchronized(waitLock) {
 			stopped = true;
 			waitLock.notify();
@@ -325,6 +354,7 @@ public class TrainingSession {
 		//sort array descending based on fitness
 		Arrays.parallelSort(nnPlayer, nnPlayerComparator);
 		NNGUI.console.printInfo("Best Fitness(non normalized): " + nnPlayer[0].fitness, name);
+		NNGUI.chart.addFitness(nnPlayer[0].fitness, FitnessType.NONNORMALIZED);
     	//calculate sum
 		sumFitness = 0;
     	for(int i = 0; i < nnspecs.nnQuantity; i++){
@@ -333,7 +363,10 @@ public class TrainingSession {
     		sumFitness += nnPlayer[i].fitness;
     	}
     	NNGUI.console.printInfo("Best Fitness: " + nnPlayer[0].fitness, name);
+    	NNGUI.chart.addFitness(nnPlayer[0].fitness, FitnessType.MAX);
     	NNGUI.console.printInfo("Average Fitness: " + sumFitness/nnPlayer.length, name);
+    	NNGUI.chart.addFitness(sumFitness/nnPlayer.length, FitnessType.AVG);
+    	NNGUI.chart.increaseIndex(1);
 	}
 	/**
 	 * sets the fitness of every player in the nnPlayer array to 0 and didValidMove to false.
@@ -404,11 +437,15 @@ public class TrainingSession {
 			writer = new FileOutputStream(new File(sessionDir.getPath() + "/Session.json"));
 			writer.write(toJsonObject().toString(2).getBytes("UTF-8"));
 			writer.close();
+			writer = new FileOutputStream(new File(sessionDir.getPath() + "/Epochdata.json"));
+			writer.write(NNGUI.chart.toJSONObject().toString(2).getBytes("UTF-8"));
+			writer.close();
 			nnPlayerDir = new File(sessionDir.getPath() + "/NNPlayer");
 			if(!nnPlayerDir.exists()) nnPlayerDir.mkdir();
 			for(int i1 = 0; i1 < nnPlayer.length; i1++) {
 				writer = new FileOutputStream(nnPlayerDir.getPath()+ "/" +  i1 + ".json");
 				writer.write(nnPlayer[i1].net.toJSONObject().toString(2).getBytes("UTF-8"));
+				writer.close();
 			}
 		} catch (IOException e) {
 			NNGUI.console.printError("IO Error while saving session " + name, "TrainingPanel");

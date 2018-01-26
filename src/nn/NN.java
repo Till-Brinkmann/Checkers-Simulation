@@ -87,7 +87,7 @@ public class NN
     }
     public void changeAll(double percent){ //in percent
     	double scale = percent / 100;
-        /*for (int i = 0; i < afterInputWeights.length; i++){
+        for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
                 afterInputWeights[i][x] *= changeFunction(scale);
                 if(afterInputWeights[i][x] == 0) afterInputWeights[i][x] += changeFunction(0.00001);
@@ -112,8 +112,8 @@ public class NN
             	bias[i][x] *= changeFunction(scale);
             	if(bias[i][x] == 0) bias[i][x] += changeFunction(0.00001);
             }
-        }*/
-    	for (int i = 0; i < afterInputWeights.length; i++){
+        }
+    	/*for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
                 afterInputWeights[i][x] += changeFunction(scale);
             }
@@ -134,7 +134,7 @@ public class NN
             for (int x = 0; x < bias[i].length; x++){
             	bias[i][x] += changeFunction(scale);
             }
-        }
+        }*/
     }
     /**
      * takes the weights of each parent to generate new weights for the nn.
@@ -167,8 +167,8 @@ public class NN
     }
     
     private static double changeFunction(double scale){
-    	double random = Math.random();//< 0.9 ? Math.random() : -Math.random();
-    	return (StrictMath.pow(2*random-1, 3))*scale;
+    	double random = Math.random()< 0.9 ? Math.random() : -Math.random();
+    	return (StrictMath.pow(2*random-1, 3)+1)*scale;
     }
     
     private double sigmoid(double x) {
