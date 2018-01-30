@@ -175,7 +175,7 @@ public class NN
         return (1/( 1 + StrictMath.pow(Math.E,(-x))) + sigoffset) * sigscale;
     }
     
-    private static double[] vector_matrix_multiplication(double[] vector, double[][] matrix){
+    public static double[] vector_matrix_multiplication(double[] vector, double[][] matrix){
         double[] resultVector = new double[matrix.length];
         for (int i = 0; i < resultVector.length; i++){
             for (int x = 0; x < vector.length; x++){
