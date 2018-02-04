@@ -36,6 +36,7 @@ public class TrainingSessionPanel extends JPanel {
 			"Current Mutationpercentage: "
 	};
 	protected JButton startStop;
+	protected JButton clearSession;
 	protected JButton delete;
 	
 	public TrainingSessionPanel() {
@@ -67,6 +68,7 @@ public class TrainingSessionPanel extends JPanel {
 			c.gridy++;
 		}
 		startStop = new JButton("Start");
+		startStop.setBackground(Color.WHITE);
 		startStop.addActionListener(new ActionListener() {
 
 			@Override
@@ -75,6 +77,23 @@ public class TrainingSessionPanel extends JPanel {
 			}
 			
 		});
+		clearSession = new JButton("Clear Session");
+		clearSession.setBackground(Color.WHITE);
+		clearSession.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if(startStop.getText().equals("Start")) {					
+					ts.clearSession();
+					NNGUI.console.printInfo("Successfully deleted all nn's and EpochData.");
+				}
+				else {
+					NNGUI.console.printInfo("NN is currently running. It can not be deleted.");
+				}
+			}
+			
+		});
+		
 		startStop.setForeground(Color.GREEN);
 		c.anchor = GridBagConstraints.NORTHEAST;
 		c.gridx = 3;
@@ -85,8 +104,11 @@ public class TrainingSessionPanel extends JPanel {
 		delete.setForeground(Color.LIGHT_GRAY);
 		c.gridx = 4;
 		add(delete, c);
+		c.gridy = 1;
+		c.gridx = 4;
+		add(clearSession, c);
 	}
-	
+
 	public void update() {
 		if(ts == null) {
 			for(int i = 0; i < 11; i++) {

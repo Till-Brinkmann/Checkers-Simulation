@@ -1,4 +1,7 @@
 package checkers;
+
+import datastructs.List;
+
 /**
  * Optimized version of the GameLogic for NNTraining.
  * All methods dealing with move creation/validation can now be found in NNMove.
@@ -62,6 +65,25 @@ public class NNGame {
 	/**
 	 * Starts the game. Does not return until the game is finished because a non NORMAL situation occured.
 	 */
+	public boolean oneMove() {
+		if(pRed == null) {
+			pWhite.prepare(false, field);
+			makeMove(false, pWhite.requestMove());
+			if(situation != NORMAL) { 
+				return false;
+			}
+			return true;
+		}
+		else {
+			pRed.prepare(true, field);
+			makeMove(true, pRed.requestMove());
+			if(situation != NORMAL) {
+				return false;
+			}
+			return true;
+		}
+		
+	}
 	public void start(){
 		pRed.prepare(true, field);
 		pWhite.prepare(false, field);
@@ -107,5 +129,19 @@ public class NNGame {
 				return;
 			}
 		}
+	}
+	public List<NNPlayfield> getRandomSituations(int maxLength) {
+		List<NNPlayfield> situations = new List<NNPlayfield>();
+		pRed.prepare(true, field);
+		pWhite.prepare(false, field);
+		for(int i = 0; i < maxLength; i++){
+			situations.append(field.copy());
+			makeMove(true, pRed.requestMove());
+			if(situation != NORMAL) break;
+			situations.append(field.copy());
+			makeMove(false, pWhite.requestMove());
+			if(situation != NORMAL) break;
+		}
+		return situations;
 	}
 }

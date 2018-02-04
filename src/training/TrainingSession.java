@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import checkers.NNGame;
+import checkers.NNPlayfield;
 import checkers.Player;
+import datastructs.List;
 import gui.CommandListener;
 import gui.LineChart.FitnessType;
 import gui.NNGUI;
@@ -30,6 +32,7 @@ public class TrainingSession {
 		NORMAL,
 		MINMAX,
 		RANDOMAI,
+		RANDOMSITUATIONS
 	}
 	public final String name;
 	
@@ -58,6 +61,7 @@ public class TrainingSession {
 	//for RandomAi mode
 	private int rtp = 10;
 	
+	private List<NNPlayfield> learningSet;
 	public final Comparator<NNPlayer> nnPlayerComparator = new Comparator<NNPlayer>(){			
 		@Override
 		public int compare(NNPlayer n1, NNPlayer n2) {
@@ -248,6 +252,13 @@ public class TrainingSession {
 				
 			});
 		}
+		if(mode == TrainingMode.RANDOMSITUATIONS) {
+			//create lerning set
+			learningSet = new List<NNPlayfield>();
+			for(int i = 0; i < 10; i++) {
+				learningSet.concat(new NNGame(new RandomAI(), new RandomAI()).getRandomSituations(50));
+			}
+		}
 		//training loop
 		while(!stopTraining) {
 			switch(mode){
@@ -259,7 +270,12 @@ public class TrainingSession {
 				break;
 			case RANDOMAI:
 				trainAgainstRandomAI(rtp);
+				break;
+			case RANDOMSITUATIONS:
+				trainWithRandomSituations();
+				break;
 			}
+				
 			
 			epoch++;
 			//save in case the program or the computer crashes.
@@ -276,6 +292,59 @@ public class TrainingSession {
 		}
 	}
 	
+	private void trainWithRandomSituations() {
+		resetPlayer();
+		int moves = 0;
+		//NNPlayfield[] situations = selectSituations(100);
+		for(NNPlayer p : nnPlayer){
+			for(learningSet.toFirst(); learningSet.hasAccess(); learningSet.next()) {
+				if(new NNGame(p, null, learningSet.get()).oneMove()) {
+					moves++;
+				}
+				if(new NNGame(null, p, learningSet.get()).oneMove()) {
+					moves++;
+				}
+			}
+//			for(NNPlayfield situation: situations) {
+//				if(new NNGame(p, null, situation).oneMove()) {
+//					moves++;
+//				}
+//				if(new NNGame(null, p, situation).oneMove()) {
+//					moves++;
+//				}
+//			}
+		}
+		NNGUI.console.printInfo("Correct move executions: " + moves);
+		sortAndCalculateSum();
+    	for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
+    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
+    		nnPlayer[i].net.changeAll(changePercentage);
+    	}
+    	//mix it again to give nets that have equal scores a better chance
+    	randomizeArray();		
+	}
+	private NNPlayfield[] selectSituations(int amount) {
+
+		NNPlayfield[] selectedSet = new NNPlayfield[amount];
+		int i = 0;
+		learningSet.toFirst();
+
+		while(i < amount) {
+			if(Math.random() < 0.01) {
+				selectedSet[i] = learningSet.get();
+				if(selectedSet[i] == null) {
+					System.getenv();;;
+				}
+				i++;
+			}
+			learningSet.next();
+			if(!learningSet.hasAccess()) {
+				learningSet.toFirst();
+			}
+		}
+		return selectedSet;
+		
+	}
 	private void trainNormal(){
 		//do one epoch
     	//make sure fitness is reset
@@ -317,22 +386,29 @@ public class TrainingSession {
 	}
 	private void trainAgainstRandomAI(int roundsToPlay) {
 		resetPlayer();
+		int allmoves = 0;
 		for(NNPlayer p : nnPlayer) {
 			for(int rounds = 0; rounds < roundsToPlay; rounds++) {
 				//starts first
 				new NNGame(p, opponent)
 				.start();
+				allmoves += p.rightmoves;
+				p.rightmoves = 0;
 				//and as second
 				new NNGame(opponent, p)
 				.start();
+				allmoves += p.rightmoves;
+				p.rightmoves = 0;
 			}
 		}
+		NNGUI.console.printInfo("Correct move executions: " + allmoves);
+		allmoves= 0;
 		sortAndCalculateSum();
 		for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
     		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
     		nnPlayer[i].net.changeAll(changePercentage);
     	}
-		changePercentage *= (1 - learnrate);
+		//changePercentage *= (1 - learnrate);
 	}
 	
 	//----training helper methods start----//
@@ -374,7 +450,6 @@ public class TrainingSession {
 	private void resetPlayer() {
 		for(NNPlayer p : nnPlayer) {
     		p.fitness = 0;
-    		p.didValidMove = false;
     	}
 	}
 	/**
@@ -456,5 +531,17 @@ public class TrainingSession {
 	@Override
 	public String toString(){
 		return name;
+	}
+	public void clearSession() {
+		File epochData = new File(sessionDir.getAbsolutePath() + "/Epochdata.json");
+		if(epochData.exists()) {
+			epochData.delete();
+		}
+		File[] nnfiles = new File(sessionDir.getPath() + "/NNPlayer").listFiles();
+		if(nnfiles.length != 0) {
+			for(int nncounter = 0; nncounter < nnfiles.length; nncounter++) {
+				nnfiles[nncounter].delete();
+			}
+		}
 	}
 }

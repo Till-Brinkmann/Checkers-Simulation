@@ -1,26 +1,23 @@
 package nn;
 
+import datastructs.List;
 import checkers.NNMove;
 import checkers.NNPlayfield;
 import checkers.Player;
-import datastructs.List;
 import training.NNSpecification;
 
-public class NNPlayer implements Player{
+public class NNPlayer implements Player {
 
 	public NN net;
 	
 	private NNPlayfield field;
 	
-	public float fitness;
-	public boolean didValidMove;
-	
-	private double[] inputVector;
+	public int fitness;
 	
 	private double[] outputVector;
-	
 	private boolean color;
-	
+
+	public int rightmoves;
 	public NNPlayer(NNSpecification specs) {
 		net = new NN(specs);
 	}
@@ -29,139 +26,138 @@ public class NNPlayer implements Player{
 	public void prepare(boolean color, NNPlayfield field){
 		this.color = color;
 		this.field = field;
-		inputVector = new double[net.afterInputWeights[0].length];
 	}
-	
+
 	@Override
-	public NNMove requestMove(){
-		byte f = 0;
-		for(int y = 0;y < 8; y++){
-            for(int x = 0;x < 8; x++){
-            	if(y%2 == 1) {
-            		if(x%2 == 1) {
-            			addValueToInputVector(f);
-    					f++;
-            		}
-            	}
-            	else {
-            		if(x%2 == 0) {
-            			addValueToInputVector(f);
-    					f++;
-            		}
-            	}
-            }
+	public NNMove requestMove() {
+		//runs the neural network with a specific input which consist of an 32 vector, which represents the board
+		//with different values(King: 3, Figure 1, Empty: 0). Enemy figures are obtaining the negated values.
+		outputVector = net.run(createInputVector(net.afterInputWeights[0].length));
+		//after the output was determined the index of the two biggest values in the output are extracted.
+		int best[] = searchForBiggestValues();
+		//
+		NNMove move = NNMove.INVALID;
+		//Creates a list with all possible moves.
+		List<NNMove> possibleMoves = NNMove.getPossibleMovesFor(color, field);
+		//test if the fields with the biggest values are a legal move.
+		for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next()) {
+			if(possibleMoves.get().from == best[0]) {
+				if(possibleMoves.get().to == best[1]) {
+					move = possibleMoves.get();
+					rightmoves++;
+				}
+			}
+			if(possibleMoves.get().from == best[1]) {
+				if(possibleMoves.get().to == best[0]) {
+					move = possibleMoves.get();
+					rightmoves++;
+				}
+			}
 		}
-		if(color){
-			outputVector = net.run(inputVector);
+		//for evaluation purposes(setting the fitness of the NN)
+		if(move != NNMove.INVALID) {
+			fitness += 100;
+			if(move.isJump()) {
+				fitness += 100;
+			}
 		}
 		else {
-			double[] invertedInputVector = new double[64];
-			for(int i = 0; i < inputVector.length/2; i++){
-				invertedInputVector[mirrorField(i)] = inputVector[i];
-			}
-			for(int i = inputVector.length/2; i < inputVector.length/2; i++){
-				invertedInputVector[mirrorField(i-inputVector.length/2)+inputVector.length/2] = inputVector[i];
-			}
-			outputVector = net.run(invertedInputVector);
-		}
-		//add fitness based on how near it is to making a valid move
-		List<NNMove> possibleMoves = NNMove.getPossibleMovesFor(color, field);
-		for(byte output = 0; output < 32; output++) {
-			boolean isValidDestination = false;
-			boolean isValidFigurePosition = false;
-			for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next()) {
-				//if the nn has high values on the positions were moves are valid it gets a higher fitness
-				//high values for positions that are not valid give higher minus points
-				if(output == possibleMoves.get().to) {
-					isValidDestination = true;
-				}
-				if(output == possibleMoves.get().from) {
-					isValidFigurePosition = true;
-				}
-				if(isValidDestination && isValidFigurePosition) break;
-			}
-			fitness += isValidDestination ? outputVector[output] : -outputVector[output];
-			fitness += isValidFigurePosition ? outputVector[output+32] : -outputVector[output+32];
+			//tests, if the field chosen by the nn is having a good attempt.
+//			if(field.isOccupiedByColor((byte)best[0], color)) {
+//				fitness += 10;
+//				if(!field.isOccupied((byte)best[1])) {
+//					fitness += 10;
+//				}
+//			}
+//			if(field.isOccupiedByColor((byte)best[1], color)) {
+//				fitness += 10;
+//				if(!field.isOccupied((byte)best[0])) {
+//					fitness += 10;
+//				}
+//			}
 		}
 		
-		NNMove bestMove = NNMove.INVALID;
-		NNMove move = NNMove.INVALID;
-		double max = Integer.MIN_VALUE;
-        int choiceField = 0;
-        for(int i = 0, fieldIndex = 0; i < 32; i++) {
-        	fieldIndex = color ? i : mirrorField(i);
-        	if(outputVector[fieldIndex] > max){
-        		max = outputVector[fieldIndex];
-        		choiceField = fieldIndex;
-        	}
-        }
-        //test which figures can reach this field
-        List<NNMove> availableMoves = new List<NNMove>();
-        for(byte pos : field.getFigurePositionsOfType(color)){
-        	move = NNMove.createMove(pos, (byte)choiceField, field);
-        	if(NNMove.testMove(move, field)) {
-        		availableMoves.append(move);
-        	}
-        }
-        if(availableMoves.length != 0) {
-        	//NNGUI.console.printInfo("There are available moves");
-        	//there is a move that ends at this field
-            //find out if a figure that can do the move is on the field which is chosen by the nn to be the move start
-            max = Integer.MIN_VALUE;
-    		double score = 0;
-        	for(availableMoves.toFirst();availableMoves.hasAccess();availableMoves.next()){
-    			move = availableMoves.get();
-    			score = color ?
-    					outputVector[move.from + 32] :
-    					outputVector[mirrorField(move.from) + 32];
-    			if(score > max){
-    				bestMove = move;
-    				max = score;
-    			}
-    		}
-        }
-        if(bestMove == NNMove.INVALID){
-        	fitness -= 100;
-        } else {
-        	didValidMove = true;
-        	fitness += 100;
-        	if(bestMove.isJump()) {
-        		fitness += 25;
-        	}
-        }
-        return bestMove;
+
+		
+		return move;
 	}
-	
-	public void addValueToInputVector(byte f) {
-		if(field.isOccupied(f)) {
-			if(field.isOccupiedByColor(f, true)) {
-				if(field.isKing(f)) {
-					inputVector[f+32] = 1;
-					inputVector[f] = 0;
-				}
-				else {
-					inputVector[f] = 1;	
-					inputVector[f+32] = 0;
-				}
+	private double[] createInputVector(int length) {
+		double[] inputVector = new double[length];
+		byte f = 0;
+		if(color) {
+			for(int y = 0;y < 8; y++){
+	            for(int x = 0;x < 8; x++){
+	            	if(y%2 == 1) {
+	            		if(x%2 == 1) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            	else {
+	            		if(x%2 == 0) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            }
+	            
 			}
-			else {
-				if(field.isKing(f)) {
-					inputVector[f+32] = -1;	
-					inputVector[f] = 0;	
-				}
-				else {
-					inputVector[f] = -1;	
-					inputVector[f+32] = 0;
-				}
-			}			
 		}
 		else {
-			inputVector[f] = 0;
-			inputVector[f+32] = 0;
+			for(int y = 8;y >= 0; y--){
+	            for(int x = 8;x >= 0; x--){
+	            	if(y%2 == 1) {
+	            		if(x%2 == 1) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            	else {
+	            		if(x%2 == 0) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            }
+	            
+			}
 		}
+		return inputVector;
 	}
-	
-	private int mirrorField(int field) {
-		return Math.abs(field-31);
+
+	private int[] searchForBiggestValues() {
+		double[] bestValues = {-1,-1 };
+		int[] bestField = new int[2];
+		for(int i = 0; i < outputVector.length; i++) {
+			if(outputVector[i] > bestValues[1]) {
+				if(outputVector[i] > bestValues[0]) {
+					bestValues[0] = outputVector[i];
+					bestField[0] = i;
+				}
+				else {
+					bestValues[1] = outputVector[i];
+					bestField[1] = i;
+				}
+			}
+		}
+		return bestField;
 	}
+	private int setInputValue(byte f) {
+		if(field.isOccupied(f)) {
+			if(!field.isKing(f)){
+				if(field.isOccupiedByColor(f, color) == color) {
+					return 1;
+				}
+				return -1;
+			}
+			else {
+				if(field.isOccupiedByColor(f, color) == color) {
+					return 3;
+				}
+				return -3;
+			}
+		}
+		return 0;
+		
+	}
+	public double[] getOutput() {
+		return outputVector;
+	}
+
 }

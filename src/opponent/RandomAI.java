@@ -1,5 +1,7 @@
 package opponent;
 
+import java.util.Random;
+
 import checkers.NNMove;
 import checkers.NNPlayfield;
 import checkers.Player;
@@ -24,13 +26,13 @@ public class RandomAI implements Player{
 	@Override
 	public NNMove requestMove() {
 		List<NNMove> moves = NNMove.getPossibleMovesFor(color, field);
-		double random = Math.random();
-		double weight = 1/moves.length;
+		int random = new Random().nextInt(moves.length);
+		int i = 0;
 		for(moves.toFirst();moves.hasAccess();moves.next()) {
-			if(random < weight) {
+			if(random == i) {
 				return moves.get();
 			}
-			random -= weight;
+			i++;
 		}
 		return null;
 	}

@@ -20,6 +20,7 @@ public class NNGUI extends JFrame{
 
 	public static Console console = new Console();
 	public static LineChart chart = new LineChart();
+	public static BarChart barChart = new BarChart();
 	private static TrainingPanel tp;
 	public NNGUI() {
 		super("Checker Simulation NN Training");

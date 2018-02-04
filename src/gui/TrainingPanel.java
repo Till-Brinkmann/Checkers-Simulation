@@ -1,5 +1,6 @@
 package gui;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -17,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
@@ -34,7 +36,7 @@ public class TrainingPanel extends JPanel {
 	public static final File tsDirsDir = new File("resources/Trainingsessions");
 	
 	JComboBox<TrainingSession> sessions;
-	
+	JButton newSession;
 	TrainingSessionPanel tsPanel;
 	
 	public TrainingPanel() {
@@ -127,8 +129,17 @@ public class TrainingPanel extends JPanel {
 		});
 		c.anchor = GridBagConstraints.NORTH;
 		c.gridx = 2;
-		c.gridwidth = 3;
+		c.gridwidth = 1;
 		add(sessions, c);
+		newSession = new JButton("Create new session");
+		newSession.setBackground(Color.WHITE);
+		newSession.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+			}
+		});
+		c.gridx = 3;
+		add(newSession,c);
 		
 		tsPanel = new TrainingSessionPanel();
 		c.anchor = GridBagConstraints.NORTH;
