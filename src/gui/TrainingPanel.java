@@ -12,6 +12,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -22,7 +25,9 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
+import datastructs.List;
 import json.JSONObject;
+import nn.NNPlayer;
 import training.NNSpecification;
 import training.TrainingSession;
 import training.TrainingSession.TrainingMode;
@@ -174,6 +179,7 @@ public class TrainingPanel extends JPanel {
 			float changePercentage;
 			float learnrate;
 			int epoch;
+			String nnPlayerString;
 			try {
 				FileReader fileReader = new FileReader(propfiles[0]);
 				char[] chars = new char[(int)propfiles[0].length()];
@@ -182,6 +188,7 @@ public class TrainingPanel extends JPanel {
 				JSONObject object = new JSONObject(String.valueOf(chars));
 				name = object.getString("Name");
 				mode = TrainingMode.valueOf(object.getString("Mode"));
+				nnPlayerString = object.getString("NNPlayer name");
 				JSONObject nnspecsobject = object.getJSONObject("NNSpecs");
 				nnspecs = new NNSpecification(
 						nnspecsobject.getInt("Inputs"),
@@ -198,15 +205,59 @@ public class TrainingPanel extends JPanel {
 				changePercentage = (float)object.getDouble("Current Changepercentage");
 				learnrate = (float)object.getDouble("Learnrate");
 				epoch = object.getInt("Epoch");
-				sessions.addItem(new TrainingSession(name, mode, nnspecs, defaultChangePercentage, changePercentage, learnrate, epoch));
+				File[] files = new File("resources/NNPlayer").listFiles();
+				URLClassLoader loader = new URLClassLoader(getNNPlayerUrls());
+				Class<?> player = null;
+				for(int i = 0; i < files.length; i++) {
+					if(files[i].getName().endsWith(".class")){
+						if((files[i].getName().substring(0, files[i].getName().length()-6).equals(nnPlayerString))){
+							player = loader.loadClass(files[i].getName().substring(0, files[i].getName().length()-6));
+							loader.close();
+						}							
+					}					
+				}
+				if(player != null) {	
+					 NNPlayer nnplayer = (NNPlayer) player.getConstructor(NNSpecification.class).newInstance(nnspecs);
+					if(nnplayer.getInputSize() == nnspecsobject.getInt("Inputs") && nnplayer.getInputSize() == nnspecsobject.getInt("Outputs")) {
+						sessions.addItem(new TrainingSession(name, mode, nnspecs, defaultChangePercentage, changePercentage, learnrate, epoch, nnplayer));
+					}
+					else {
+						NNGUI.console.printInfo("The NNPlayer " + name + "does not matches the NN input/output.");
+					}
+				}
+				else {
+					NNGUI.console.printInfo("No NNPlayer was found for the Session" + name + ". Therefore it could not be added. Please check the /resources/NNplayer folder");
+				}
 			} catch (Exception e) {
 				//do nothing
 				e.printStackTrace();
 				return;
 			}
 		}
+	}	
+	private URL[] getNNPlayerUrls() {
+		List<URL> urls = new List<URL>();
+		try {
+			File aiDir = new File("resources/NNPlayer");
+			urls.append(aiDir.toURI().toURL());
+			File[] files = aiDir.listFiles();
+			for(File f : files) {
+				if(f.getName().endsWith(".jar")) {
+					urls.append(f.toURI().toURL());
+				}
+			}
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		URL[] urlArray = new URL[urls.length];
+		urls.toFirst();
+		for(int i = 0; i < urls.length; i++) {
+			urlArray[i] = urls.get();
+			urls.next();
+		}
+		return urlArray;
 	}
-	
+
 	public void saveAll() {
 		if(tsDirsDir.listFiles() == null) {
 			NNGUI.console.printWarning("No Trainingsessions found.");

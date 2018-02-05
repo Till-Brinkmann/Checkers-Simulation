@@ -19,15 +19,33 @@ public class BarChart extends JFrame{
 	public BarChart() {
 		super("Output visualization barchart");
 		dataset = new StandardCategoryDataset3D();
-		DefaultKeyedValues<Number> s1 = new DefaultKeyedValues<Number>();
-		s1.put(1,1);
-		s1.put(2,1);
-		s1.put(3,1);
-		s1.put(4,1);
-		s1.put(5,1);
-		s1.put(6,1);
+		DefaultKeyedValues<Number> y1 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y2 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y3 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y4 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y5 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y6 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y7 = new DefaultKeyedValues<Number>();
+		DefaultKeyedValues<Number> y8 = new DefaultKeyedValues<Number>();
+		for(int i = 1; i <= 8; i++) {
+			y1.put(i,1);
+			y2.put(i,1);
+			y3.put(i,1);
+			y4.put(i,1);
+			y5.put(i,1);
+			y6.put(i,1);
+			y7.put(i,1);
+			y8.put(i,1);		
+		}
+		dataset.addSeriesAsRow("1",y1);
+		dataset.addSeriesAsRow("2",y1);
+		dataset.addSeriesAsRow("3",y1);
+		dataset.addSeriesAsRow("4",y1);
+		dataset.addSeriesAsRow("5",y1);
+		dataset.addSeriesAsRow("6",y1);
+		dataset.addSeriesAsRow("7",y1);
+		dataset.addSeriesAsRow("8",y1);
 		
-		dataset.addSeriesAsRow("1",s1);
 		chart = Chart3DFactory.createBarChart("NN Output",
 												null,
 												dataset,
@@ -37,7 +55,7 @@ public class BarChart extends JFrame{
 		chart.setAntiAlias(true);
 		panel = new Panel3D(chart);
 		panel.setBackground(Color.WHITE);
-	    panel.setPreferredSize(new Dimension(600,400));
+	    panel.setPreferredSize(new Dimension(1000,800));
 		add(panel);
 		pack();
 		setVisible(true);

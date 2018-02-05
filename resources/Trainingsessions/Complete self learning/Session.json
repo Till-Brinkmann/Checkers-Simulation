@@ -1,18 +1,19 @@
 {
   "Default Changepercentage": 60,
   "Mode": "NORMAL",
+  "NNPlayer name": "NNPlayer32INRE",
   "Epoch": 2,
   "Learnrate": 9.999999747378752E-6,
-  "Current Changepercentage": 59.986820220947266,
+  "Current Changepercentage": 70,
   "NNSpecs": {
     "NN Surviver": 20,
     "Weight Max": 10,
     "NN Quantity": 150,
     "Hiddenneuron Count": 64,
     "Weight Min": -10,
-    "Outputs": 64,
+    "Outputs": 32,
     "Hiddenlayer Count": 10,
-    "Inputs": 64,
+    "Inputs": 32,
     "Sigmoid Max": 1,
     "Sigmoid Min": -1
   },

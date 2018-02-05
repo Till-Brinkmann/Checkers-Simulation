@@ -40,6 +40,7 @@ public class TrainingSession {
 	
 	public final NNSpecification nnspecs;
 	
+	public NNPlayer player;
 	public NNPlayer[] nnPlayer;
 	private float sumFitness;
 	
@@ -65,7 +66,7 @@ public class TrainingSession {
 	public final Comparator<NNPlayer> nnPlayerComparator = new Comparator<NNPlayer>(){			
 		@Override
 		public int compare(NNPlayer n1, NNPlayer n2) {
-			return n1.fitness > n2.fitness ? -1 : (n1.fitness < n2.fitness  ? 1 : 0);
+			return n1.getFitness() > n2.getFitness() ? -1 : (n1.getFitness() < n2.getFitness()  ? 1 : 0);
 		}
 		
 	};
@@ -77,15 +78,21 @@ public class TrainingSession {
 			float defaultChangePercentage,
 			float changePercentage,
 			float learnrate,
-			int epoch) {
+			int epoch,
+			NNPlayer player) {
 		this.name = name;
 		this.mode = mode;
 		this.nnspecs = nnspecs;
 		this.defaultChangePercentage = defaultChangePercentage;
 		this.learnrate = learnrate;
 		this.changePercentage = changePercentage;
+		this.player = player;
 		sessionDir = new File(TrainingPanel.tsDirsDir.getPath() + "/" + name);
 		nnPlayer = new NNPlayer[nnspecs.nnQuantity];
+		for(int i = 0; i < nnspecs.nnQuantity; i++) {
+			nnPlayer[i] = player.clone();
+		}
+
 		//loadNNPlayer();
 		waitLock = new Object();
 		started = false;
@@ -173,31 +180,31 @@ public class TrainingSession {
 							bias[i][j] = innerArray.getDouble(j);
 						}
 					}
-					nnPlayer[nncounter] = new NNPlayer(nnspecs);
-					nnPlayer[nncounter].net.afterInputWeights = afterInputWeights;
-					nnPlayer[nncounter].net.hiddenWeights = hiddenWeights;
-					nnPlayer[nncounter].net.toOutputWeights = toOutputWeights;
-					nnPlayer[nncounter].net.bias = bias;
+					nnPlayer[nncounter] = player.clone();
+					nnPlayer[nncounter].getNet().afterInputWeights = afterInputWeights;
+					nnPlayer[nncounter].getNet().hiddenWeights = hiddenWeights;
+					nnPlayer[nncounter].getNet().toOutputWeights = toOutputWeights;
+					nnPlayer[nncounter].getNet().bias = bias;
 				} catch (Exception e) {
 					//TODO Maybe print that on the program console.
 					e.printStackTrace();
 					//something bad happened so just make a new player with random weights
-					nnPlayer[nncounter] = new NNPlayer(nnspecs);
-					nnPlayer[nncounter].net.randomWeights();
+					nnPlayer[nncounter] = player.clone();
+					nnPlayer[nncounter].getNet().randomWeights();
 				}
 				//we filled the array so we are done
 				if(nncounter == nnPlayer.length - 1) return;
 			}
 			//fill the rest with new random players
 			for(int i = nnfiles.length; i < nnPlayer.length; i++) {
-				nnPlayer[i] = new NNPlayer(nnspecs);
-				nnPlayer[i].net.randomWeights();
+				nnPlayer[i] = player.clone();
+				nnPlayer[i].getNet().randomWeights();
 			}
 			return;
 		}
 		for(int i = 0; i < nnPlayer.length; i++) {
-			nnPlayer[i] = new NNPlayer(nnspecs);
-			nnPlayer[i].net.randomWeights();
+			nnPlayer[i] = player.clone();
+			nnPlayer[i].getNet().randomWeights();
 		}
 	}
 	
@@ -317,8 +324,8 @@ public class TrainingSession {
 		NNGUI.console.printInfo("Correct move executions: " + moves);
 		sortAndCalculateSum();
     	for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
-    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
-    		nnPlayer[i].net.changeAll(changePercentage);
+    		nnPlayer[i].getNet().childFrom(weightedRandomSelection().getNet(), weightedRandomSelection().getNet());
+    		nnPlayer[i].getNet().changeAll(changePercentage);
     	}
     	//mix it again to give nets that have equal scores a better chance
     	randomizeArray();		
@@ -357,8 +364,8 @@ public class TrainingSession {
 		}
 		sortAndCalculateSum();
     	for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
-    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
-    		nnPlayer[i].net.changeAll(changePercentage);
+    		nnPlayer[i].getNet().childFrom(weightedRandomSelection().getNet(), weightedRandomSelection().getNet());
+    		nnPlayer[i].getNet().changeAll(changePercentage);
     	}
     	//mix it again to give nets that have equal scores a better chance
     	randomizeArray();
@@ -379,8 +386,8 @@ public class TrainingSession {
 		}
 		sortAndCalculateSum();
 		for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
-    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
-    		nnPlayer[i].net.changeAll(changePercentage);
+    		nnPlayer[i].getNet().childFrom(weightedRandomSelection().getNet(), weightedRandomSelection().getNet());
+    		nnPlayer[i].getNet().changeAll(changePercentage);
     	}
 		changePercentage *= (1 - learnrate);
 	}
@@ -392,21 +399,21 @@ public class TrainingSession {
 				//starts first
 				new NNGame(p, opponent)
 				.start();
-				allmoves += p.rightmoves;
-				p.rightmoves = 0;
+				allmoves += p.getRightMoves();
+				p.setRightMoves(0);
 				//and as second
 				new NNGame(opponent, p)
 				.start();
-				allmoves += p.rightmoves;
-				p.rightmoves = 0;
+				allmoves += p.getRightMoves();
+				p.setRightMoves(0);
 			}
 		}
 		NNGUI.console.printInfo("Correct move executions: " + allmoves);
 		allmoves= 0;
 		sortAndCalculateSum();
 		for(int i = nnspecs.nnSurviver; i < nnspecs.nnQuantity; i++){
-    		nnPlayer[i].net.childFrom(weightedRandomSelection().net, weightedRandomSelection().net);
-    		nnPlayer[i].net.changeAll(changePercentage);
+    		nnPlayer[i].getNet().childFrom(weightedRandomSelection().getNet(), weightedRandomSelection().getNet());
+    		nnPlayer[i].getNet().changeAll(changePercentage);
     	}
 		//changePercentage *= (1 - learnrate);
 	}
@@ -416,10 +423,10 @@ public class TrainingSession {
 	private NNPlayer weightedRandomSelection(){
 		float random = (float)Math.random() * sumFitness;
 		for(NNPlayer p : nnPlayer) {
-			if(random < p.fitness) {
+			if(random < p.getFitness()) {
 				return p;
 			}
-			random -= p.fitness;
+			random -= p.getFitness();
 		}
     	return nnPlayer[nnspecs.nnQuantity-1];
     }
@@ -429,17 +436,18 @@ public class TrainingSession {
 	private void sortAndCalculateSum() {
 		//sort array descending based on fitness
 		Arrays.parallelSort(nnPlayer, nnPlayerComparator);
-		NNGUI.console.printInfo("Best Fitness(non normalized): " + nnPlayer[0].fitness, name);
-		NNGUI.chart.addFitness(nnPlayer[0].fitness, FitnessType.NONNORMALIZED);
+		NNGUI.console.printInfo("Best Fitness(non normalized): " + nnPlayer[0].getFitness(), name);
+		NNGUI.chart.addFitness(nnPlayer[0].getFitness(), FitnessType.NONNORMALIZED);
     	//calculate sum
 		sumFitness = 0;
     	for(int i = 0; i < nnspecs.nnQuantity; i++){
     		//all values have to be at least 0
-    		nnPlayer[i].fitness -= nnPlayer[nnspecs.nnQuantity-1].fitness;
-    		sumFitness += nnPlayer[i].fitness;
+    		//TODO warum?
+    		nnPlayer[i].addFitness( -nnPlayer[nnspecs.nnQuantity-1].getFitness());
+    		sumFitness += nnPlayer[i].getFitness();
     	}
-    	NNGUI.console.printInfo("Best Fitness: " + nnPlayer[0].fitness, name);
-    	NNGUI.chart.addFitness(nnPlayer[0].fitness, FitnessType.MAX);
+    	NNGUI.console.printInfo("Best Fitness: " + nnPlayer[0].getFitness(),name);
+    	NNGUI.chart.addFitness(nnPlayer[0].getFitness(), FitnessType.MAX);
     	NNGUI.console.printInfo("Average Fitness: " + sumFitness/nnPlayer.length, name);
     	NNGUI.chart.addFitness(sumFitness/nnPlayer.length, FitnessType.AVG);
     	NNGUI.chart.increaseIndex(1);
@@ -449,7 +457,7 @@ public class TrainingSession {
 	 */
 	private void resetPlayer() {
 		for(NNPlayer p : nnPlayer) {
-    		p.fitness = 0;
+    		p.setFitness(0);
     	}
 	}
 	/**
@@ -519,7 +527,7 @@ public class TrainingSession {
 			if(!nnPlayerDir.exists()) nnPlayerDir.mkdir();
 			for(int i1 = 0; i1 < nnPlayer.length; i1++) {
 				writer = new FileOutputStream(nnPlayerDir.getPath()+ "/" +  i1 + ".json");
-				writer.write(nnPlayer[i1].net.toJSONObject().toString(2).getBytes("UTF-8"));
+				writer.write(nnPlayer[i1].getNet().toJSONObject().toString(2).getBytes("UTF-8"));
 				writer.close();
 			}
 		} catch (IOException e) {

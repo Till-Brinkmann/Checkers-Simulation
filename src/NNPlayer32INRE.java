@@ -1,0 +1,205 @@
+
+import java.util.Arrays;
+
+import checkers.NNMove;
+import checkers.NNPlayfield;
+import datastructs.List;
+import nn.NN;
+import nn.NNPlayer;
+import training.NNSpecification;
+
+public class NNPlayer32INRE implements NNPlayer {
+
+	public NN net;
+	
+	private NNPlayfield field;
+	
+	public int fitness;
+	
+	public int outputSize = 32;
+	public int inputSize = 32;
+	
+	private double[] outputVector;
+	private boolean color;
+
+	public int rightmoves;
+	public NNSpecification specs;
+	public NNPlayer32INRE(NNSpecification specs) {
+		this.specs = specs;
+		net = new NN(specs);
+	}
+
+	@Override
+	public void prepare(boolean color, NNPlayfield field){
+		this.color = color;
+		this.field = field;
+	}
+
+	@Override
+	public NNMove requestMove() {
+		//runs the neural network with a specific input which consist of an 32 vector, which represents the board
+		//with different values(King: 3, Figure 1, Empty: 0). Enemy figures are obtaining the negated values.
+		outputVector = net.run(createInputVector(inputSize));
+		//after the output was determined the index of the two biggest values in the output are extracted.
+		int biggestIndex = searchForBiggestValue();
+		//
+		NNMove move = NNMove.INVALID;
+		//Creates a list with all possible moves.
+		List<NNMove> possibleMoves = NNMove.getPossibleMovesFor(color, field);
+		//test if the fields with the biggest values are a legal move.
+		int[] movesFromIndex = new int[possibleMoves.length];
+		int i = 0;
+		for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next(), i++) {
+			movesFromIndex[i] = possibleMoves.get().from;
+			if(movesFromIndex[i] == biggestIndex) {
+				move = possibleMoves.get();
+				break;
+			}
+		}		
+		if(move == NNMove.INVALID) {
+			int j = 0;
+			while(move == NNMove.INVALID) {
+				if(Arrays.binarySearch(movesFromIndex, biggestIndex+j) > 0) {
+					biggestIndex = biggestIndex+j;
+					break;
+				}
+				if(Arrays.binarySearch(movesFromIndex, biggestIndex-j) > 0) {
+					biggestIndex = biggestIndex-j;
+					break;
+				}
+				j++;
+			}
+			for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next()) {
+				if(possibleMoves.get().from == biggestIndex) {
+					move = possibleMoves.get();
+					break;
+				}
+			}
+		}
+		
+
+		
+		return move;
+	}
+	private double[] createInputVector(int length) {
+		double[] inputVector = new double[length];
+		byte f = 0;
+		if(color) {
+			for(int y = 0;y < 8; y++){
+	            for(int x = 0;x < 8; x++){
+	            	if(y%2 == 1) {
+	            		if(x%2 == 1) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            	else {
+	            		if(x%2 == 0) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            }
+	            
+			}
+		}
+		else {
+			for(int y = 8;y >= 0; y--){
+	            for(int x = 8;x >= 0; x--){
+	            	if(y%2 == 1) {
+	            		if(x%2 == 1) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            	else {
+	            		if(x%2 == 0) {
+	            			inputVector[f] = setInputValue(f);
+	            		}
+	            	}
+	            }
+	            
+			}
+		}
+		return inputVector;
+	}
+
+	private int searchForBiggestValue() {
+		double[] bestValues = {-1,-1 };
+		int bestField = 0;
+		for(int i = 0; i < outputVector.length; i++) {
+			if(outputVector[i] > bestValues[1]) {
+				if(outputVector[i] > bestValues[0]) {
+					bestValues[0] = outputVector[i];
+					bestField = i;
+				}
+
+			}
+		}
+		return bestField;
+	}
+	private int setInputValue(byte f) {
+		if(field.isOccupied(f)) {
+			if(!field.isKing(f)){
+				if(field.isOccupiedByColor(f, color) == color) {
+					return 1;
+				}
+				return -1;
+			}
+			else {
+				if(field.isOccupiedByColor(f, color) == color) {
+					return 3;
+				}
+				return -3;
+			}
+		}
+		return 0;
+		
+	}
+	public double[] getOutput() {
+		return outputVector;
+	}
+
+	@Override
+	public int getInputSize() {
+		return inputSize;
+	}
+
+	@Override
+	public int getOutputSize() {
+		return outputSize;
+	}
+
+	@Override
+	public NNPlayer clone() {
+		return new NNPlayer32INRE(specs);
+	}
+
+	@Override
+	public NN getNet() {
+		return net;
+	}
+
+	@Override
+	public int getFitness() {
+		return fitness;
+	}
+
+	@Override
+	public void addFitness(int value) {
+		fitness += value;
+	}
+
+	@Override
+	public void setFitness(int value) {
+		fitness = value;
+	}
+
+	@Override
+	public int getRightMoves() {
+		return rightmoves;
+	}
+
+	@Override
+	public void setRightMoves(int value) {
+		rightmoves = value;
+	}
+
+}

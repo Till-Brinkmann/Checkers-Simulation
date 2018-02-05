@@ -1,6 +1,7 @@
 {
   "Default Changepercentage": 100,
   "Mode": "MINMAX",
+  "NNPlayer name": "NNPlayer64IN",
   "Epoch": 252,
   "Learnrate": 9.999999747378752E-5,
   "Current Changepercentage": 97.17019653320312,
