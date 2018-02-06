@@ -35,7 +35,7 @@ public class BarChart extends JFrame{
 			y5.put(i,1);
 			y6.put(i,1);
 			y7.put(i,1);
-			y8.put(i,1);		
+			y8.put(i,1);
 		}
 		dataset.addSeriesAsRow("1",y1);
 		dataset.addSeriesAsRow("2",y1);

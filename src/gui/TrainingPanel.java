@@ -188,7 +188,7 @@ public class TrainingPanel extends JPanel {
 				JSONObject object = new JSONObject(String.valueOf(chars));
 				name = object.getString("Name");
 				mode = TrainingMode.valueOf(object.getString("Mode"));
-				nnPlayerString = object.getString("NNPlayer name");
+				nnPlayerString = object.getString("NNPlayer Name");
 				JSONObject nnspecsobject = object.getJSONObject("NNSpecs");
 				nnspecs = new NNSpecification(
 						nnspecsobject.getInt("Inputs"),

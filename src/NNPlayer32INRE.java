@@ -1,5 +1,6 @@
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 import checkers.NNMove;
 import checkers.NNPlayfield;
@@ -37,48 +38,36 @@ public class NNPlayer32INRE implements NNPlayer {
 
 	@Override
 	public NNMove requestMove() {
+		NNMove move = NNMove.INVALID;
 		//runs the neural network with a specific input which consist of an 32 vector, which represents the board
 		//with different values(King: 3, Figure 1, Empty: 0). Enemy figures are obtaining the negated values.
 		outputVector = net.run(createInputVector(inputSize));
-		//after the output was determined the index of the two biggest values in the output are extracted.
-		int biggestIndex = searchForBiggestValue();
-		//
-		NNMove move = NNMove.INVALID;
-		//Creates a list with all possible moves.
-		List<NNMove> possibleMoves = NNMove.getPossibleMovesFor(color, field);
-		//test if the fields with the biggest values are a legal move.
-		int[] movesFromIndex = new int[possibleMoves.length];
-		int i = 0;
-		for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next(), i++) {
-			movesFromIndex[i] = possibleMoves.get().from;
-			if(movesFromIndex[i] == biggestIndex) {
-				move = possibleMoves.get();
-				break;
-			}
-		}		
-		if(move == NNMove.INVALID) {
-			int j = 0;
-			while(move == NNMove.INVALID) {
-				if(Arrays.binarySearch(movesFromIndex, biggestIndex+j) > 0) {
-					biggestIndex = biggestIndex+j;
+		byte[] sortedOutputIndexes = this.sortOutputByValue();
+		//what is the first index that has a figure on the corresponding field.
+		for(byte i = 0; i < sortedOutputIndexes.length; i++) {
+			if(field.isOccupiedByColor(sortedOutputIndexes[i], color)) {
+				byte chosenField = sortedOutputIndexes[i];
+				List<NNMove> possibleMoves = NNMove.getPossibleMoves(chosenField, color, field);
+				switch(possibleMoves.length) {
+				case 0:
 					break;
-				}
-				if(Arrays.binarySearch(movesFromIndex, biggestIndex-j) > 0) {
-					biggestIndex = biggestIndex-j;
-					break;
-				}
-				j++;
-			}
-			for(possibleMoves.toFirst();possibleMoves.hasAccess();possibleMoves.next()) {
-				if(possibleMoves.get().from == biggestIndex) {
-					move = possibleMoves.get();
-					break;
+				case 1:
+					possibleMoves.toFirst();
+					return possibleMoves.get();
+				//we have more than one move, so we have to choose the one with the highest value.
+				default:
+					double highest = -Double.MAX_VALUE;
+					for(possibleMoves.toFirst(); possibleMoves.hasAccess(); possibleMoves.next()) {
+						if(outputVector[possibleMoves.get().to] > highest) {
+							move = possibleMoves.get();
+							highest = outputVector[possibleMoves.get().to];
+						}
+					}
+					return move;
 				}
 			}
+				
 		}
-		
-
-		
 		return move;
 	}
 	private double[] createInputVector(int length) {
@@ -120,7 +109,38 @@ public class NNPlayer32INRE implements NNPlayer {
 		}
 		return inputVector;
 	}
+	private class ValueIndexPair {
+		public final double value;
+		public final byte index;
+		public ValueIndexPair(final double value, final byte index) {
+			this.value = value;
+			this.index = index;
+		}
+	}
+	private byte[] sortOutputByValue() {
+		byte[] indexes = new byte[outputVector.length];
+		ValueIndexPair[] pairs = new ValueIndexPair[outputVector.length];
+		//create pairs
+		for(int i = 0; i < pairs.length; i++) {
+			pairs[i] = new ValueIndexPair(outputVector[i], (byte)i);
+		}
+		Arrays.sort(pairs, new Comparator<ValueIndexPair>() {
 
+			@Override
+			public int compare(ValueIndexPair arg0, ValueIndexPair arg1) {
+				return arg0.value > arg1.value ? -1 : arg0.value < arg1.value ? 1 : 0;
+			}
+			
+		});
+		for(int i = 0; i < indexes.length; i++) {
+			indexes[i] = pairs[i].index;
+		}
+		return indexes;
+	}
+	/**
+	 * Searches for the biggest value on field and returns it's index.
+	 * @return index
+	 */
 	private int searchForBiggestValue() {
 		double[] bestValues = {-1,-1 };
 		int bestField = 0;

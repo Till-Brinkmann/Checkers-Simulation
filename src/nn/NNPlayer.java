@@ -2,7 +2,7 @@ package nn;
 
 import checkers.Player;
 
-public interface NNPlayer extends Player{
+public interface NNPlayer extends Player {
 	public int getInputSize();
 	public int getOutputSize();
 	public NNPlayer clone();

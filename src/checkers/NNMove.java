@@ -151,40 +151,43 @@ public class NNMove {
 		return false;
 	}
 	
-	public static List<NNMove> getPossibleMovesFor(boolean color, NNPlayfield field) {
+	public static List<NNMove> getPossibleMoves(byte pos, boolean color, NNPlayfield field) {
 		List<NNMove> moves = new List<NNMove>();
-		byte[] jumpPos;
-		byte[] positions = field.getFigurePositionsOfType(color);
-		for(byte pos : positions) {
-			jumpPos = getJumpPositions(pos, color, field);
-			for(int i = 0; i < 4; i++) {
-				if(jumpPos[i] != -1) {
-					int[] coords = fieldToCoords(pos);
-					byte beatenFigurePos = 0;
-					switch(i) {
-					case 0:
-						beatenFigurePos = coordsToField(coords[0]+1, coords[1]+1);
-						break;
-					case 1:
-						beatenFigurePos = coordsToField(coords[0]+1, coords[1]-1);
-						break;
-					case 2:
-						beatenFigurePos = coordsToField(coords[0]-1, coords[1]-1);
-						break;
-					case 3:
-						beatenFigurePos = coordsToField(coords[0]-1, coords[1]+1);
-						break;
-					}
-					moves.append(new NNMove(pos, jumpPos[i], 1<<beatenFigurePos));
+		byte[] jumpPos = getJumpPositions(pos, color, field);
+		for(int i = 0; i < 4; i++) {
+			if(jumpPos[i] != -1) {
+				int[] coords = fieldToCoords(pos);
+				byte beatenFigurePos = 0;
+				switch(i) {
+				case 0:
+					beatenFigurePos = coordsToField(coords[0]+1, coords[1]+1);
+					break;
+				case 1:
+					beatenFigurePos = coordsToField(coords[0]+1, coords[1]-1);
+					break;
+				case 2:
+					beatenFigurePos = coordsToField(coords[0]-1, coords[1]-1);
+					break;
+				case 3:
+					beatenFigurePos = coordsToField(coords[0]-1, coords[1]+1);
+					break;
 				}
+				moves.append(new NNMove(pos, jumpPos[i], 1<<beatenFigurePos));
 			}
 		}
 		//if there are jumps available you have to take these
 		if(moves.length != 0) return moves;
+		for(byte stepPos : getStepPositions(pos, color, field)) {
+			if(stepPos != -1) moves.append(new NNMove(pos, stepPos, 0));
+		}
+		return moves;
+	}
+	
+	public static List<NNMove> getPossibleMovesFor(boolean color, NNPlayfield field) {
+		List<NNMove> moves = new List<NNMove>();
+		byte[] positions = field.getFigurePositionsOfType(color);
 		for(byte pos : positions) {
-			for(byte stepPos : getStepPositions(pos, color, field)) {
-				if(stepPos != -1) moves.append(new NNMove(pos, stepPos, 0));
-			}
+			getPossibleMoves(pos, color, field);
 		}
 		return moves;
 	}

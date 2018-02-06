@@ -1,10 +1,9 @@
 {
   "Default Changepercentage": 100,
   "Mode": "MINMAX",
-  "NNPlayer name": "NNPlayer64IN",
-  "Epoch": 252,
+  "Epoch": 2733,
   "Learnrate": 9.999999747378752E-5,
-  "Current Changepercentage": 97.17019653320312,
+  "Current Changepercentage": 73.92900085449219,
   "NNSpecs": {
     "NN Surviver": 15,
     "Weight Max": 10,

@@ -59,6 +59,8 @@ public class TrainingSession {
 	
 	File sessionDir;
 	
+	private final String nnPlayerName;
+	
 	//for RandomAi mode
 	private int rtp = 10;
 	
@@ -92,7 +94,8 @@ public class TrainingSession {
 		for(int i = 0; i < nnspecs.nnQuantity; i++) {
 			nnPlayer[i] = player.clone();
 		}
-
+		nnPlayerName = player.getClass().getSimpleName();
+		System.out.println(nnPlayerName);
 		//loadNNPlayer();
 		waitLock = new Object();
 		started = false;
@@ -359,7 +362,16 @@ public class TrainingSession {
 		//start with playing all vs all
 		for(NNPlayer p : nnPlayer){
 			for(NNPlayer s : nnPlayer){
-				if(p != s) new NNGame(p, s).start();
+				if(p != s) {
+					NNGame game = new NNGame(p, s);
+					game.start();
+					if(game.situation == NNGame.REDWIN) {
+						p.addFitness(10);
+					}
+					else if(game.situation == NNGame.WHITEWIN) {
+						s.addFitness(10);
+					}
+				}
 			}
 		}
 		sortAndCalculateSum();
@@ -509,7 +521,8 @@ public class TrainingSession {
 		.put("Current Changepercentage", changePercentage)
 		.put("Default Changepercentage", defaultChangePercentage)
 		.put("Learnrate", learnrate)
-		.put("Epoch", epoch);
+		.put("Epoch", epoch)
+		.put("NNPlayer Name", nnPlayerName);
 	}
 	
 	public void save() {
