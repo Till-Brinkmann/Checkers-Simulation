@@ -37,7 +37,6 @@ public class MiniMaxABTask{
 	}
 	
 	/*
-	 * @see java.util.concurrent.RecursiveAction#compute()
 	 * starts children if not in last depth. if depth is equal to maxDepth (@see algo.MinMaxManager#maxDepth)
 	 * just calls the parents notifyFinished callback
 	 */
@@ -89,7 +88,7 @@ public class MiniMaxABTask{
 		//if we do not have any moves to evaluate
 		if(moves.length == 0) {
 			//you can not make any moves: you lose!
-			return -100f;
+			return isMaximizing ? -100f : 100f;
 		}
 		return value;
 	}
@@ -99,7 +98,9 @@ public class MiniMaxABTask{
 	 * and #ownFigures of current depth and the same with #enemyFigures
 	 */
 	private float evaluateMove() {
-		return (manager.getFigureQuantity(manager.enemyColor)-
+		return manager.getFigureQuantity(manager.playerColor) < 4 && manager.getFigureQuantity(manager.enemyColor) < 4 ?
+				manager.getFigureQuantity(manager.enemyColor) - pf.getFigureQuantity(manager.enemyColor) :
+				(manager.getFigureQuantity(manager.enemyColor)-
 				pf.getFigureQuantity(manager.enemyColor))+
 				(pf.getFigureQuantity(manager.playerColor)-
 				manager.getFigureQuantity(manager.playerColor));
