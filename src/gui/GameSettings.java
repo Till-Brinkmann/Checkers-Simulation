@@ -115,7 +115,7 @@ public class GameSettings extends JFrame{
 		player2ComboBox.setSelectedItem("Player");
 		currentSelectionPlayer2 = player2ComboBox.getSelectedItem().toString();
 		
-		roundsSpinner = new JSpinner (new SpinnerNumberModel(1, 1, 1000, 1));
+		roundsSpinner = new JSpinner (new SpinnerNumberModel(1, 1, 10000, 1));
 		roundsSpinner.setValue(1);
 		slownessForSlowMode = new JSlider(0,2000,0);
 		slownessForSlowMode.setMajorTickSpacing(1000);
@@ -199,8 +199,14 @@ public class GameSettings extends JFrame{
 	 */
 	private void createWindow() {
 		setResizable(false);
-		setSize(300,325);
-		setAlwaysOnTop (true);
+		if(System.getProperty("os.name").contains("Linux")) {
+			setSize(310,335);
+		}
+		else {
+			setSize(300, 325);
+		}
+		
+		setAlwaysOnTop(true);
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		backgroundPanel = new JPanel();
@@ -219,7 +225,7 @@ public class GameSettings extends JFrame{
 		recordGamePanel.setPreferredSize(new Dimension(300,4));
 		recordGamePanel.add(recordGame);
 		recordGamePanel.add(new JLabel("Rounds:"));
-		recordGamePanel.add(roundsSpinner);	
+		recordGamePanel.add(roundsSpinner);
 		
 		JPanel playerSelection = new JPanel();
 		playerSelection.setBackground(Color.WHITE);
@@ -245,7 +251,7 @@ public class GameSettings extends JFrame{
 		backgroundPanel.add(playerSelection);
 		backgroundPanel.add(slownessPanel);
 		backgroundPanel.add(okButtonPanel);
-		add(backgroundPanel);		
+		add(backgroundPanel);
 		setVisible(true);
 	}
 	/**

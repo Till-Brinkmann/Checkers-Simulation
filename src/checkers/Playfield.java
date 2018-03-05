@@ -61,12 +61,12 @@ public class Playfield {
 	 * @throws IOException Thrown when the file containing the start situation does not exist or is not available at the moment.
 	 */
 	public void createStartPosition() throws IOException{
-		field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/startPositionForSize" + SIZE +".pfs"), this);
+		field = FileUtilities.loadGameSituation(new File("resources/PlayfieldSaves/startPositionForSize" + SIZE +".pfs").getAbsoluteFile(), this);
 		if(display != null) display.updateDisplay();
 	}
 	
 	public void clearField() throws IOException {
-		 field = FileUtilities.loadGameSituation(new File("resources/playfieldSaves/noFigures.pfs"), this);
+		 field = FileUtilities.loadGameSituation(new File("resources/PlayfieldSaves/noFigures.pfs"), this);
 		 if(display != null) display.updateDisplay();
 	}
 	
@@ -121,10 +121,10 @@ public class Playfield {
 		display = d;
 	}
 	/**
-	 * Sets the object that is responsible for establishing a connection to the object that has the the task to playsounds. This object has to have the interface 
-	 * DisplaySounds.
+	 * Sets the interface that is responsible for establishing a connection to the object that has the the task to play sounds. This object has to have the interface 
+	 * PlayfieldSound.
 	 * <p>
-	 * @param s A object that is responsible for playing sound with the interface DisplaySounds.
+	 * @param s A object that is responsible for playing sound with the interface PlayfieldSound.
 	 */
 	public void setPlayfieldSound(PlayfieldSound s) {
 		sound = s;

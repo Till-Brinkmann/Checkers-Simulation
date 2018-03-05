@@ -24,7 +24,6 @@ public class FileUtilities {
 	
 	public static Figure[][] loadGameSituation(File file, Playfield playfield) throws IOException{
 		Figure[][] field = new Figure[8][8];
-
 		FileReader reader = new FileReader(file);
 		BufferedReader bufferedReader = new BufferedReader(reader);
 		try {

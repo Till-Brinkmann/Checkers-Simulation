@@ -65,15 +65,15 @@ public class GUI extends JFrame{
 	 */
 	public enum AISpeed{SLOW, MEDIUM, FAST, NOTACTIVE}
 	public AISpeed aiSpeed;
+	
 	public GUI(GameLogic gamelogic){
 		super("Checker Simulation 2.0");
-
 		gmlc = gamelogic;
 		gmlc.linkGUI(this);
 		initialize();
 		createWindow();
-		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored. Have fun!","GUI");
-		console.printInfo("All available commands can be found under /availableCommands", "GUI");
+		console.printInfo("The user interface was loaded successfully. Now it is ready to be explored.","GUI");
+		console.printInfo("All available commands can be seen by typing /availableCommands into the console", "GUI");
 		
 	}
 	/**
@@ -88,8 +88,17 @@ public class GUI extends JFrame{
 	 * @param args Additional arguments.
 	 */
 	public static void main(String[] args) {
+//		if(System.getProperty("os.name").contains("Linux")) {
+//			try {
+//				UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+//			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+//					| UnsupportedLookAndFeelException e) {
+//				System.out.println("Nope");
+//				e.printStackTrace();
+//			}
+//		}
+		
 		new GUI();
-
 	}
 	/**
 	 * Connects a GameLogic to the console

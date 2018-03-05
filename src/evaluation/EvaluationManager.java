@@ -81,9 +81,10 @@ public class EvaluationManager {
 		int draws = 0;
 		int stopped = 0;
 		int avgTurnCounts = 0;
+		//TODO the player is not 
 		for(Round r : round) {
 			if(r == null) continue;
-			switch(r.getEndSitation()) {
+			switch(r.getEndSituation()) {
 			case DRAW:
 				draws++;
 				break;

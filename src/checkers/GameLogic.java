@@ -39,8 +39,8 @@ public class GameLogic {
 	private boolean redFailedOnce;
 	private boolean whiteFailedOnce;
 
-	String namePlayerWhite;
-	String namePlayerRed;
+	String namePlayer2;
+	String namePlayer1;
 	
 	private boolean gameInProgress;
 	
@@ -60,11 +60,11 @@ public class GameLogic {
 	private EvaluationManager evaluationManager;
 	private long timeBeforeMove;
 	private long gameTimeBefore;
-	private int winCountRed;
-	private int winCountWhite;
+	private int winCountP1;
+	private int winCountP2;
 	private int drawCount;
-	private int overallMovePossibilitiesRed;
-	private int overallMovePossibilitiesWhite;
+	private int overallMovePossibilitiesP1;
+	private int overallMovePossibilitiesP2;
 	private Situations endSituation;
 	private boolean failed;
 	
@@ -78,8 +78,8 @@ public class GameLogic {
 	 */
 	public GameLogic(Playfield playfield) {
 		field = playfield;
-		winCountRed = 0;
-		winCountWhite = 0;
+		winCountP1 = 0;
+		winCountP2 = 0;
 		drawCount = 0;
 		currentRound = 0;
 		gameInProgress = false;
@@ -96,39 +96,40 @@ public class GameLogic {
 	/**
 	 * 
 	 * @param gameName
-	 * @param playerRed
-	 * @param playerWhite
+	 * @param player1
+	 * @param player2
 	 * @param rounds
 	 * @param slowness
 	 * @param displayActivated
 	 * @param useCurrentPf
 	 */
-	public void startGame(String gameName, Player playerRed, Player playerWhite, int rounds, int slowness, boolean displayActivated, boolean useCurrentPf, boolean autoPfTurning){
+	public void startGame(String gameName, Player player1, Player player2, int rounds, int slowness, boolean displayActivated, boolean useCurrentPf, boolean autoPfTurning){
 		//reset moveWindow
 		gui.movesWindow.resetTextArea();
 		
 		gameInProgress = true;
 		pause = false;
-		//how many game should be played
+		//how many games should be played
 		this.rounds = rounds;
 		//if the display should be turned after every move
 		this.autoPfTurning = autoPfTurning;
-		//if both player are one object one Player controls both white and red
-		twoPlayerMode = playerRed == playerWhite;
+		if(currentRound == 0) {
+			//if both players are one object one Player controls both white and red
+			twoPlayerMode = player1 == player2;
+			namePlayer1 = player1.getName();
+			namePlayer2 = player2.getName();
+		}
 		
-		namePlayerRed = playerRed.getName();
-		namePlayerWhite = playerWhite.getName();
-		
-		this.playerRed = playerRed;
-		this.playerWhite = playerWhite;
+		this.playerRed = player1;
+		this.playerWhite = player2;
 		
 		redFailedOnce = false;
 		whiteFailedOnce = false;
 		//SlowMode
 		this.slowness = slowness;
-		//set the new Playfield as the field to display if displaying is enabled
-		gui.playfieldplayer.playfield = field;
 		
+		gui.playfieldplayer.playfield = field;
+		//set the new Playfield as the field to display if displaying is enabled
 		if(!displayActivated) {
 			field.setPlayfieldDisplay(null);
 		}
@@ -162,20 +163,19 @@ public class GameLogic {
 		if(gui.playfieldplayer.playfieldpanel.reversed == true) {
 			gui.playfieldplayer.playfieldpanel.turnPlayfield();
 		}
-		playerRed.prepare(FigureColor.RED);
+		player1.prepare(FigureColor.RED);
 		//prepare only needs to be called once for Red then
 		if(!twoPlayerMode){
-			playerWhite.prepare(FigureColor.WHITE);
+			player2.prepare(FigureColor.WHITE);
 		}
 		//red always starts
-		gui.console.printInfo("GameLogic", "Therefore " + namePlayerRed + "starts first");
-		gui.console.printInfo("GameLogic","Playing "+ (rounds-currentRound) + " more Rounds before reset");
+		gui.console.printInfo("GameLogic", playerRed.getName() + "starts first.");
+		gui.console.printInfo("GameLogic","Playing " + (rounds-currentRound) + " more Rounds.");
 		inTurn = FigureColor.RED;
-		if(!playerRed.equals(gui.playfieldplayer)) {
+		if(!player1.equals(gui.playfieldplayer)) {
 			try {
 				Thread.sleep(slowness);
 			} catch (InterruptedException e) {
-				gui.console.printWarning("");
 				e.printStackTrace();
 			}
 		}
@@ -184,7 +184,7 @@ public class GameLogic {
 			timeBeforeMove = System.nanoTime();
 			gameTimeBefore = System.currentTimeMillis();
 		}
-		playerRed.requestMove();
+		player1.requestMove();
 	}
 	/**
 	 * First, the method tests, if the Move transferred as a parameter is valid. After that it executes all nessecary steps for one particular
@@ -199,13 +199,13 @@ public class GameLogic {
 	public void makeMove(Move m){
 		//save move times
 		if(evaluationManager != null) {
-			if(inTurn == FigureColor.RED) {
+			if(inTurn == FigureColor.RED && currentRound % 2 == 0) {
 				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerRed);
-				overallMovePossibilitiesRed += Move.getPossibleMoves(FigureColor.RED,field).length;
+				overallMovePossibilitiesP1 += Move.getPossibleMoves(FigureColor.RED,field).length;
 			}
 			else {
 				evaluationManager.getRound(currentRound).setMoveTime((System.nanoTime()-timeBeforeMove),playerWhite);
-				overallMovePossibilitiesWhite += Move.getPossibleMoves(FigureColor.WHITE,field).length;
+				overallMovePossibilitiesP2 += Move.getPossibleMoves(FigureColor.WHITE,field).length;
 			}
 		}
 		//if the movetype is invalid or the player of the figure is not in turn or testMove returns false
@@ -225,7 +225,6 @@ public class GameLogic {
 					redFailedOnce = true;
 					timeBeforeMove = System.nanoTime();
 					playerRed.requestMove();
-					
 				}
 			}
 			else {
@@ -289,7 +288,6 @@ public class GameLogic {
 					try {
 						Thread.sleep(slowness);
 					} catch (InterruptedException e) {
-						gui.console.printWarning("");
 						e.printStackTrace();
 					}
 				}
@@ -301,7 +299,6 @@ public class GameLogic {
 					try {
 						Thread.sleep(slowness);
 					} catch (InterruptedException e) {
-						gui.console.printWarning("");
 						e.printStackTrace();
 					}
 				}
@@ -348,7 +345,7 @@ public class GameLogic {
 	 * @return An enumeration for the passible game situations 
 	 */
 	private Situations testFinished(){
-		//red has to make the next move. So if Red has just moved it does not need to move in the next round
+		//white has to make the next move, because red has just moved and it does not need to move in the next round.
 		if(inTurn == FigureColor.WHITE && Move.getPossibleMoves(FigureColor.RED, field).length == 0) {
 			return Situations.WHITEWIN;
 		}
@@ -381,17 +378,22 @@ public class GameLogic {
 		case DRAW:
 			gui.console.printInfo("GameLogic", "Game is finished!");
 			gui.console.printInfo("GameLogic", "Result: Draw!");
-			drawCount++;	
+			drawCount++;
 			break;
 
 		case REDWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
+			//the color of the players change every round.
 			if(failed) {
 				gui.console.printInfo("GameLogic", playerWhite.getName() +"(White) did a wrong move!");
 			}
-			
 			gui.console.printInfo("GameLogic", "Result: "+ playerRed.getName() +"(Red) won the game!");
-			winCountRed++;
+			if(currentRound % 2 == 0) {
+				winCountP1++;
+			}
+			else {
+				winCountP2++;
+			}
 			break;
 		case WHITEWIN:
 			gui.console.printInfo("GameLogic", "Game is finished!");
@@ -399,7 +401,12 @@ public class GameLogic {
 				gui.console.printInfo("GameLogic", playerRed.getName() +"(Red) did a wrong move!");
 			}
 			gui.console.printInfo("GameLogic", "Result: "+ playerWhite.getName() +"(White) won the game!");
-			winCountWhite++;
+			if(currentRound % 2 == 1) {
+				winCountP1++;
+			}
+			else {
+				winCountP2++;
+			}
 			break;
 		case STOP:
 			gui.console.printInfo("GameLogic", "Game was stopped");
@@ -413,16 +420,18 @@ public class GameLogic {
 		}
 		currentRound++;
 		if(currentRound == rounds || end == Situations.STOP) {
-			currentRound = 0;
-			
-			gui.console.printInfo("GameLogic", "The " + playerWhite.getName() + " (White) won " + winCountWhite + " times.");
-			gui.console.printInfo("GameLogic", "The " + playerRed.getName() + " (Red) won " + winCountRed + " times.");
+			gui.console.printInfo("GameLogic", "The " + namePlayer1 +
+					" (started as: Red, " + ((currentRound - 1) % 2 == 0 ? "Red" : "White") + " in last game)" +
+					" won " + winCountP1 + " times.");
+			gui.console.printInfo("GameLogic", "The " + namePlayer2 +
+					" (started as: White, " + ((currentRound - 1) % 2 == 1 ? "Red" : "White") + " in last game)" +
+					" won " + winCountP2 + " times.");
 			gui.console.printInfo("GameLogic", "Draw: " + drawCount + " times.");
-			
 			//reset variables
+			currentRound = 0;
 			gameInProgress = false;
-			winCountWhite = 0;
-			winCountRed = 0;
+			winCountP2 = 0;
+			winCountP1 = 0;
 			drawCount = 0;
 			gui.setAISpeed(AISpeed.NOTACTIVE);
 			gui.setEnableResume(false);
@@ -706,19 +715,19 @@ public class GameLogic {
 		return multijumpCount;
 	}
 	public int getWinCountRed() {
-		return winCountRed;
+		return winCountP1;
 	}
 	public int getWinCountWhite() {
-		return winCountWhite;
+		return winCountP2;
 	}
 	public int getDrawCount() {
 		return drawCount;
 	}
 	public int getOverallMovePossibilitiesRed() {		
-		return overallMovePossibilitiesRed;
+		return overallMovePossibilitiesP1;
 	}
 	public int getOverallMovePossibilitiesWhite() {
-		return overallMovePossibilitiesWhite;
+		return overallMovePossibilitiesP2;
 	}
 	public int getTurnCount() {
 		return getTurnCountRed() + getTurnCountWhite();

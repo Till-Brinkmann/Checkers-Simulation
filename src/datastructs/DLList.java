@@ -2,7 +2,7 @@ package datastructs;
 /**
  * A double linked generic List.
  * <p>
- * @param <ContentType> The Datatype to store.
+ * @param <ContentType> The datatype to store.
  */
 public class DLList<ContentType> {
 	

@@ -157,7 +157,7 @@ public class Round {
 	public FigureColor getInturn() {
 		return inTurn;
 	}
-	public Situations getEndSitation() {
+	public Situations getEndSituation() {
 		return endSituation;
 	}
 	public void setgameTime(double l) {

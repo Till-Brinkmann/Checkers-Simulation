@@ -42,6 +42,11 @@ public class List<ContentType>{
 			length++;
 		}
 	}
+	public void appendArray(ContentType[] content) {
+		for(int i = 0; i < content.length; i++) {
+			append(content[i]);
+		}
+	}
 	/**
 	 * Inserts the new content at the end of the list.
 	 * <p>
