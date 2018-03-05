@@ -85,7 +85,7 @@ public class NN
             }
         }
     }
-    public void changeAll(double percent){ //in percent
+    public void changeAll(double percent){
     	double scale = percent / 100;
         for (int i = 0; i < afterInputWeights.length; i++){
             for (int x = 0; x < afterInputWeights[0].length; x++){
