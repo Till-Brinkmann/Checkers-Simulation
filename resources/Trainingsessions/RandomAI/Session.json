@@ -1,0 +1,21 @@
+{
+  "Default Changepercentage": 180,
+  "Mode": "RANDOMAI",
+  "NNPlayer Name": "NNPlayer32IN",
+  "Epoch": 9,
+  "Learnrate": 9.999999747378752E-5,
+  "Current Changepercentage": 70,
+  "NNSpecs": {
+    "NN Surviver": 15,
+    "Weight Max": 10,
+    "NN Quantity": 100,
+    "Hiddenneuron Count": 32,
+    "Weight Min": -10,
+    "Outputs": 32,
+    "Hiddenlayer Count": 10,
+    "Inputs": 32,
+    "Sigmoid Max": 1,
+    "Sigmoid Min": -1
+  },
+  "Name": "RandomAI"
+}
