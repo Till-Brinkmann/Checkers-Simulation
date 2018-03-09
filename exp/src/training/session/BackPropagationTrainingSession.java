@@ -32,5 +32,4 @@ implements Trainer, InputEncoder<InputDataType, InputType>, OutputEncoder<Output
 		super(saveDir);
 	}
 	
-	
 }

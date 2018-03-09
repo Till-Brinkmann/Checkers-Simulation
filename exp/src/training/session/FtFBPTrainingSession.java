@@ -9,7 +9,7 @@ import checkers.NNPlayfield;
 import checkers.Player;
 import json.JSONArray;
 import json.JSONObject;
-import nn.DFF_FC;
+import nn.DFF_FC_Backprop;
 import opponent.MiniMaxAB;
 import opponent.RandomAI;
 import training.data.JSONSaveableTrainingSet;
@@ -18,18 +18,6 @@ import util.JSONUtil;
 
 public class FtFBPTrainingSession
 extends BackPropagationTrainingSession<double[], NNPlayfield, double[], NNPlayfield> {
-	
-	private final File tsFile = new File(saveDir.getAbsolutePath() + "/Trainingset.json");
-	private final File vsFile = new File(this.saveDir.getAbsolutePath() + "/Validationset.json");
-	/**
-	 * NN to train.
-	 */
-	private DFF_FC nn;
-	
-	/**
-	 * Used by {@code encodeInput()} to set the right values and determine if the field should be flipped
-	 */
-	private boolean nnColor;
 	
 	/**
 	 * A JSONSaveable Trainingset with the default loading method implementation
@@ -77,6 +65,18 @@ extends BackPropagationTrainingSession<double[], NNPlayfield, double[], NNPlayfi
 		}
 		
 	}
+	
+	private final File tsFile = new File(saveDir.getAbsolutePath() + "/Trainingset.json");
+	private final File vsFile = new File(this.saveDir.getAbsolutePath() + "/Validationset.json");
+	/**
+	 * NN to train.
+	 */
+	private DFF_FC_Backprop nn;
+	
+	/**
+	 * Used by {@code encodeInput()} to set the right values and determine if the field should be flipped
+	 */
+	private boolean nnColor;
 	
 	public FtFBPTrainingSession(File saveDir) {
 		super(saveDir);
