@@ -3,11 +3,13 @@ package training.data;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import json.JSONArray;
 import json.JSONObject;
-import training.data.TrainingSet.TrainingExample;
+import training.data.TrainingSet;
+import training.data.TrainingExample;
 import util.JSONArrayable;
 import util.JSONable;
 /**
@@ -25,7 +27,7 @@ public abstract class JSONSaveableTrainingSet<InputType, OutputType>
 	 * Base class of every saveable TrainingExample
 	 */
 	public class JSONSaveableTrainingExample
-	extends TrainingSet<InputType, OutputType>.TrainingExample
+	extends TrainingExample<InputType, OutputType>
 	implements JSONArrayable{
 		
 		public JSONSaveableTrainingExample(JSONArray save) {
@@ -64,7 +66,7 @@ public abstract class JSONSaveableTrainingSet<InputType, OutputType>
 	public JSONSaveableTrainingSet(JSONObject save) {
 		JSONArray vals = save.getJSONArray("TrainingExamples");
 		for(int i = 0, len = vals.length(); i < len; i++) {
-			data.append(new JSONSaveableTrainingExample(vals.getJSONArray(i)));
+			append(new JSONSaveableTrainingExample(vals.getJSONArray(i)));
 		}
 	}
 	/**
@@ -72,18 +74,18 @@ public abstract class JSONSaveableTrainingSet<InputType, OutputType>
 	 * @param e The example to add. Can not be null and must be an instance of .
 	 */
 	@Override
-	public void addTrainingExample(TrainingExample e) {
+	public void addTrainingExample(TrainingExample<InputType, OutputType> e) {
 		//we do not want null here
 		if(e == null) return;
 		if(e instanceof JSONSaveableTrainingSet.JSONSaveableTrainingExample) {
-			data.append(e);
+			append(e);
 			return;
 		}
 		throw new IllegalArgumentException("The trainingexample has to be json saveable.");
 	}
 	@Override
 	public void addTrainingExample(InputType input, OutputType output) {
-		data.append(new JSONSaveableTrainingExample(input, output));
+		append(new JSONSaveableTrainingExample(input, output));
 	}
 	//TODO this methods could be static if they were not dealing with generic types.
 	//There could be a better way.
@@ -112,20 +114,27 @@ public abstract class JSONSaveableTrainingSet<InputType, OutputType>
 		//TODO there is probably other stuff to test before continuing
 		if(file == null || charset == null)
 			throw new IllegalArgumentException("The charset or the file is null.");
+		if(!file.exists()) {
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+		}
 		if(!file.canWrite())
 			throw new IllegalArgumentException("This file is (currently) not accessible!");
 		if(indentFactor < 0)
 			throw new IllegalArgumentException("indentFactor must be at least 0.");
 		FileOutputStream writer = new FileOutputStream(file);
-		writer.write(charset.encode(toJSONObject().toString(indentFactor)).array());
+		String str = toJSONObject().toString(indentFactor);
+		ByteBuffer b = charset.encode(str);
+		System.out.println("Writing");
+		writer.write(b.array());
 		writer.close();
 	}
 	
 	@SuppressWarnings("unchecked")
 	public JSONArray toJSONArray() {
 		JSONArray array = new JSONArray();
-		for(data.toFirst(); data.hasAccess(); data.next()) {
-			array.put(((JSONSaveableTrainingExample) data.get()).toJSONArray());
+		for(toFirst(); hasAccess(); nextNoWrap()) {
+			array.put(((JSONSaveableTrainingExample) get()).toJSONArray());
 		}
 		return array;
 	}

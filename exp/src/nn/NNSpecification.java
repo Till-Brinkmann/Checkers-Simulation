@@ -9,24 +9,24 @@ public class NNSpecification {
 	public final int hiddenNeuronCount;
 	public final int outputs;
 	
-	public final float sigmin;
-	public final float sigmax;
+	public final float sigscale;
+	public final float sigoffset;
 	public final float weightMin;
-	public final float weightMax;
+	public final float weightDiff;
 	
 	
 
 	public NNSpecification(int inputs, int hiddenLayerCount, int hiddenNeuronCount, int outputs,
-			float sigmin, float sigmax, float weightMin, float weightMax, int nnQuantity,
+			float sigscale, float sigoffset, float weightMin, float weightDiff, int nnQuantity,
 			int nnSurviver) {
 		this.inputs = inputs;
 		this.hiddenLayerCount = hiddenLayerCount;
 		this.hiddenNeuronCount = hiddenNeuronCount;
 		this.outputs = outputs;
-		this.sigmin = sigmin;
-		this.sigmax = sigmax;
+		this.sigscale = sigscale;
+		this.sigoffset = sigoffset;
 		this.weightMin = weightMin;
-		this.weightMax = weightMax;
+		this.weightDiff = weightDiff;
 	}
 	
 	public String[] toStringArray() {
@@ -35,10 +35,10 @@ public class NNSpecification {
 			Integer.toString(hiddenLayerCount),
 			Integer.toString(hiddenNeuronCount),
 			Integer.toString(outputs),
-			Float.toString(sigmin),
-			Float.toString(sigmax),
+			Float.toString(sigscale),
+			Float.toString(sigoffset),
 			Float.toString(weightMin),
-			Float.toString(weightMax),
+			Float.toString(weightDiff),
 		};
 	}
 	public JSONObject toJSONObject() {
@@ -47,9 +47,9 @@ public class NNSpecification {
 				.put("Hiddenlayer Count", hiddenLayerCount)
 				.put("Hiddenneuron Count", hiddenNeuronCount)
 				.put("Outputs", outputs)
-				.put("Sigmoid Min", sigmin)
-				.put("Sigmoid Max", sigmax)
+				.put("Sigmoid Scale", sigscale)
+				.put("Sigmoid Offset", sigoffset)
 				.put("Weight Min", weightMin)
-				.put("Weight Max", weightMax);
+				.put("Weight Difference", weightDiff);
 	}
 }

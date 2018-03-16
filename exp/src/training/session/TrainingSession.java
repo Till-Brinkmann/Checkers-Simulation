@@ -45,19 +45,15 @@ public abstract class TrainingSession implements TrainingSessionEventListener{
 	 * Set all values to default.
 	 */
 	public TrainingSession(String name) {
-		running = false;
-		stopTraining = false;
-		stopLock = new Object();
-		totalEpochs = 0;
-		saveInterval = 42;
-		listenerList = new List<TrainingSessionEventListener>();
-		this.name = name;
+		this(name, 0, 42);
 	}
 	public TrainingSession(String name, int totalEpochs, int saveInterval) {
 		running = false;
 		stopTraining = false;
 		stopLock = new Object();
 		listenerList = new List<TrainingSessionEventListener>();
+		//adds itself as an Eventlistener
+		addTrainingSessionEventListener(this);
 		this.totalEpochs = totalEpochs;
 		this.saveInterval = saveInterval;
 		this.name = name;
@@ -77,6 +73,7 @@ public abstract class TrainingSession implements TrainingSessionEventListener{
 	 */
 	public void train(int epochs) {
 		fireStartEvent();
+		running = true;
 		for(int epoch = 0; epoch != epochs && !stopTraining; epoch++) {
 			doEpoch();
 			totalEpochs++;

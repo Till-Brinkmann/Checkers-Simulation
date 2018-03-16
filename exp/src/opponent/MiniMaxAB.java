@@ -6,7 +6,6 @@ import checkers.NNPlayfield;
 import checkers.Player;
 import datastructs.List;
 import gui.CommandListener;
-import gui.NNGUI;
 /**
  * Version of the MiniMaxABPlayer for nn training.
  */
@@ -120,12 +119,10 @@ public class MiniMaxAB implements Player{
 			return value;
 		}
 		
-		/**
-		 * @return the difference of the difference of the amount of own figures at depth 0
-		 * and #ownFigures of current depth and the same with #enemyFigures
-		 */
 		private float evaluateMove() {
-			return (manager.getFigureQuantityOfColor(!manager.color)-
+			return manager.getFigureQuantityOfColor(manager.color) < 4 && manager.getFigureQuantityOfColor(!manager.color) < 4 ?
+					manager.getFigureQuantityOfColor(!manager.color) - pf.getFigureQuantityOfColor(!manager.color) :
+					(manager.getFigureQuantityOfColor(!manager.color)-
 					pf.getFigureQuantityOfColor(!manager.color))+
 					(pf.getFigureQuantityOfColor(manager.color)-
 					manager.getFigureQuantityOfColor(manager.color));
@@ -144,24 +141,7 @@ public class MiniMaxAB implements Player{
 	public float alpha;
 	public float beta;
 	
-	public final CommandListener changemaxDepth = new CommandListener() {
-		@Override
-		public boolean processCommand(String command, String[] args) {
-			if(command.equals("set")) {
-				if(args.length == 2 && args[0].equals("MMMaxDepth")) {
-					//creating a new manager is the easiest way to make sure that the maxDepth does not change while a move is calculated
-					//(the current Tasks all have references to the old manager)
-					manager = new MiniMaxABManager(manager.field, (byte)Integer.parseInt(args[1]), manager.color);
-					NNGUI.console.printCommandOutput("maxDepth set to " + manager.maxDepth);
-					return true;
-				}
-			}
-			return false;
-		}
-	};
-	
 	public MiniMaxAB() {
-		NNGUI.console.addCommandListener(changemaxDepth);
 	}
 
 	@Override

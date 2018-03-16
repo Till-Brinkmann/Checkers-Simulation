@@ -1,50 +1,55 @@
 package training.data;
 
+import java.util.Random;
+
 import datastructs.List;
 import datastructs.Stack;
 
-public class TrainingSet<InputType, OutputType> {
+public class TrainingSet<InputType, OutputType> extends List<TrainingExample<InputType, OutputType>>{
 
-	public class TrainingExample {
-		InputType input;
-		OutputType output;
-		
-		public TrainingExample(InputType input, OutputType output) {
-			this.input = input;
-			this.output = output;
-		}
-		/**
-		 * this is used by SaveableTrainingExample and should not be used elsewhere.
-		 */
-		protected TrainingExample() {}
-	}
-	
-	List<TrainingExample> data;
-	
 	public TrainingSet() {
-		data = new List<TrainingExample>();
+		super();
 	}
 	
-	public void addTrainingExample(TrainingExample e) {
+	public void addTrainingExample(TrainingExample<InputType, OutputType> e) {
 		//we do not want null here
 		if(e == null) return;
-		data.append(e);
+		append(e);
 	}
 	
 	public void addTrainingExample(InputType input, OutputType output) {
-		data.append(new TrainingExample(input, output));
+		append(new TrainingExample<InputType, OutputType>(input, output));
 	}
 
-	public TrainingExample getFirst() {
-		if(data.isEmpty()) return null;
-		data.toFirst();
-		return data.get();
+	public TrainingExample<InputType, OutputType> getFirst() {
+		if(isEmpty()) return null;
+		toFirst();
+		return get();
 	}
 	
-	public TrainingExample getNext() {
-		data.next();
-		return data.hasAccess() ? data.get() : null;
+	public TrainingExample<InputType, OutputType> getNext() {
+		if(!hasAccess()) {
+			toFirst();
+			return get();
+		}
+		TrainingExample<InputType, OutputType> e = get();
+		next();
+		return e;
 	}
+	
+	@Override
+	public void next() {
+		if(!hasNext()) {
+			toFirst();
+			return;
+		}
+		super.next();
+	}
+	
+	public void nextNoWrap() {
+		super.next();
+	}
+	
 	/**
 	 * Shuffles the trainingset.
 	 * This is important when a represantative
@@ -52,22 +57,24 @@ public class TrainingSet<InputType, OutputType> {
 	 */
 	public void shuffle() {
 		//TODO find out how to shuffle a list efficiently.
-		Stack<TrainingExample> t = new Stack<TrainingExample>();
-		for(data.toFirst(); data.hasAccess(); data.next()) {
-			if(Math.random() < 0.5) {
-				t.push(data.get());
-				data.remove();
+		Stack<TrainingExample<InputType, OutputType>> t =
+				new Stack<TrainingExample<InputType, OutputType>>();
+		Random r = new Random();
+		for(toFirst(); hasAccess(); super.next()) {
+			if(r.nextBoolean()) {
+				t.push(get());
+				remove();
 			}
 		}
-		data.toFirst();
+		toFirst();
 		while(!t.isEmpty()) {
-			if(Math.random() < 0.5) data.insert(t.pop());
-			if(data.hasAccess()) data.next();
+			if(r.nextBoolean()) insert(t.pop());
+			if(hasAccess()) super.next();
 			else break;
 		}
 		//in case not all items have been appended (could happen because it is random)
 		while(!t.isEmpty()) {
-			data.append(t.pop());
+			append(t.pop());
 		}
 	}
 	

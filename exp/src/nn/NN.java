@@ -1,6 +1,8 @@
 package nn;
 
-public abstract class NN<InputType, OutputType> {
+import util.JSONable;
+
+public abstract class NN<InputType, OutputType> implements JSONable{
 
 	public abstract OutputType run(InputType input);
 	

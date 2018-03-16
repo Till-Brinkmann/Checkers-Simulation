@@ -1,8 +1,8 @@
 package util;
 
-public class MatVecMath {
+public class MatMath {
 	
-	private MatVecMath() {}
+	private MatMath() {}
 	
 	/**
 	 * multiplies a vector with a matrix.
@@ -10,7 +10,7 @@ public class MatVecMath {
 	 * @param matrix
 	 * @return
 	 */
-	public static double[] mult(double[] vector, double[][] matrix){
+	public static double[] dot(double[] vector, double[][] matrix){
 		final int matLen = matrix.length, vecLen = vector.length;
         double[] resultVector = new double[matLen];
         for (int i = 0; i < matLen; i++){

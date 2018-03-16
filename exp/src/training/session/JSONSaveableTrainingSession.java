@@ -71,6 +71,7 @@ public abstract class JSONSaveableTrainingSession extends SaveableTrainingSessio
 		//TODO there is probably other stuff to test before continuing
 		if(charset == null)
 			throw new IllegalArgumentException("The charset is null.");
+		if(!file.exists()) file.createNewFile();
 		if(!file.canWrite())
 			throw new IllegalArgumentException("This file is (currently) not accessible!");
 		if(indentFactor < 0)
